@@ -1,0 +1,264 @@
+<template>
+  <div class="job-detail-page" v-loading="jobStore.loadingDetail">
+    <el-breadcrumb :separator-icon="ArrowRight" class="breadcrumb-nav">
+      <el-breadcrumb-item :to="{ path: '/student/jobs' }">职位列表</el-breadcrumb-item>
+      <el-breadcrumb-item>{{ jobStore.currentJob?.title || '职位详情' }}</el-breadcrumb-item>
+    </el-breadcrumb>
+
+    <el-card v-if="jobStore.currentJob" shadow="never" class="job-detail-card">
+      <template #header>
+        <div class="card-header">
+          <h1 class="job-title">{{ jobStore.currentJob.title }}</h1>
+          <span class="salary">{{ jobStore.currentJob.salary_range }}</span>
+        </div>
+        <div class="job-meta">
+          <span class="company-name">{{ jobStore.currentJob.company_name || '未知公司' }}</span>
+          <span class="location"><el-icon><Location /></el-icon> {{ jobStore.currentJob.location }}</span>
+          <span class="job-type"><el-icon><Briefcase /></el-icon> {{ jobStore.currentJob.job_type }}</span>
+          <span class="experience"><el-icon><DataAnalysis /></el-icon> {{ jobStore.currentJob.experience_required || '经验不限' }}</span>
+          <span class="education"><el-icon><Reading /></el-icon> {{ jobStore.currentJob.education_required || '学历不限' }}</span>
+        </div>
+      </template>
+
+      <div class="job-content">
+        <section class="section">
+          <h2>职位描述</h2>
+          <div class="description" v-html="jobDescriptionHtml"></div>
+        </section>
+
+        <section class="section">
+          <h2>职位要求</h2>
+          <div class="requirements" v-html="jobRequirementsHtml"></div>
+        </section>
+
+        <section v-if="jobStore.currentJob.company_name" class="section company-info">
+           <h2>公司信息</h2>
+           <p><strong>{{ jobStore.currentJob.company_name }}</strong></p>
+           <el-image v-if="jobStore.currentJob.company_logo" :src="jobStore.currentJob.company_logo" fit="contain" style="width: 100px; height: 50px; margin-top: 10px;">
+             <template #error>
+               <div class="image-slot"></div>
+             </template>
+           </el-image>
+        </section>
+      </div>
+
+       <template #footer>
+           <el-button type="primary" size="large" @click="handleApply" :icon="Pointer">立即申请</el-button>
+       </template>
+
+    </el-card>
+
+    <el-empty v-else-if="!jobStore.loadingDetail" description="未找到该职位信息"></el-empty>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useJobStore } from '@/stores/job';
+import { useApplicationStore } from '@/stores/application';
+import { useResumeStore } from '@/stores/resume';
+import { ElCard, ElButton, ElEmpty, ElIcon, ElBreadcrumb, ElBreadcrumbItem, ElImage } from 'element-plus';
+import { Location, Briefcase, DataAnalysis, Reading, ArrowRight, Pointer } from '@element-plus/icons-vue';
+import { marked } from 'marked'; // Assuming marked is installed for markdown
+import DOMPurify from 'dompurify'; // Assuming DOMPurify is installed for security
+import { ElMessage } from 'element-plus';
+
+const route = useRoute();
+const router = useRouter(); // Use router for navigation if needed
+const jobStore = useJobStore();
+const applicationStore = useApplicationStore();
+const resumeStore = useResumeStore();
+
+const jobId = ref<string | null>(null);
+
+// Sanitize markdown content
+const sanitizeHtml = (content: string | undefined | null): string => {
+    if (!content) return '';
+    // Type assertion needed if marked returns a Promise
+    const rawHtml = marked(content) as string; 
+    return DOMPurify.sanitize(rawHtml);
+};
+
+const jobDescriptionHtml = computed(() => sanitizeHtml(jobStore.currentJob?.description));
+const jobRequirementsHtml = computed(() => sanitizeHtml(jobStore.currentJob?.requirements));
+
+const fetchJobData = async (id: string) => {
+    try {
+        await jobStore.fetchJobDetail(id);
+    } catch (error) {
+        console.error("Failed to fetch job details:", error);
+        // Optional: Redirect to not found or show error message
+    }
+};
+
+const handleApply = async () => {
+  if (!jobStore.currentJob?.id) {
+    ElMessage.error('无法获取职位信息');
+    return;
+  }
+
+  // Fetch resumes if not already loaded
+  if (!resumeStore.resumeList.length) {
+      await resumeStore.fetchResumeList();
+  }
+  
+  // Find the default resume
+  const defaultResume = resumeStore.resumeList.find(r => r.is_default);
+  const resumeIdToUse = defaultResume?.id;
+
+  if (!resumeIdToUse) {
+      // TODO: Handle case where no default resume exists - maybe prompt user to select?
+      ElMessage.warning('您尚未设置默认简历，请先前往"我的简历"设置。若无简历，请先创建。');
+      router.push({ name: 'student-resume' });
+      return;
+  }
+
+  console.log(`Applying for job ${jobStore.currentJob.id} with resume ${resumeIdToUse}`);
+
+  try {
+      // Call the store action to apply
+      await applicationStore.applyForJob({ 
+          job_id: jobStore.currentJob.id, 
+          resume_id: resumeIdToUse 
+      });
+      // Success message is handled within the store action
+      // Optionally, disable button or show 'Applied' state after success
+      // Maybe navigate to application list?
+      // router.push({ name: 'student-applications' });
+  } catch (error) {
+      // Error message is handled within the store action
+      console.error('Application submission failed from component:', error);
+  }
+};
+
+onMounted(() => {
+    jobStore.clearCurrentJob(); // Clear previous details
+    const idFromRoute = route.params.id;
+    if (typeof idFromRoute === 'string') {
+        jobId.value = idFromRoute;
+        fetchJobData(jobId.value);
+    } else if (Array.isArray(idFromRoute) && typeof idFromRoute[0] === 'string') {
+        // Handle array case if router config allows it, take the first one
+        jobId.value = idFromRoute[0];
+        fetchJobData(jobId.value);
+    } else {
+        console.error("Invalid job ID in route");
+        // Optional: Redirect or show error
+        router.push('/student/jobs'); 
+    }
+});
+
+// Watch for route changes if the component is reused for different jobs
+watch(() => route.params.id, (newId) => {
+    jobStore.clearCurrentJob();
+    if (typeof newId === 'string') {
+         jobId.value = newId;
+         fetchJobData(newId);
+    } else if (Array.isArray(newId) && typeof newId[0] === 'string') {
+        jobId.value = newId[0];
+        fetchJobData(newId[0]);
+    }
+});
+
+</script>
+
+<style scoped>
+.job-detail-page {
+  padding: 20px;
+}
+
+.breadcrumb-nav {
+  margin-bottom: 20px;
+}
+
+.job-detail-card {
+  /* Styles for the main card */
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px; /* Add space below header before meta */
+}
+
+.job-title {
+  margin: 0;
+  font-size: 1.8em; /* Larger title */
+}
+
+.salary {
+  font-size: 1.4em; /* Larger salary */
+  color: #F56C6C; /* Red color for salary */
+  font-weight: bold;
+}
+
+.job-meta {
+  display: flex;
+  flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+  gap: 15px; /* Spacing between meta items */
+  color: #606266; /* Grey color for meta */
+  font-size: 0.9em;
+  margin-bottom: 20px; /* Space below meta before content */
+}
+
+.job-meta span {
+  display: inline-flex; /* Align icon and text */
+  align-items: center;
+}
+
+.job-meta .el-icon {
+  margin-right: 5px; /* Space between icon and text */
+}
+
+
+.job-content .section {
+  margin-bottom: 25px;
+}
+
+.job-content h2 {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+  border-left: 4px solid #409EFF; /* Blue accent line */
+  padding-left: 8px;
+}
+
+.description :deep(p),
+.requirements :deep(p) {
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.description :deep(ul),
+.requirements :deep(ul) {
+  list-style: disc;
+  padding-left: 20px;
+  line-height: 1.8;
+}
+
+.company-info p {
+    margin-bottom: 5px;
+    line-height: 1.6;
+}
+
+.company-info .el-image {
+    display: block; /* Ensure image takes its own line */
+}
+
+.image-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: var(--el-fill-color-light);
+  color: var(--el-text-color-secondary);
+  font-size: 14px;
+}
+
+.el-card :deep(.el-card__footer) {
+    text-align: center; /* Center the apply button */
+}
+
+</style> 

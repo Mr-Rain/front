@@ -1,0 +1,26 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 前端项目结构与开发大纲（校园招聘系统）
+
+本项目基于 Vue3 + TypeScript + Pinia + Vite，目录结构与开发规范详见下述说明。
+
+## 目录结构说明
+
+- `src/api/`：接口封装，按业务实体（user、student、company、job、resume、application、recommendation、permission）分文件，便于统一管理后端API。
+- `src/assets/`：静态资源目录，存放图片、样式等。
+- `src/components/`：组件目录，分为 common（通用组件）、student、company、admin（业务组件）。
+  - `common/` 包含 Navbar、Sidebar、Footer、UserAvatar、JobCard、CompanyCard、ResumeUploader、Pagination、Modal 等高复用组件。
+- `src/router/`：路由配置，`index.ts`为主路由表，`guards.ts`为路由守卫（权限控制、角色跳转）。
+- `src/stores/`：Pinia 状态管理，按业务实体分 store 文件（user、student、company、job、resume、application、recommendation、permission）。
+- `src/types/`：TypeScript 类型定义，按业务实体分 d.ts 文件，提升类型安全和开发体验。
+- `src/utils/`：工具函数目录。
+- `src/views/`：页面目录，按角色/功能模块分子目录。
+  - `student/`：学生端页面（Dashboard、Profile、JobList、JobDetail、Resume、Application、Recommendation）。
+  - `company/`：企业端页面（Dashboard、Profile、JobManage、JobEdit、ApplicationManage）。
+  - `admin/`：管理端页面（Dashboard、UserManage、CompanyAudit）。
+  - `auth/`：认证相关页面（Login、Register、ForgotPassword）。
+  - `common/`：通用页面（NotFound、Unauthorized）。
+- `App.vue`、`main.ts`：全局入口文件。
