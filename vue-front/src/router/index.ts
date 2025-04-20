@@ -4,6 +4,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import StudentLayout from '@/layouts/StudentLayout.vue'; // Import student layout
 import CompanyLayout from '@/layouts/CompanyLayout.vue'; // Import company layout
 import AdminLayout from '@/layouts/AdminLayout.vue'; // Import admin layout
+import DefaultLayout from '@/layouts/DefaultLayout.vue'; // Import default layout for public pages
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -112,7 +113,7 @@ const router = createRouter({
         },
         {
           path: 'jobs',
-          name: 'company-job-manage', 
+          name: 'company-job-manage',
           component: () => import('@/views/company/JobManage.vue'),
           meta: { title: '职位管理' }
         },
@@ -152,7 +153,7 @@ const router = createRouter({
         },
         {
           path: 'companies',
-          name: 'admin-company-audit', 
+          name: 'admin-company-audit',
           component: () => import('@/views/admin/CompanyAudit.vue'),
           meta: { title: '企业审核' }
         },
@@ -160,23 +161,32 @@ const router = createRouter({
       ]
     },
 
-    // --- General App Routes (Consider a default layout) ---
-    // Example: Job List and Detail (accessible to all logged-in users or guests)
-    // {
-    //     path: '/jobs',
-    //     // component: DefaultLayout, // Use a default layout if needed
-    //     children: [
-    //         { path: '', name: 'job-list', component: () => import('@/views/common/JobList.vue') },
-    //         { path: ':id', name: 'job-detail', component: () => import('@/views/common/JobDetail.vue') }
-    //     ]
-    // },
+    // --- General App Routes (accessible to all users) ---
+    {
+        path: '/jobs',
+        component: DefaultLayout,
+        children: [
+            {
+                path: '',
+                name: 'job-list',
+                component: () => import('@/views/student/JobList.vue'),
+                meta: { title: '职位列表' }
+            },
+            {
+                path: ':id',
+                name: 'job-detail',
+                component: () => import('@/views/student/JobDetail.vue'),
+                meta: { title: '职位详情' }
+            }
+        ]
+    },
 
      // --- Root path redirect based on role (handled by guard) ---
      // Remove the previous placeholder for '/'
     // {
-    //     path: '/', 
+    //     path: '/',
     //     name: 'dashboard',
-    //     component: () => import('@/views/common/NotFound.vue'), 
+    //     component: () => import('@/views/common/NotFound.vue'),
     //     meta: { requiresAuth: true, title: '仪表盘' }
     // },
 

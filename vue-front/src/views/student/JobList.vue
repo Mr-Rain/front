@@ -1,13 +1,21 @@
 <template>
   <div class="job-list-page responsive-padding job-list-container">
-    <el-card shadow="never" class="filter-card responsive-card">
-      <!-- 移动端简化搜索按钮 -->
-      <div class="mobile-search-toggle show-on-mobile">
-        <el-button type="primary" @click="showFilterForm = !showFilterForm">
-          {{ showFilterForm ? '隐藏筛选' : '显示筛选' }}
+    <div class="page-header">
+      <h2 class="page-title">职位列表</h2>
+      <div class="header-actions">
+        <el-button 
+          type="primary" 
+          plain 
+          size="small" 
+          icon="Filter"
+          class="filter-button show-on-mobile"
+          @click="showFilterForm = !showFilterForm"
+        >
+          {{ showFilterForm ? '隐藏筛选' : '筛选' }}
         </el-button>
       </div>
-
+    </div>
+    <el-card shadow="never" class="filter-card responsive-card">
       <!-- 搜索表单 -->
       <el-form
         :inline="true"
@@ -64,12 +72,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useJobStore } from '@/stores/job';
 import JobCard from '@/components/common/JobCard.vue';
 import Pagination from '@/components/common/Pagination.vue';
 import type { JobListParams } from '@/types/job';
-import { Search } from '@element-plus/icons-vue';
+import { Search, Filter } from '@element-plus/icons-vue';
 
+const router = useRouter();
 const jobStore = useJobStore();
 
 // 移动端适配相关变量
@@ -153,8 +163,43 @@ onUnmounted(() => {
   padding: 20px;
 }
 
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.page-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #303133;
+  margin: 0;
+  padding-left: 12px;
+  position: relative;
+}
+
+.page-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  height: 70%;
+  width: 4px;
+  background: var(--el-color-primary);
+  border-radius: 2px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .filter-card {
   margin-bottom: 20px;
+  border-radius: 8px;
+  transition: all 0.3s;
 }
 
 /* Make form items wrap nicely */
@@ -165,17 +210,17 @@ onUnmounted(() => {
 
 .list-card {
   margin-bottom: 20px;
+  border-radius: 8px;
 }
 
 .list-pagination {
   margin-top: 20px;
+  text-align: center;
 }
 
-/* 移动端搜索切换按钮 */
-.mobile-search-toggle {
+/* 筛选按钮 - 移动端显示 */
+.filter-button {
   display: none;
-  margin-bottom: 10px;
-  text-align: center;
 }
 
 /* 搜索结果摘要 */
@@ -194,12 +239,16 @@ onUnmounted(() => {
     padding: 10px;
   }
 
+  .page-title {
+    font-size: 1.5rem;
+  }
+
   .filter-card {
     margin-bottom: 15px;
   }
 
-  .mobile-search-toggle {
-    display: block;
+  .filter-button {
+    display: flex;
   }
 
   .mobile-hidden {
@@ -221,33 +270,33 @@ onUnmounted(() => {
   .filter-form .el-select {
     width: 100%;
   }
+}
 
-  /* 搜索按钮占满宽度 */
-  .filter-form .el-form-item:last-child .el-button {
-    width: 100%;
-  }
+/* 响应式卡片 */
+.responsive-card {
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05) !important;
+}
 
-  /* 搜索结果摘要调整 */
-  .search-summary {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
+.responsive-card:hover {
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 响应式边距 */
+@media (max-width: 768px) {
+  .responsive-padding {
+    padding: 15px;
   }
 }
 
-/* 平板设备适配 */
-@media (min-width: 577px) and (max-width: 992px) {
-  .job-list-page {
-    padding: 15px;
+@media (max-width: 576px) {
+  .responsive-padding {
+    padding: 10px;
   }
-
-  .filter-card {
-    margin-bottom: 15px;
-  }
-
-  /* 调整表单布局 */
-  .el-form--inline .el-form-item {
-    margin-right: 8px;
+  
+  .show-on-mobile {
+    display: block !important;
   }
 }
 </style>

@@ -1,7 +1,11 @@
 <template>
   <div class="job-detail-page" v-loading="jobStore.loadingDetail">
+    <div class="page-header">
+      <el-button @click="goBack" type="primary" plain icon="ArrowLeft">返回</el-button>
+      <h2 class="page-title">职位详情</h2>
+    </div>
     <el-breadcrumb :separator-icon="ArrowRight" class="breadcrumb-nav">
-      <el-breadcrumb-item :to="{ path: '/student/jobs' }">职位列表</el-breadcrumb-item>
+      <el-breadcrumb-item :to="{ path: '/jobs' }">职位列表</el-breadcrumb-item>
       <el-breadcrumb-item>{{ jobStore.currentJob?.title || '职位详情' }}</el-breadcrumb-item>
     </el-breadcrumb>
 
@@ -59,7 +63,7 @@ import { useJobStore } from '@/stores/job';
 import { useApplicationStore } from '@/stores/application';
 import { useResumeStore } from '@/stores/resume';
 import { ElCard, ElButton, ElEmpty, ElIcon, ElBreadcrumb, ElBreadcrumbItem, ElImage } from 'element-plus';
-import { Location, Briefcase, DataAnalysis, Reading, ArrowRight, Pointer } from '@element-plus/icons-vue';
+import { Location, Briefcase, DataAnalysis, Reading, ArrowRight, Pointer, ArrowLeft } from '@element-plus/icons-vue';
 import { marked } from 'marked'; // Assuming marked is installed for markdown
 import DOMPurify from 'dompurify'; // Assuming DOMPurify is installed for security
 import { ElMessage } from 'element-plus';
@@ -72,11 +76,22 @@ const resumeStore = useResumeStore();
 
 const jobId = ref<string | null>(null);
 
+// 返回上一页
+const goBack = () => {
+  router.go(-1); // 返回上一页
+  // 如果没有上一页，则返回职位列表
+  setTimeout(() => {
+    if (router.currentRoute.value.fullPath.startsWith('/jobs/')) {
+      router.push('/jobs');
+    }
+  }, 100);
+};
+
 // Sanitize markdown content
 const sanitizeHtml = (content: string | undefined | null): string => {
     if (!content) return '';
     // Type assertion needed if marked returns a Promise
-    const rawHtml = marked(content) as string; 
+    const rawHtml = marked(content) as string;
     return DOMPurify.sanitize(rawHtml);
 };
 
@@ -102,7 +117,7 @@ const handleApply = async () => {
   if (!resumeStore.resumeList.length) {
       await resumeStore.fetchResumeList();
   }
-  
+
   // Find the default resume
   const defaultResume = resumeStore.resumeList.find(r => r.is_default);
   const resumeIdToUse = defaultResume?.id;
@@ -118,9 +133,9 @@ const handleApply = async () => {
 
   try {
       // Call the store action to apply
-      await applicationStore.applyForJob({ 
-          job_id: jobStore.currentJob.id, 
-          resume_id: resumeIdToUse 
+      await applicationStore.applyForJob({
+          job_id: jobStore.currentJob.id,
+          resume_id: resumeIdToUse
       });
       // Success message is handled within the store action
       // Optionally, disable button or show 'Applied' state after success
@@ -145,7 +160,7 @@ onMounted(() => {
     } else {
         console.error("Invalid job ID in route");
         // Optional: Redirect or show error
-        router.push('/student/jobs'); 
+        router.push('/student/jobs');
     }
 });
 
@@ -162,3 +177,109 @@ watch(() => route.params.id, (newId) => {
 });
 
 </script>
+
+<style scoped>
+.job-detail-page {
+  padding: 20px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  margin: 0 0 0 15px;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #303133;
+}
+
+.breadcrumb-nav {
+  margin-bottom: 20px;
+}
+
+.job-detail-card {
+  margin-bottom: 20px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.job-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  color: #303133;
+}
+
+.salary {
+  color: #e6a23c;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  color: #606266;
+  margin-bottom: 10px;
+}
+
+.job-meta span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.job-meta .el-icon {
+  margin-right: 5px;
+}
+
+.company-name {
+  font-weight: 500;
+}
+
+.section {
+  margin-bottom: 30px;
+}
+
+.section h2 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-bottom: 15px;
+  color: #303133;
+  border-left: 3px solid var(--el-color-primary);
+  padding-left: 10px;
+}
+
+.description, .requirements {
+  line-height: 1.6;
+  color: #606266;
+}
+
+/* 移动端适配 */
+@media (max-width: 576px) {
+  .job-detail-page {
+    padding: 10px;
+  }
+
+  .card-header {
+    flex-direction: column;
+  }
+
+  .salary {
+    margin-top: 5px;
+  }
+
+  .job-meta {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+</style>

@@ -1,88 +1,91 @@
 <template>
   <div class="student-dashboard">
     <el-row :gutter="20">
-      <!-- Left Column: Profile Summary & Quick Links -->
-      <el-col :xs="24" :sm="8" :md="6">
-        <el-card class="box-card profile-summary" shadow="never">
+      <!-- 个人信息卡片 -->
+      <el-col :xs="24" :sm="24" :md="6" :lg="5">
+        <el-card class="box-card profile-summary" shadow="hover">
           <template #header>
             <div class="card-header">
-              <span>个人信息</span>
-              <el-button type="primary" link @click="goToProfile">编辑</el-button>
+              <span class="card-title">个人信息</span>
+              <el-button type="primary" class="edit-button" @click="goToProfile">编辑</el-button>
             </div>
           </template>
-          <div v-if="studentStore.loading">加载中...</div>
-          <div v-else-if="studentStore.profile" class="profile-content">
-            <UserAvatar :image-url="studentStore.profile.avatar" :size="80" style="margin-bottom: 15px;" />
-            <h4>{{ studentStore.profile.username }}</h4>
-            <p>{{ studentStore.profile.school }} - {{ studentStore.profile.major }}</p>
-            <p>学历: {{ studentStore.profile.education }}</p>
-            <!-- Add more summary details -->
+          <div v-if="studentStore.loading" class="loading-placeholder">
+            <el-skeleton :rows="3" animated />
           </div>
-           <div v-else>无法加载学生信息</div>
-        </el-card>
-
-        <el-card class="box-card quick-links" shadow="never">
-            <template #header><span>快速导航</span></template>
-            <el-menu default-active="/student/dashboard">
-                <el-menu-item index="/student/jobs" @click="() => router.push('/student/jobs')">
-                    <el-icon><Briefcase /></el-icon> 浏览职位
-                </el-menu-item>
-                <el-menu-item index="/student/resume" @click="() => router.push('/student/resume')">
-                   <el-icon><Document /></el-icon> 我的简历
-                </el-menu-item>
-                 <el-menu-item index="/student/applications" @click="() => router.push('/student/applications')">
-                   <el-icon><Memo /></el-icon> 我的申请
-                </el-menu-item>
-                 <el-menu-item index="/student/recommendations" @click="() => router.push('/student/recommendations')">
-                   <el-icon><Opportunity /></el-icon> 推荐职位
-                </el-menu-item>
-            </el-menu>
+          <div v-else-if="studentStore.profile" class="profile-content">
+            <div class="avatar-container">
+              <UserAvatar :image-url="studentStore.profile.avatar" :size="100" />
+            </div>
+            <h3 class="profile-name">{{ studentStore.profile.username }}</h3>
+            <div class="profile-info">
+              <p class="info-item"><i class="el-icon"><School /></i> {{ studentStore.profile.school }}</p>
+              <p class="info-item"><i class="el-icon"><OfficeBuilding /></i> {{ studentStore.profile.major }}</p>
+              <p class="info-item"><i class="el-icon"><Collection /></i> 学历: {{ studentStore.profile.education }}</p>
+            </div>
+          </div>
+          <div v-else class="error-message">无法加载学生信息</div>
         </el-card>
       </el-col>
 
-      <!-- Right Column: Recommendations & Application Status -->
-      <el-col :xs="24" :sm="16" :md="18">
-        <el-card class="box-card recommended-jobs" shadow="never">
+      <!-- 主要内容区域 -->
+      <el-col :xs="24" :sm="24" :md="18" :lg="19">
+        <!-- 推荐职位卡片 -->
+        <el-card class="box-card recommended-jobs" shadow="hover">
           <template #header>
             <div class="card-header">
-              <span>推荐职位</span>
-              <el-button type="primary" link @click="goToRecommendations">查看更多</el-button>
+              <span class="card-title">推荐职位</span>
+              <el-button type="primary" class="more-button" @click="goToRecommendations">查看更多</el-button>
             </div>
           </template>
-          <div v-if="recommendationStore.loading">加载中...</div>
-          <div v-else-if="recommendationStore.recommendedJobs.length > 0">
+          <div v-if="recommendationStore.loading" class="loading-placeholder">
+            <el-skeleton :rows="3" animated />
+          </div>
+          <div v-else-if="recommendationStore.recommendedJobs.length > 0" class="job-list">
             <!-- Limit the number of recommendations shown on dashboard -->
             <JobCard v-for="rec in recommendationStore.recommendedJobs.slice(0, 3)" :key="rec.job_info.id" :job="rec.job_info" />
           </div>
           <el-empty v-else description="暂无推荐职位"></el-empty>
         </el-card>
 
-        <el-card class="box-card application-status" shadow="never">
+        <!-- 申请状态卡片 -->
+        <el-card class="box-card application-status" shadow="hover">
           <template #header>
             <div class="card-header">
-              <span>最新申请状态</span>
-               <el-button type="primary" link @click="goToApplications">查看全部</el-button>
+              <span class="card-title">最新申请状态</span>
+              <el-button type="primary" class="more-button" @click="goToApplications">查看全部</el-button>
             </div>
           </template>
-           <div v-if="applicationStore.loadingStudentList">加载中...</div>
-            <div v-else-if="applicationStore.studentApplications.length > 0">
-               <!-- Display latest applications -->
-               <el-timeline style="padding-left: 10px; margin-top: 10px;">
-                  <el-timeline-item
-                    v-for="app in applicationStore.studentApplications.slice(0, 4)"
-                    :key="app.id"
-                    :timestamp="formatTimestamp(app.apply_time)"
-                    placement="top"
-                  >
-                     <el-card shadow="hover" class="app-status-card">
-                        <p>申请职位：<el-link type="primary" @click="goToJobDetail(app.job_id)">{{ app.job_info?.title || '职位信息加载中...' }}</el-link> ({{ app.job_info?.company_name }})</p>
-                        <p>状态：<el-tag :type="getStatusTagType(app.status)">{{ formatStatus(app.status) }}</el-tag></p>
-                        <p v-if="app.feedback">企业反馈：{{ app.feedback }}</p>
-                     </el-card>
-                  </el-timeline-item>
-               </el-timeline>
-            </div>
-           <el-empty v-else description="暂无申请记录"></el-empty>
+          <div v-if="applicationStore.loadingStudentList" class="loading-placeholder">
+            <el-skeleton :rows="3" animated />
+          </div>
+          <div v-else-if="applicationStore.studentApplications.length > 0" class="timeline-container">
+             <!-- Display latest applications -->
+             <el-timeline>
+                <el-timeline-item
+                  v-for="app in applicationStore.studentApplications.slice(0, 4)"
+                  :key="app.id"
+                  :timestamp="formatTimestamp(app.apply_time)"
+                  placement="top"
+                  class="timeline-item"
+                >
+                   <el-card shadow="hover" class="app-status-card">
+                      <p class="job-title">
+                        申请职位：
+                        <el-link type="primary" @click="goToJobDetail(app.job_id)">
+                          {{ app.job_info?.title || '职位信息加载中...' }}
+                        </el-link> 
+                        <span class="company-name">({{ app.job_info?.company_name }})</span>
+                      </p>
+                      <p class="job-status">
+                        状态：<el-tag :type="getStatusTagType(app.status)" effect="plain">{{ formatStatus(app.status) }}</el-tag>
+                      </p>
+                      <p v-if="app.feedback" class="job-feedback">企业反馈：{{ app.feedback }}</p>
+                   </el-card>
+                </el-timeline-item>
+             </el-timeline>
+          </div>
+          <el-empty v-else description="暂无申请记录"></el-empty>
         </el-card>
       </el-col>
     </el-row>
@@ -97,7 +100,7 @@ import { useRecommendationStore } from '@/stores/recommendation';
 import { useApplicationStore } from '@/stores/application';
 import UserAvatar from '@/components/common/UserAvatar.vue';
 import JobCard from '@/components/common/JobCard.vue';
-import { Briefcase, Document, Memo, Opportunity } from '@element-plus/icons-vue';
+import { School, OfficeBuilding, Collection } from '@element-plus/icons-vue';
 import type { ApplicationStatus } from '@/types/application';
 
 const router = useRouter();
@@ -156,93 +159,307 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
 </script>
 
 <style scoped>
-.student-dashboard {
-  padding: 20px;
+/* 全局变量 */
+:root {
+  --primary-color: #409EFF;
+  --success-color: #67C23A;
+  --warning-color: #E6A23C;
+  --danger-color: #F56C6C;
+  --info-color: #909399;
+  
+  --text-primary: #303133;
+  --text-regular: #606266;
+  --text-secondary: #909399;
+  
+  --border-color: #EBEEF5;
+  --bg-color: #F5F7FA;
+  
+  --card-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  --card-hover-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
 }
 
+.student-dashboard {
+  padding: 24px;
+  background-color: var(--bg-color);
+  min-height: calc(100vh - 60px);
+}
+
+/* 卡片样式 */
 .box-card {
-  margin-bottom: 20px;
-  height: 100%; /* 使卡片高度一致 */
+  margin-bottom: 24px;
+  border-radius: 8px;
+  transition: all 0.3s;
+  border: none;
+  height: 100%;
+}
+
+.box-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--card-hover-shadow);
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 15px 0;
 }
 
-.profile-summary .profile-content {
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  position: relative;
+  padding-left: 12px;
+}
+
+.card-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 16px;
+  background: var(--primary-color);
+  border-radius: 2px;
+}
+
+.edit-button, .more-button {
+  font-weight: 500;
+}
+
+/* 个人信息样式 */
+.profile-summary {
+  background: linear-gradient(to bottom, #f7fafc, #fff);
+  position: sticky;
+  top: 24px;
+}
+
+.profile-content {
   text-align: center;
+  padding: 10px 0;
 }
 
-.profile-summary h4 {
-    margin: 10px 0 5px 0;
-    font-size: 1.1em;
+.avatar-container {
+  margin-bottom: 16px;
+  position: relative;
 }
 
-.profile-summary p {
-    color: #606266;
-    font-size: 0.9em;
-    margin: 3px 0;
+.avatar-container::after {
+  content: '';
+  display: block;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 2px solid rgba(64, 158, 255, 0.2);
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: pulse 2s infinite;
 }
 
-.quick-links .el-menu {
-    border-right: none; /* Remove default menu border */
+@keyframes pulse {
+  0% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.8;
+  }
+  70% {
+    transform: translateX(-50%) scale(1.1);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0;
+  }
 }
 
-.quick-links .el-menu-item {
-    height: 45px;
+.profile-name {
+  margin: 16px 0 10px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-.quick-links .el-icon {
-    margin-right: 8px;
+.profile-info {
+  text-align: left;
+  padding: 5px 10px;
 }
 
-.recommended-jobs .job-card {
-    margin-bottom: 15px; /* 增加职位卡片之间的间距 */
+.info-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  color: var(--text-regular);
+  font-size: 14px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-item .el-icon {
+  margin-right: 10px;
+  color: var(--primary-color);
+  font-size: 18px;
+}
+
+.loading-placeholder {
+  padding: 20px 0;
+}
+
+.error-message {
+  text-align: center;
+  color: var(--danger-color);
+  padding: 20px 0;
+}
+
+/* 推荐职位样式 */
+.recommended-jobs {
+  background-color: #fff;
+}
+
+.job-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 申请状态样式 */
+.application-status {
+  background-color: #fff;
+}
+
+.timeline-container {
+  padding: 0 10px;
+}
+
+.timeline-item {
+  padding-bottom: 10px;
 }
 
 .app-status-card {
-    margin-bottom: 10px; /* Add space between cards in timeline */
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s;
 }
 
-.app-status-card p {
-    margin: 5px 0;
-    font-size: 14px;
+.app-status-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.app-status-card .el-tag {
-    margin-left: 5px;
+.job-title {
+  margin: 10px 0;
+  font-size: 15px;
+  font-weight: 500;
 }
 
-/* Remove default padding from el-timeline-item content if needed */
-:deep(.el-timeline-item__content) {
-    /* padding-bottom: 5px; */
+.company-name {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: normal;
+}
+
+.job-status {
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.job-feedback {
+  margin: 10px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* 时间轴样式优化 */
+:deep(.el-timeline-item__node) {
+  background-color: var(--primary-color);
+}
+
+:deep(.el-timeline-item__tail) {
+  border-left-color: var(--border-color);
+}
+
+:deep(.el-timeline-item__timestamp) {
+  color: var(--text-secondary);
+  font-size: 13px;
 }
 
 /* 响应式调整 */
-@media (max-width: 768px) {
-    .student-dashboard {
-        padding: 10px;
-    }
-
-    .el-row {
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-    }
-
-    .el-col {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-    }
-
-    .box-card {
-        margin-bottom: 15px;
-    }
-
-    .profile-summary, .quick-links {
-        margin-bottom: 15px;
-    }
+@media (max-width: 992px) {
+  .student-dashboard {
+    padding: 16px;
+  }
+  
+  .profile-summary {
+    position: static;
+    margin-bottom: 20px;
+  }
 }
 
+@media (max-width: 768px) {
+  .student-dashboard {
+    padding: 12px;
+  }
+  
+  .el-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  .el-col {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  .box-card {
+    margin-bottom: 16px;
+  }
+  
+  .card-title {
+    font-size: 16px;
+  }
+  
+  .profile-name {
+    font-size: 18px;
+  }
+  
+  .avatar-container::after {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+@media (max-width: 575px) {
+  .student-dashboard {
+    padding: 10px;
+  }
+  
+  .card-header {
+    padding: 12px 0;
+  }
+  
+  .avatar-container {
+    margin-bottom: 12px;
+  }
+  
+  .profile-name {
+    font-size: 16px;
+    margin: 12px 0 8px;
+  }
+  
+  .job-title, .job-status, .job-feedback {
+    font-size: 13px;
+    margin: 8px 0;
+  }
+  
+  .job-list {
+    gap: 12px;
+  }
+}
 </style>
