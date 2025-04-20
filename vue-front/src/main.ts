@@ -1,4 +1,5 @@
 import './assets/main.css'
+import './assets/search-form.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'

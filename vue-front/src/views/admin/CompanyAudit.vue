@@ -6,21 +6,40 @@
       </template>
 
       <!-- Filters -->
-      <el-form :inline="true" :model="listQuery" @submit.prevent="handleFilter" class="filter-form">
-         <el-form-item label="审核状态">
-            <el-select v-model="listQuery.auditStatus" placeholder="所有状态" clearable @change="handleFilter">
-                 <el-option label="待审核" value="pending"></el-option>
-                 <el-option label="已通过" value="approved"></el-option>
-                 <el-option label="未通过" value="rejected"></el-option>
-            </el-select>
-        </el-form-item>
-        <el-form-item label="公司名称">
-          <el-input v-model="listQuery.keyword" placeholder="输入公司名称搜索" clearable @clear="handleFilter"/>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleFilter" :icon="Search">搜索</el-button>
-        </el-form-item>
-      </el-form>
+      <div class="filter-card">
+        <el-form :inline="true" :model="listQuery" @submit.prevent="handleFilter" class="filter-form">
+          <div class="search-form-container">
+            <div class="search-inputs-group">
+              <el-form-item label="审核状态" class="search-form-item">
+                <el-select
+                  v-model="listQuery.auditStatus"
+                  placeholder="所有状态"
+                  clearable
+                  @change="handleFilter"
+                  class="search-select"
+                >
+                  <el-option label="待审核" value="pending"></el-option>
+                  <el-option label="已通过" value="approved"></el-option>
+                  <el-option label="未通过" value="rejected"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="公司名称" class="search-form-item">
+                <el-input
+                  v-model="listQuery.keyword"
+                  placeholder="输入公司名称搜索"
+                  clearable
+                  @clear="handleFilter"
+                />
+              </el-form-item>
+            </div>
+            <div class="search-button-group">
+              <el-form-item class="search-button-item">
+                <el-button type="primary" @click="handleFilter" :icon="Search" class="search-button">搜索</el-button>
+              </el-form-item>
+            </div>
+          </div>
+        </el-form>
+      </div>
 
       <el-table :data="companyStore.auditList" v-loading="companyStore.loadingAuditList" style="width: 100%">
         <el-table-column prop="company_name" label="公司名称" min-width="180"></el-table-column>
@@ -53,7 +72,7 @@
       </el-table>
 
       <!-- Pagination -->
-      <Pagination 
+      <Pagination
         v-if="companyStore.auditTotal > 0"
         :total="companyStore.auditTotal"
         v-model:page="listQuery.page"
@@ -82,7 +101,7 @@
                 <el-link type="primary" @click="previewLicense(currentCompany.business_license)">{{ currentCompany.business_license_name || '点击预览认证文件' }}</el-link>
             </p>
              <p v-else>未上传认证文件</p>
-             
+
             <h4>审核操作</h4>
             <el-form ref="auditFormRef" :model="auditData">
                  <el-form-item label="审核结果" prop="status" required>
@@ -246,4 +265,4 @@ const handleAuditSubmit = async () => {
     margin-top: 0;
 }
 
-</style> 
+</style>

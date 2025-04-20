@@ -9,20 +9,39 @@
       </template>
 
       <!-- Filters -->
-       <el-form :inline="true" :model="listQuery" @submit.prevent="handleFilter" class="filter-form">
-         <el-form-item label="职位状态">
-            <el-select v-model="listQuery.status" placeholder="所有状态" clearable @change="handleFilter">
-                <el-option label="招聘中" value="open"></el-option>
-                <el-option label="已关闭" value="closed"></el-option>
-            </el-select>
-        </el-form-item>
-        <el-form-item label="关键词">
-          <el-input v-model="listQuery.keyword" placeholder="职位名称" clearable @clear="handleFilter"/>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleFilter" :icon="Search">搜索</el-button>
-        </el-form-item>
-      </el-form>
+      <div class="filter-card">
+        <el-form :inline="true" :model="listQuery" @submit.prevent="handleFilter" class="filter-form">
+          <div class="search-form-container">
+            <div class="search-inputs-group">
+              <el-form-item label="职位状态" class="search-form-item">
+                <el-select
+                  v-model="listQuery.status"
+                  placeholder="所有状态"
+                  clearable
+                  @change="handleFilter"
+                  class="search-select"
+                >
+                  <el-option label="招聘中" value="open"></el-option>
+                  <el-option label="已关闭" value="closed"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="关键词" class="search-form-item">
+                <el-input
+                  v-model="listQuery.keyword"
+                  placeholder="职位名称"
+                  clearable
+                  @clear="handleFilter"
+                />
+              </el-form-item>
+            </div>
+            <div class="search-button-group">
+              <el-form-item class="search-button-item">
+                <el-button type="primary" @click="handleFilter" :icon="Search" class="search-button">搜索</el-button>
+              </el-form-item>
+            </div>
+          </div>
+        </el-form>
+      </div>
 
       <el-table :data="jobStore.companyJobList" v-loading="jobStore.loadingCompanyList" style="width: 100%">
         <el-table-column prop="title" label="职位名称" min-width="200">
@@ -64,7 +83,7 @@
       </el-table>
 
        <!-- Pagination -->
-        <Pagination 
+        <Pagination
             v-if="jobStore.companyJobTotal > 0"
             :total="jobStore.companyJobTotal"
             v-model:page="listQuery.page"
@@ -121,7 +140,7 @@ const formatTime = (timeStr: string | undefined): string => {
 
 const goToCreateJob = () => {
     // Assuming route name is company-job-edit with no ID for create
-    router.push({ name: 'company-job-edit' }); 
+    router.push({ name: 'company-job-edit' });
 };
 
 const goToEditJob = (id: string | number) => {
@@ -188,7 +207,7 @@ const handleDeleteJob = async (id: string | number) => {
 
 /* Adjust link color/style within table */
 .el-table .el-link {
-    font-size: inherit; 
+    font-size: inherit;
 }
 
-</style> 
+</style>

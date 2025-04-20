@@ -9,30 +9,56 @@
       </template>
 
       <!-- Filters -->
-       <el-form :inline="true" :model="listQuery" @submit.prevent="handleFilter" class="filter-form">
-         <el-form-item label="申请状态">
-            <el-select v-model="listQuery.status" placeholder="所有状态" clearable @change="handleFilter">
-                 <el-option label="待处理" value="pending"></el-option>
-                 <el-option label="已查看" value="viewed"></el-option>
-                 <el-option label="面试中" value="interview"></el-option>
-                 <el-option label="已录用" value="offer"></el-option>
-                 <el-option label="未录用" value="rejected"></el-option>
-                 <el-option label="已撤销" value="withdrawn"></el-option>
-            </el-select>
-        </el-form-item>
-        <el-form-item label="申请职位" prop="jobId">
-             <!-- TODO: Fetch job list for company to populate this select -->
-             <el-select v-model="listQuery.jobId" placeholder="所有职位" clearable filterable @change="handleFilter">
-                <!-- <el-option v-for="job in companyJobs" :key="job.id" :label="job.title" :value="job.id"></el-option> -->
-             </el-select>
-        </el-form-item>
-        <el-form-item label="关键词">
-          <el-input v-model="listQuery.keyword" placeholder="姓名/学校/专业" clearable @clear="handleFilter"/>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleFilter" :icon="Search">搜索</el-button>
-        </el-form-item>
-      </el-form>
+      <div class="filter-card">
+        <el-form :inline="true" :model="listQuery" @submit.prevent="handleFilter" class="filter-form">
+          <div class="search-form-container">
+            <div class="search-inputs-group">
+              <el-form-item label="申请状态" class="search-form-item">
+                <el-select
+                  v-model="listQuery.status"
+                  placeholder="所有状态"
+                  clearable
+                  @change="handleFilter"
+                  class="search-select"
+                >
+                  <el-option label="待处理" value="pending"></el-option>
+                  <el-option label="已查看" value="viewed"></el-option>
+                  <el-option label="面试中" value="interview"></el-option>
+                  <el-option label="已录用" value="offer"></el-option>
+                  <el-option label="未录用" value="rejected"></el-option>
+                  <el-option label="已撤销" value="withdrawn"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="申请职位" prop="jobId" class="search-form-item">
+                <!-- TODO: Fetch job list for company to populate this select -->
+                <el-select
+                  v-model="listQuery.jobId"
+                  placeholder="所有职位"
+                  clearable
+                  filterable
+                  @change="handleFilter"
+                  class="search-select"
+                >
+                  <!-- <el-option v-for="job in companyJobs" :key="job.id" :label="job.title" :value="job.id"></el-option> -->
+                </el-select>
+              </el-form-item>
+              <el-form-item label="关键词" class="search-form-item">
+                <el-input
+                  v-model="listQuery.keyword"
+                  placeholder="姓名/学校/专业"
+                  clearable
+                  @clear="handleFilter"
+                />
+              </el-form-item>
+            </div>
+            <div class="search-button-group">
+              <el-form-item class="search-button-item">
+                <el-button type="primary" @click="handleFilter" :icon="Search" class="search-button">搜索</el-button>
+              </el-form-item>
+            </div>
+          </div>
+        </el-form>
+      </div>
 
       <el-table :data="applicationStore.companyApplications" v-loading="applicationStore.loadingCompanyList" style="width: 100%">
         <el-table-column label="申请人信息" min-width="200">
@@ -84,7 +110,7 @@
       </el-table>
 
       <!-- Pagination -->
-      <Pagination 
+      <Pagination
         v-if="applicationStore.companyApplicationsTotal > 0"
         :total="applicationStore.companyApplicationsTotal"
         v-model:page="listQuery.page"
@@ -183,7 +209,7 @@ const fetchApplications = () => {
 
 onMounted(() => {
    // Fetch initial data - handled by watch now
-   // fetchApplications(); 
+   // fetchApplications();
    // Fetch job list for filter dropdown
    // TODO: Ensure fetchCompanyJobList exists and returns needed data
    jobStore.fetchCompanyJobList({ pageSize: 1000 }); // Fetch all jobs for filter for now
@@ -205,9 +231,9 @@ const formatTime = (timeStr: string | undefined): string => {
 
 const formatStatus = (status: ApplicationStatus | undefined): string => {
     if (!status) return '未知';
-    const statusMap: Record<ApplicationStatus, string> = { 
-        pending: '待处理', viewed: '已查看', interview: '面试中', 
-        offer: '已录用', rejected: '未录用', withdrawn: '已撤销' 
+    const statusMap: Record<ApplicationStatus, string> = {
+        pending: '待处理', viewed: '已查看', interview: '面试中',
+        offer: '已录用', rejected: '未录用', withdrawn: '已撤销'
     };
     return statusMap[status] || status;
 };
@@ -306,4 +332,4 @@ const previewResume = (resumeId: string | number | undefined, studentId: string 
     margin-top: 0;
 }
 
-</style> 
+</style>

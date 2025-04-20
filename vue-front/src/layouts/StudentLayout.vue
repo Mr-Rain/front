@@ -1,14 +1,16 @@
 <template>
   <div class="app-wrapper">
-    <!-- Sidebar -->
-    <Sidebar class="sidebar-container" @collapse-change="handleSidebarCollapse" />
+    <!-- Navbar - Now at the top of the entire layout -->
+    <header class="navbar-container">
+      <Navbar />
+    </header>
 
-    <!-- Main Container (includes Navbar and Content) -->
-    <div class="main-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
-      <!-- Navbar -->
-      <header class="navbar-container">
-        <Navbar />
-      </header>
+    <div class="content-wrapper">
+      <!-- Sidebar - Now below navbar -->
+      <Sidebar class="sidebar-container" @collapse-change="handleSidebarCollapse" />
+
+      <!-- Main Container -->
+      <div class="main-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
 
       <!-- Main Content Area -->
       <main class="app-main">
@@ -26,6 +28,7 @@
           </div>
         </div>
       </main>
+      </div>
     </div>
   </div>
 </template>
@@ -50,34 +53,8 @@ const handleSidebarCollapse = (collapsed: boolean) => {
   position: relative;
   height: 100vh;
   width: 100%;
-}
-
-.sidebar-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 200px;
-  height: 100%;
-  z-index: 1001;
-  transition: width 0.28s;
-  overflow: hidden;
-}
-
-.main-container {
-  position: relative;
-  height: 100vh;
-  margin-left: 200px;
-  width: calc(100% - 200px);
-  transition: margin-left 0.28s, width 0.28s;
   display: flex;
   flex-direction: column;
-  background-color: #f0f2f5;
-}
-
-.sidebar-collapsed .main-container {
-  margin-left: 64px;
-  width: calc(100% - 64px);
 }
 
 .navbar-container {
@@ -85,6 +62,38 @@ const handleSidebarCollapse = (collapsed: boolean) => {
   width: 100%;
   background-color: #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  z-index: 1002; /* 确保导航栏在最上层 */
+}
+
+.content-wrapper {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar-container {
+  position: relative;
+  width: 200px;
+  height: calc(100vh - 60px); /* 减去导航栏高度 */
+  transition: width 0.28s;
+  overflow: hidden;
+  z-index: 1001;
+  background-color: #fff;
+  border-right: 1px solid var(--el-border-color-light);
+}
+
+.main-container {
+  position: relative;
+  height: calc(100vh - 60px); /* 减去导航栏高度 */
+  width: calc(100% - 200px);
+  transition: width 0.28s;
+  display: flex;
+  flex-direction: column;
+  background-color: #f0f2f5;
+}
+
+.sidebar-collapsed .main-container {
+  width: calc(100% - 64px);
 }
 
 .app-main {

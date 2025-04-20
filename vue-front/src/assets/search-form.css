@@ -1,0 +1,95 @@
+/* 通用搜索表单样式 */
+
+/* 搜索表单容器 */
+.filter-form {
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* 搜索表单内容容器 */
+.search-form-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: 15px;
+}
+
+/* 搜索输入组 */
+.search-inputs-group {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1;
+  gap: 15px;
+  justify-content: center;
+}
+
+/* 搜索表单项 */
+.search-form-item {
+  margin-right: 0 !important;
+  margin-bottom: 0 !important;
+  flex: 1;
+  min-width: 200px;
+  max-width: 300px;
+}
+
+/* 搜索按钮组 */
+.search-button-group {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* 搜索按钮项 */
+.search-button-item {
+  margin-right: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* 搜索按钮 */
+.search-button {
+  min-width: 100px;
+  height: 40px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+/* 下拉选择器 */
+.search-select {
+  width: 100%;
+}
+
+/* 搜索表单卡片 */
+.filter-card {
+  margin-bottom: 20px;
+  border-radius: 12px;
+  transition: all 0.3s;
+  padding: 20px;
+  background-color: #fff;
+}
+
+/* 移动端适配 */
+@media (max-width: 576px) {
+  .search-form-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .search-inputs-group {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .search-form-item {
+    width: 100%;
+    max-width: none;
+  }
+
+  .search-button-group {
+    width: 100%;
+  }
+
+  .search-button {
+    width: 100%;
+  }
+}

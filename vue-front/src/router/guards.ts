@@ -7,7 +7,7 @@ import { usePermissionStore } from '@/stores/permission';
 // NProgress.configure({ showSpinner: false }); // optional configuration
 
 // 白名单，不需要登录即可访问的路由路径
-const whiteList = ['/', '/login', '/register', '/forgot-password', '/404', '/401'];
+const whiteList = ['/', '/login', '/register', '/forgot-password', '/404', '/401', '/jobs', '/companies'];
 
 // 定义角色对应的首页路径
 const homePathMap: Record<string, string> = {
@@ -61,7 +61,7 @@ export function createRouterGuards(router: Router) {
             }
 
             // TODO: 这里可以添加基于 roles/permissions 的动态路由添加逻辑 (如果需要)
-            
+
             // === START: Remove root path redirect AFTER fetching ===
             // 获取信息后再次检查目标路径
             // if (to.path === '/') { // <-- Remove this block
@@ -82,13 +82,13 @@ export function createRouterGuards(router: Router) {
       }
     } else {
       // --- 未登录 ---
-      if (whiteList.includes(to.path)) {
-        // 如果在白名单中，直接放行 (now includes '/')
+      if (whiteList.includes(to.path) || to.path.match(/^\/jobs\/\d+$/)) {
+        // 如果在白名单中或是职位详情页，直接放行
         next();
       } else {
         // === START: Remove explicit root path redirect for unauthenticated ===
         // if (to.path === '/') { // <-- Remove this block
-        //     next('/login'); 
+        //     next('/login');
         // } else {
         next(`/login?redirect=${to.path}`);
         // }
@@ -105,4 +105,4 @@ export function createRouterGuards(router: Router) {
     console.error('Router Error:', error);
     // NProgress.done(); // Ensure progress bar stops on error
   });
-} 
+}

@@ -6,27 +6,52 @@
       </template>
 
       <!-- Filters -->
-       <el-form :inline="true" :model="listQuery" @submit.prevent="handleFilter" class="filter-form">
-         <el-form-item label="用户类型">
-            <el-select v-model="listQuery.userType" placeholder="所有类型" clearable @change="handleFilter">
-                 <el-option label="学生" value="student"></el-option>
-                 <el-option label="企业" value="company"></el-option>
-                 <el-option label="管理员" value="admin"></el-option>
-            </el-select>
-        </el-form-item>
-        <el-form-item label="账号状态">
-            <el-select v-model="listQuery.status" placeholder="所有状态" clearable @change="handleFilter">
-                 <el-option label="正常" value="active"></el-option>
-                 <el-option label="禁用" value="inactive"></el-option>
-            </el-select>
-        </el-form-item>
-        <el-form-item label="关键词">
-          <el-input v-model="listQuery.keyword" placeholder="用户名/邮箱/手机号" clearable @clear="handleFilter"/>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleFilter" :icon="Search">搜索</el-button>
-        </el-form-item>
-      </el-form>
+      <div class="filter-card">
+        <el-form :inline="true" :model="listQuery" @submit.prevent="handleFilter" class="filter-form">
+          <div class="search-form-container">
+            <div class="search-inputs-group">
+              <el-form-item label="用户类型" class="search-form-item">
+                <el-select
+                  v-model="listQuery.userType"
+                  placeholder="所有类型"
+                  clearable
+                  @change="handleFilter"
+                  class="search-select"
+                >
+                  <el-option label="学生" value="student"></el-option>
+                  <el-option label="企业" value="company"></el-option>
+                  <el-option label="管理员" value="admin"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="账号状态" class="search-form-item">
+                <el-select
+                  v-model="listQuery.status"
+                  placeholder="所有状态"
+                  clearable
+                  @change="handleFilter"
+                  class="search-select"
+                >
+                  <el-option label="正常" value="active"></el-option>
+                  <el-option label="禁用" value="inactive"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="关键词" class="search-form-item">
+                <el-input
+                  v-model="listQuery.keyword"
+                  placeholder="用户名/邮箱/手机号"
+                  clearable
+                  @clear="handleFilter"
+                />
+              </el-form-item>
+            </div>
+            <div class="search-button-group">
+              <el-form-item class="search-button-item">
+                <el-button type="primary" @click="handleFilter" :icon="Search" class="search-button">搜索</el-button>
+              </el-form-item>
+            </div>
+          </div>
+        </el-form>
+      </div>
 
       <el-table :data="userStore.userList" v-loading="userStore.loadingList" style="width: 100%">
         <el-table-column prop="id" label="ID" width="80"></el-table-column>
@@ -60,7 +85,7 @@
       </el-table>
 
       <!-- Pagination -->
-      <Pagination 
+      <Pagination
         v-if="userStore.userTotal > 0"
         :total="userStore.userTotal"
         v-model:page="listQuery.page"
@@ -160,4 +185,4 @@ const handleViewDetail = (id: string | number) => {
     display: flex;
     justify-content: flex-end;
 }
-</style> 
+</style>

@@ -180,6 +180,25 @@ const router = createRouter({
             }
         ]
     },
+    {
+        path: '/companies',
+        component: DefaultLayout,
+        children: [
+            {
+                path: '',
+                name: 'company-list',
+                component: () => import('@/views/common/CompanyList.vue'),
+                meta: { title: '企业列表' }
+            }
+            // 未来可以添加企业详情页
+            // {
+            //     path: ':id',
+            //     name: 'company-detail',
+            //     component: () => import('@/views/common/CompanyDetail.vue'),
+            //     meta: { title: '企业详情' }
+            // }
+        ]
+    },
 
      // --- Root path redirect based on role (handled by guard) ---
      // Remove the previous placeholder for '/'

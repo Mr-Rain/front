@@ -125,10 +125,12 @@ const handleClick = () => {
 
 .company-logo {
   margin-right: 10px;
+  border: 1px solid #f0f0f0;
 }
 
 .company-name {
-  color: #909399;
+  color: #606266;
+  font-size: 14px;
 }
 
 /* Responsive adjustments */
@@ -153,6 +155,10 @@ const handleClick = () => {
     }
     .company-info {
         margin-top: 8px; /* 调整公司信息的上边距 */
+    }
+
+    .company-name {
+        font-size: 13px;
     }
 }
 </style>

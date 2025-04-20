@@ -30,24 +30,6 @@
 
       <!-- 主要内容区域 -->
       <el-col :xs="24" :sm="24" :md="18" :lg="19">
-        <!-- 推荐职位卡片 -->
-        <el-card class="box-card recommended-jobs" shadow="hover">
-          <template #header>
-            <div class="card-header">
-              <span class="card-title">推荐职位</span>
-              <el-button type="primary" class="more-button" @click="goToRecommendations">查看更多</el-button>
-            </div>
-          </template>
-          <div v-if="recommendationStore.loading" class="loading-placeholder">
-            <el-skeleton :rows="3" animated />
-          </div>
-          <div v-else-if="recommendationStore.recommendedJobs.length > 0" class="job-list">
-            <!-- Limit the number of recommendations shown on dashboard -->
-            <JobCard v-for="rec in recommendationStore.recommendedJobs.slice(0, 3)" :key="rec.job_info.id" :job="rec.job_info" />
-          </div>
-          <el-empty v-else description="暂无推荐职位"></el-empty>
-        </el-card>
-
         <!-- 申请状态卡片 -->
         <el-card class="box-card application-status" shadow="hover">
           <template #header>
@@ -63,7 +45,7 @@
              <!-- Display latest applications -->
              <el-timeline>
                 <el-timeline-item
-                  v-for="app in applicationStore.studentApplications.slice(0, 4)"
+                  v-for="app in applicationStore.studentApplications.slice(0, 5)"
                   :key="app.id"
                   :timestamp="formatTimestamp(app.apply_time)"
                   placement="top"
@@ -74,7 +56,7 @@
                         申请职位：
                         <el-link type="primary" @click="goToJobDetail(app.job_id)">
                           {{ app.job_info?.title || '职位信息加载中...' }}
-                        </el-link> 
+                        </el-link>
                         <span class="company-name">({{ app.job_info?.company_name }})</span>
                       </p>
                       <p class="job-status">
@@ -96,27 +78,22 @@
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStudentStore } from '@/stores/student';
-import { useRecommendationStore } from '@/stores/recommendation';
 import { useApplicationStore } from '@/stores/application';
 import UserAvatar from '@/components/common/UserAvatar.vue';
-import JobCard from '@/components/common/JobCard.vue';
 import { School, OfficeBuilding, Collection } from '@element-plus/icons-vue';
 import type { ApplicationStatus } from '@/types/application';
 
 const router = useRouter();
 const studentStore = useStudentStore();
-const recommendationStore = useRecommendationStore();
 const applicationStore = useApplicationStore();
 
 // Fetch data on component mount
 onMounted(() => {
   studentStore.fetchProfile();
-  recommendationStore.fetchRecommendations();
-  applicationStore.fetchStudentApplications({ pageSize: 4, page: 1 }); // Fetch latest 4 applications
+  applicationStore.fetchStudentApplications({ pageSize: 5, page: 1 }); // Fetch latest 5 applications
 });
 
 const goToProfile = () => router.push('/student/profile');
-const goToRecommendations = () => router.push('/student/recommendations');
 const goToApplications = () => router.push('/student/applications');
 const goToJobDetail = (jobId: string | number) => router.push(`/jobs/${jobId}`);
 
@@ -166,14 +143,14 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
   --warning-color: #E6A23C;
   --danger-color: #F56C6C;
   --info-color: #909399;
-  
+
   --text-primary: #303133;
   --text-regular: #606266;
   --text-secondary: #909399;
-  
+
   --border-color: #EBEEF5;
   --bg-color: #F5F7FA;
-  
+
   --card-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   --card-hover-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
 }
@@ -316,50 +293,52 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
   padding: 20px 0;
 }
 
-/* 推荐职位样式 */
-.recommended-jobs {
-  background-color: #fff;
-}
 
-.job-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
 
 /* 申请状态样式 */
 .application-status {
   background-color: #fff;
+  height: calc(100% - 24px);
 }
 
 .timeline-container {
   padding: 0 10px;
+  max-height: 600px;
+  overflow-y: auto;
 }
 
 .timeline-item {
-  padding-bottom: 10px;
+  padding-bottom: 15px;
 }
 
 .app-status-card {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: all 0.3s;
+  border-left: 3px solid var(--primary-color);
+  margin-bottom: 5px;
 }
 
 .app-status-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
 }
 
 .job-title {
   margin: 10px 0;
   font-size: 15px;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
 .company-name {
   color: var(--text-secondary);
   font-size: 14px;
   font-weight: normal;
+  white-space: nowrap;
 }
 
 .job-status {
@@ -374,6 +353,10 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
   color: var(--text-secondary);
   font-size: 14px;
   line-height: 1.5;
+  background-color: #f8f8f8;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border-left: 2px solid var(--warning-color);
 }
 
 /* 时间轴样式优化 */
@@ -395,7 +378,7 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
   .student-dashboard {
     padding: 16px;
   }
-  
+
   .profile-summary {
     position: static;
     margin-bottom: 20px;
@@ -406,29 +389,29 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
   .student-dashboard {
     padding: 12px;
   }
-  
+
   .el-row {
     margin-left: 0 !important;
     margin-right: 0 !important;
   }
-  
+
   .el-col {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
-  
+
   .box-card {
     margin-bottom: 16px;
   }
-  
+
   .card-title {
     font-size: 16px;
   }
-  
+
   .profile-name {
     font-size: 18px;
   }
-  
+
   .avatar-container::after {
     width: 100px;
     height: 100px;
@@ -439,27 +422,23 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
   .student-dashboard {
     padding: 10px;
   }
-  
+
   .card-header {
     padding: 12px 0;
   }
-  
+
   .avatar-container {
     margin-bottom: 12px;
   }
-  
+
   .profile-name {
     font-size: 16px;
     margin: 12px 0 8px;
   }
-  
+
   .job-title, .job-status, .job-feedback {
     font-size: 13px;
     margin: 8px 0;
-  }
-  
-  .job-list {
-    gap: 12px;
   }
 }
 </style>

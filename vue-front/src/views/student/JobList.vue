@@ -1,12 +1,24 @@
 <template>
   <div class="job-list-page responsive-padding job-list-container">
     <div class="page-header">
-      <h2 class="page-title">职位列表</h2>
+      <div class="title-section">
+        <el-button
+          v-if="showBackButton"
+          @click="goBack"
+          type="primary"
+          plain
+          class="back-button"
+        >
+          <el-icon class="back-icon"><ArrowLeft /></el-icon>
+          <span class="back-text">返回</span>
+        </el-button>
+        <h2 class="page-title">职位列表</h2>
+      </div>
       <div class="header-actions">
-        <el-button 
-          type="primary" 
-          plain 
-          size="small" 
+        <el-button
+          type="primary"
+          plain
+          size="small"
           icon="Filter"
           class="filter-button show-on-mobile"
           @click="showFilterForm = !showFilterForm"
@@ -15,7 +27,7 @@
         </el-button>
       </div>
     </div>
-    <el-card shadow="never" class="filter-card responsive-card">
+    <el-card shadow="hover" class="filter-card responsive-card">
       <!-- 搜索表单 -->
       <el-form
         :inline="true"
@@ -24,23 +36,46 @@
         class="filter-form"
         :class="{ 'mobile-hidden': !showFilterForm && isMobileView }"
       >
-        <el-form-item label="关键词">
-          <el-input v-model="listQuery.keyword" placeholder="职位名称/公司" clearable @clear="handleFilter"/>
-        </el-form-item>
-        <el-form-item label="地点">
-          <el-input v-model="listQuery.location" placeholder="城市" clearable @clear="handleFilter"/>
-        </el-form-item>
-        <el-form-item label="职位类型">
-          <el-select v-model="listQuery.job_type" placeholder="选择类型" clearable @change="handleFilter">
-            <el-option label="全职" value="全职"></el-option>
-            <el-option label="兼职" value="兼职"></el-option>
-            <el-option label="实习" value="实习"></el-option>
-          </el-select>
-        </el-form-item>
-        <!-- Add more filters as needed (experience, education, salary) -->
-        <el-form-item>
-          <el-button type="primary" @click="handleFilter" :icon="Search">搜索</el-button>
-        </el-form-item>
+        <div class="search-form-container">
+          <div class="search-inputs-group">
+            <el-form-item label="关键词" class="search-form-item">
+              <el-input
+                v-model="listQuery.keyword"
+                placeholder="职位名称/公司"
+                clearable
+                @clear="handleFilter"
+                prefix-icon="Search"
+              />
+            </el-form-item>
+            <el-form-item label="地点" class="search-form-item">
+              <el-input
+                v-model="listQuery.location"
+                placeholder="城市"
+                clearable
+                @clear="handleFilter"
+                prefix-icon="Location"
+              />
+            </el-form-item>
+            <el-form-item label="职位类型" class="search-form-item">
+              <el-select
+                v-model="listQuery.job_type"
+                placeholder="选择类型"
+                clearable
+                @change="handleFilter"
+                class="type-select"
+              >
+                <el-option label="全职" value="全职"></el-option>
+                <el-option label="兼职" value="兼职"></el-option>
+                <el-option label="实习" value="实习"></el-option>
+              </el-select>
+            </el-form-item>
+          </div>
+          <div class="search-button-group">
+            <el-form-item class="search-button-item">
+              <el-button type="primary" @click="handleFilter" :icon="Search" class="search-button">搜索</el-button>
+            </el-form-item>
+          </div>
+        </div>
       </el-form>
     </el-card>
 
@@ -72,15 +107,21 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useJobStore } from '@/stores/job';
 import JobCard from '@/components/common/JobCard.vue';
 import Pagination from '@/components/common/Pagination.vue';
 import type { JobListParams } from '@/types/job';
-import { Search, Filter } from '@element-plus/icons-vue';
+import { Search, Filter, ArrowLeft } from '@element-plus/icons-vue';
 
 const router = useRouter();
+const route = useRoute();
 const jobStore = useJobStore();
+
+// 判断是否显示返回按钮（只在/jobs路径下显示，在/student/jobs下不显示）
+const showBackButton = computed(() => {
+  return route.path === '/jobs';
+});
 
 // 移动端适配相关变量
 // 是否显示筛选表单（移动端默认隐藏）
@@ -134,6 +175,17 @@ const clearFilters = () => {
   handleFilter();
 };
 
+// 返回上一页
+const goBack = () => {
+  router.go(-1); // 返回上一页
+  // 如果没有上一页，则返回首页
+  setTimeout(() => {
+    if (router.currentRoute.value.fullPath === '/jobs') {
+      router.push('/');
+    }
+  }, 100);
+};
+
 onMounted(() => {
   // 添加窗口大小变化监听
   window.addEventListener('resize', handleResize);
@@ -171,6 +223,37 @@ onUnmounted(() => {
   position: relative;
 }
 
+.title-section {
+  display: flex;
+  align-items: center;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  height: 32px;
+  box-sizing: border-box;
+  margin-right: 15px;
+}
+
+.back-icon {
+  margin-right: 4px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  height: 14px;
+}
+
+.back-text {
+  font-size: 14px;
+  line-height: 14px;
+  height: 14px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .page-title {
   font-size: 1.8rem;
   font-weight: 600;
@@ -198,8 +281,53 @@ onUnmounted(() => {
 
 .filter-card {
   margin-bottom: 20px;
-  border-radius: 8px;
+  border-radius: 12px;
   transition: all 0.3s;
+  padding: 20px;
+}
+
+/* 搜索表单容器 */
+.search-form-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: 15px;
+}
+
+.search-inputs-group {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1;
+  gap: 15px;
+}
+
+.search-form-item {
+  margin-right: 0 !important;
+  margin-bottom: 0 !important;
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-button-group {
+  display: flex;
+  align-items: flex-end;
+}
+
+.search-button-item {
+  margin-right: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.search-button {
+  min-width: 100px;
+  height: 40px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.type-select {
+  width: 100%;
 }
 
 /* Make form items wrap nicely */
@@ -243,6 +371,15 @@ onUnmounted(() => {
     font-size: 1.5rem;
   }
 
+  .title-section {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .back-button {
+    margin-right: 10px;
+  }
+
   .filter-card {
     margin-bottom: 15px;
   }
@@ -259,6 +396,29 @@ onUnmounted(() => {
   .filter-form {
     display: flex;
     flex-direction: column;
+  }
+
+  .search-form-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .search-inputs-group {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .search-form-item {
+    width: 100%;
+  }
+
+  .search-button-group {
+    width: 100%;
+  }
+
+  .search-button {
+    width: 100%;
   }
 
   .filter-form .el-form-item {
@@ -294,7 +454,7 @@ onUnmounted(() => {
   .responsive-padding {
     padding: 10px;
   }
-  
+
   .show-on-mobile {
     display: block !important;
   }

@@ -1,64 +1,44 @@
 <template>
   <div class="app-wrapper">
-    <!-- Sidebar -->
-    <aside class="sidebar-container" :class="{ 'is-collapsed': isCollapsed }">
-      <div class="sidebar-logo">
-        <span>管理后台</span>
-      </div>
-      <el-scrollbar>
-        <el-menu
-          router
-          :default-active="activeMenu"
-          :collapse="isCollapsed"
-          class="sidebar-menu"
-        >
-          <el-menu-item index="/admin/dashboard">
-            <el-icon><Platform /></el-icon>
-            <template #title>工作台</template>
-          </el-menu-item>
-          <el-menu-item index="/admin/users">
-            <el-icon><User /></el-icon>
-            <template #title>用户管理</template>
-          </el-menu-item>
-          <el-menu-item index="/admin/companies">
-            <el-icon><OfficeBuilding /></el-icon>
-            <template #title>企业审核</template>
-          </el-menu-item>
-        </el-menu>
-      </el-scrollbar>
-      <!-- 折叠按钮 -->
-      <div class="collapse-button" @click="toggleCollapse">
-        <el-icon>
-          <component :is="isCollapsed ? Expand : Fold" />
-        </el-icon>
-      </div>
-    </aside>
+    <!-- Navbar - Now at the top of the entire layout -->
+    <header class="navbar-container">
+      <Navbar />
+    </header>
 
-    <!-- Main Container (includes Navbar and Content) -->
-    <div class="main-container" :class="{ 'sidebar-collapsed': isCollapsed }">
-      <!-- Navbar -->
-      <header class="navbar-container">
-        <div class="navbar-content">
-          <div class="breadcrumb-area">
-            <!-- 面包屑导航可以在这里添加 -->
-          </div>
-
-          <div class="spacer"></div>
-
-          <div class="user-info">
-            <el-dropdown @command="handleCommand">
-              <span class="el-dropdown-link">
-                管理员 <el-icon><arrow-down /></el-icon>
-              </span>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="logout">退出登录</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </div>
+    <div class="content-wrapper">
+      <!-- Sidebar - Now below navbar -->
+      <aside class="sidebar-container" :class="{ 'is-collapsed': isCollapsed }">
+        <el-scrollbar>
+          <el-menu
+            router
+            :default-active="activeMenu"
+            :collapse="isCollapsed"
+            class="sidebar-menu"
+          >
+            <el-menu-item index="/admin/dashboard">
+              <el-icon><Platform /></el-icon>
+              <template #title>工作台</template>
+            </el-menu-item>
+            <el-menu-item index="/admin/users">
+              <el-icon><User /></el-icon>
+              <template #title>用户管理</template>
+            </el-menu-item>
+            <el-menu-item index="/admin/companies">
+              <el-icon><OfficeBuilding /></el-icon>
+              <template #title>企业审核</template>
+            </el-menu-item>
+          </el-menu>
+        </el-scrollbar>
+        <!-- 折叠按钮 -->
+        <div class="collapse-button" @click="toggleCollapse">
+          <el-icon>
+            <component :is="isCollapsed ? Expand : Fold" />
+          </el-icon>
         </div>
-      </header>
+      </aside>
+
+      <!-- Main Container -->
+      <div class="main-container" :class="{ 'sidebar-collapsed': isCollapsed }">
 
       <!-- Main Content Area -->
       <main class="app-main">
@@ -74,6 +54,7 @@
           </div>
         </div>
       </main>
+      </div>
     </div>
   </div>
 </template>
@@ -83,6 +64,7 @@ import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { Platform, User, OfficeBuilding, ArrowDown, Fold, Expand } from '@element-plus/icons-vue';
+import Navbar from '@/components/common/Navbar.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -114,35 +96,37 @@ const handleCommand = async (command: string) => {
   position: relative;
   height: 100vh;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar-container {
+  height: 60px;
+  width: 100%;
+  background-color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  z-index: 1002; /* 确保导航栏在最上层 */
+}
+
+.content-wrapper {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 
 .sidebar-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
+  position: relative;
   width: 200px;
-  height: 100%;
-  z-index: 1001;
+  height: calc(100vh - 60px); /* 减去导航栏高度 */
   transition: width 0.28s;
   overflow: hidden;
+  z-index: 1001;
   background-color: #304156;
   color: #bfcbd9;
 }
 
 .sidebar-container.is-collapsed {
   width: 64px;
-}
-
-.sidebar-logo {
-  height: 60px;
-  line-height: 60px;
-  text-align: center;
-  font-size: 18px;
-  font-weight: bold;
-  color: #fff;
-  background-color: #2b2f3a;
-  overflow: hidden;
 }
 
 .sidebar-menu {
@@ -179,45 +163,16 @@ const handleCommand = async (command: string) => {
 
 .main-container {
   position: relative;
-  height: 100vh;
-  margin-left: 200px;
+  height: calc(100vh - 60px); /* 减去导航栏高度 */
   width: calc(100% - 200px);
-  transition: margin-left 0.28s, width 0.28s;
+  transition: width 0.28s;
   display: flex;
   flex-direction: column;
   background-color: #f0f2f5;
 }
 
 .sidebar-collapsed {
-  margin-left: 64px;
   width: calc(100% - 64px);
-}
-
-.navbar-container {
-  height: 60px;
-  width: 100%;
-  background-color: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.navbar-content {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  padding: 0 20px;
-}
-
-.breadcrumb-area {
-  display: flex;
-  align-items: center;
-}
-
-.spacer {
-  flex-grow: 1;
-}
-
-.user-info {
-  cursor: pointer;
 }
 
 .app-main {

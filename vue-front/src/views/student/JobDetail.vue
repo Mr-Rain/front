@@ -1,7 +1,10 @@
 <template>
   <div class="job-detail-page" v-loading="jobStore.loadingDetail">
     <div class="page-header">
-      <el-button @click="goBack" type="primary" plain icon="ArrowLeft">返回</el-button>
+      <el-button @click="goBack" type="primary" plain class="back-button">
+        <el-icon class="back-icon"><ArrowLeft /></el-icon>
+        <span class="back-text">返回</span>
+      </el-button>
       <h2 class="page-title">职位详情</h2>
     </div>
     <el-breadcrumb :separator-icon="ArrowRight" class="breadcrumb-nav">
@@ -62,6 +65,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useJobStore } from '@/stores/job';
 import { useApplicationStore } from '@/stores/application';
 import { useResumeStore } from '@/stores/resume';
+import { useUserStore } from '@/stores/user';
 import { ElCard, ElButton, ElEmpty, ElIcon, ElBreadcrumb, ElBreadcrumbItem, ElImage } from 'element-plus';
 import { Location, Briefcase, DataAnalysis, Reading, ArrowRight, Pointer, ArrowLeft } from '@element-plus/icons-vue';
 import { marked } from 'marked'; // Assuming marked is installed for markdown
@@ -73,6 +77,7 @@ const router = useRouter(); // Use router for navigation if needed
 const jobStore = useJobStore();
 const applicationStore = useApplicationStore();
 const resumeStore = useResumeStore();
+const userStore = useUserStore();
 
 const jobId = ref<string | null>(null);
 
@@ -110,6 +115,20 @@ const fetchJobData = async (id: string) => {
 const handleApply = async () => {
   if (!jobStore.currentJob?.id) {
     ElMessage.error('无法获取职位信息');
+    return;
+  }
+
+  // 检查用户是否已登录
+  if (!userStore.token || !userStore.userInfo) {
+    ElMessage.warning('请先登录后再申请职位');
+    // 保存当前页面路径，登录后可以返回
+    router.push(`/login?redirect=${encodeURIComponent(route.fullPath)}`);
+    return;
+  }
+
+  // 检查用户是否是学生角色
+  if (userStore.userInfo.user_type !== 'student') {
+    ElMessage.warning('只有学生用户才能申请职位');
     return;
   }
 
@@ -187,6 +206,31 @@ watch(() => route.params.id, (newId) => {
   display: flex;
   align-items: center;
   margin-bottom: 20px;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  height: 32px;
+  box-sizing: border-box;
+}
+
+.back-icon {
+  margin-right: 4px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  height: 14px;
+}
+
+.back-text {
+  font-size: 14px;
+  line-height: 14px;
+  height: 14px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .page-title {

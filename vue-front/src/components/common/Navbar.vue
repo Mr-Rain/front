@@ -3,49 +3,45 @@
     <!-- 移动端菜单 - 仅在小屏幕显示 -->
     <MobileMenu class="mobile-menu-component" />
 
-    <div class="logo-area">
-      <router-link to="/">
-        <!-- Replace with your actual logo or text -->
-        <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="logo-img" />
-        <span v-else class="logo-text">校园招聘</span>
-      </router-link>
+    <div class="left-section">
+      <div class="logo-area">
+        <router-link to="/" class="logo-link">
+          <!-- Replace with your actual logo or text -->
+          <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="logo-img" />
+          <span v-else class="logo-text">校园招聘</span>
+        </router-link>
+      </div>
+
+      <!-- 导航链接 -->
+      <div class="nav-links hide-on-mobile">
+        <router-link to="/jobs" class="nav-link" :class="{ 'active': activeIndex === '/jobs' }">职位列表</router-link>
+        <router-link to="/companies" class="nav-link" :class="{ 'active': activeIndex === '/companies' }">企业列表</router-link>
+      </div>
     </div>
 
-      <!-- 导航菜单 - 在大屏幕显示 -->
-      <el-menu
-        mode="horizontal"
-        :ellipsis="false"
-        :default-active="activeIndex"
-        class="nav-menu hide-on-mobile"
-        router
+    <!-- 搜索框 -->
+    <div class="search-container hide-on-mobile">
+      <el-autocomplete
+        v-model="searchQuery"
+        :fetch-suggestions="querySearch"
+        placeholder="搜索功能、页面或内容..."
+        @select="handleSelect"
+        class="search-input"
+        :trigger-on-focus="false"
+        :highlight-first-item="true"
+        popper-class="search-suggestions-popper"
       >
-        <el-menu-item index="/">首页</el-menu-item>
-        <el-menu-item index="/jobs">职位列表</el-menu-item>
-        <!-- 学生角色菜单 -->
-        <el-sub-menu v-if="userStore.userInfo?.user_type === 'student'" index="/student">
-          <template #title>学生中心</template>
-          <el-menu-item index="/student/dashboard">个人工作台</el-menu-item>
-          <el-menu-item index="/student/profile">个人信息</el-menu-item>
-          <el-menu-item index="/student/resume">我的简历</el-menu-item>
-          <el-menu-item index="/student/applications">我的申请</el-menu-item>
-          <el-menu-item index="/student/recommendations">推荐职位</el-menu-item>
-        </el-sub-menu>
-        <!-- 企业角色菜单 -->
-        <el-sub-menu v-if="userStore.userInfo?.user_type === 'company'" index="/company">
-          <template #title>企业中心</template>
-          <el-menu-item index="/company/dashboard">企业工作台</el-menu-item>
-          <el-menu-item index="/company/profile">企业信息</el-menu-item>
-          <el-menu-item index="/company/jobs">职位管理</el-menu-item>
-          <el-menu-item index="/company/applications">申请管理</el-menu-item>
-        </el-sub-menu>
-        <!-- 管理员角色菜单 -->
-        <el-sub-menu v-if="userStore.userInfo?.user_type === 'admin'" index="/admin">
-          <template #title>管理中心</template>
-          <el-menu-item index="/admin/dashboard">管理工作台</el-menu-item>
-          <el-menu-item index="/admin/users">用户管理</el-menu-item>
-          <el-menu-item index="/admin/companies">企业审核</el-menu-item>
-        </el-sub-menu>
-      </el-menu>
+        <template #prefix>
+          <el-icon class="search-icon"><Search /></el-icon>
+        </template>
+        <template #default="{ item }">
+          <div class="search-suggestion-item">
+            <el-icon v-if="item.icon"><component :is="item.icon" /></el-icon>
+            <span>{{ item.value }}</span>
+          </div>
+        </template>
+      </el-autocomplete>
+    </div>
 
       <div class="spacer"></div>
 
@@ -79,7 +75,18 @@ import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { ArrowDown } from '@element-plus/icons-vue';
+import {
+  ArrowDown,
+  Search,
+  User,
+  Briefcase,
+  Document,
+  DataAnalysis,
+  Setting,
+  OfficeBuilding,
+  Collection,
+  ChatLineRound
+} from '@element-plus/icons-vue';
 import MobileMenu from './MobileMenu.vue';
 
 const router = useRouter();
@@ -88,9 +95,76 @@ const userStore = useUserStore();
 
 const logoUrl = ref(''); // Optional: Provide URL for logo image
 const defaultAvatar = ref('https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'); // Default avatar
+const searchQuery = ref('');
 
 // Computed property for active menu item based on current route
 const activeIndex = computed(() => route.path);
+
+// 搜索建议数据
+interface SearchSuggestion {
+  value: string;
+  path: string;
+  icon?: any;
+  description?: string;
+}
+
+// 定义搜索建议列表
+const getSearchSuggestions = (): SearchSuggestion[] => {
+  const commonSuggestions: SearchSuggestion[] = [
+    { value: '首页', path: '/', icon: DataAnalysis },
+    { value: '职位列表', path: '/jobs', icon: Briefcase },
+  ];
+
+  // 根据用户角色添加不同的搜索建议
+  const userType = userStore.userInfo?.user_type;
+
+  if (userType === 'student') {
+    return [
+      ...commonSuggestions,
+      { value: '个人工作台', path: '/student/dashboard', icon: DataAnalysis },
+      { value: '个人信息', path: '/student/profile', icon: User },
+      { value: '我的简历', path: '/student/resume', icon: Document },
+      { value: '我的申请', path: '/student/applications', icon: Collection },
+      { value: '推荐职位', path: '/student/recommendations', icon: Briefcase },
+    ];
+  } else if (userType === 'company') {
+    return [
+      ...commonSuggestions,
+      { value: '企业工作台', path: '/company/dashboard', icon: DataAnalysis },
+      { value: '企业信息', path: '/company/profile', icon: OfficeBuilding },
+      { value: '职位管理', path: '/company/jobs', icon: Briefcase },
+      { value: '申请管理', path: '/company/applications', icon: ChatLineRound },
+    ];
+  } else if (userType === 'admin') {
+    return [
+      ...commonSuggestions,
+      { value: '管理工作台', path: '/admin/dashboard', icon: DataAnalysis },
+      { value: '用户管理', path: '/admin/users', icon: User },
+      { value: '企业审核', path: '/admin/companies', icon: OfficeBuilding },
+    ];
+  }
+
+  return userStore.token ? commonSuggestions : [
+    ...commonSuggestions,
+    { value: '登录', path: '/login', icon: User },
+    { value: '注册', path: '/register', icon: User },
+  ];
+};
+
+// 搜索建议过滤函数
+const querySearch = (queryString: string, cb: (arg: SearchSuggestion[]) => void) => {
+  const suggestions = getSearchSuggestions();
+  const results = queryString
+    ? suggestions.filter(item => item.value.toLowerCase().includes(queryString.toLowerCase()))
+    : suggestions;
+  cb(results);
+};
+
+// 处理搜索选择
+const handleSelect = (item: SearchSuggestion) => {
+  router.push(item.path);
+  searchQuery.value = ''; // 清空搜索框
+};
 
 const goToLogin = () => {
   router.push('/login');
@@ -153,6 +227,13 @@ const handleUserCommand = async (command: string | number | object) => {
   display: flex;
   align-items: center;
   margin-right: 40px;
+  min-width: 120px;
+}
+
+.logo-link {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
 }
 
 .logo-img {
@@ -161,24 +242,124 @@ const handleUserCommand = async (command: string | number | object) => {
 }
 
 .logo-text {
-  font-size: 1.4em;
+  font-size: 1.6em;
   font-weight: bold;
   color: var(--el-color-primary);
   vertical-align: middle;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Remove border from horizontal menu */
-.nav-menu {
-  border-bottom: none !important;
-  height: 100%;
+/* 左侧区域样式 */
+.left-section {
+  display: flex;
+  align-items: center;
 }
 
-/* Adjust menu item padding/styles if needed */
-.el-menu--horizontal > .el-menu-item {
-    border-bottom: none;
-    height: 100%;
-    display: inline-flex; /* Align items vertically */
-    align-items: center;
+/* 导航链接样式 */
+.nav-links {
+  display: flex;
+  margin-left: 20px;
+}
+
+.nav-link {
+  padding: 0 15px;
+  height: 60px;
+  line-height: 60px;
+  color: var(--el-text-color-primary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.nav-link:hover {
+  color: var(--el-color-primary);
+}
+
+.nav-link.active {
+  color: var(--el-color-primary);
+  font-weight: 500;
+}
+
+.nav-link.active:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 15px;
+  right: 15px;
+  height: 2px;
+  background-color: var(--el-color-primary);
+}
+
+/* 搜索框样式 */
+.search-container {
+  margin-left: auto;
+  margin-right: 20px;
+  width: 260px;
+  transition: width 0.3s ease;
+}
+
+.search-container:hover {
+  width: 300px;
+}
+
+.search-input {
+  width: 100%;
+}
+
+:deep(.el-input__wrapper) {
+  border-radius: 20px;
+  padding-left: 15px;
+  transition: all 0.3s;
+  box-shadow: 0 0 0 1px var(--el-border-color) inset;
+  background-color: #f5f7fa;
+}
+
+:deep(.el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px var(--el-color-primary) inset;
+  background-color: #fff;
+}
+
+:deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px var(--el-color-primary) inset;
+  background-color: #fff;
+}
+
+.search-icon {
+  color: #909399;
+  font-size: 16px;
+}
+
+:deep(.el-input__inner) {
+  font-size: 14px;
+}
+
+:deep(.el-input__inner::placeholder) {
+  color: #909399;
+}
+
+.search-suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.search-suggestion-item:hover {
+  background-color: #f5f7fa;
+}
+
+.search-suggestion-item .el-icon {
+  margin-right: 10px;
+  font-size: 16px;
+  color: var(--el-color-primary);
+}
+
+:deep(.search-suggestions-popper) {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .spacer {
@@ -221,11 +402,19 @@ const handleUserCommand = async (command: string | number | object) => {
     display: block; /* 在小屏幕上显示移动端菜单 */
   }
 
-  .logo-area {
-    margin: 0 auto; /* 将logo居中显示 */
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .left-section {
     flex-grow: 1;
-    display: flex;
     justify-content: center;
+  }
+
+  .logo-area {
+    margin: 0;
+    display: flex;
+    justify-content: center; /* 居中对齐 */
   }
 
   .navbar-content {
@@ -234,11 +423,19 @@ const handleUserCommand = async (command: string | number | object) => {
 
   /* 在移动端上调整logo大小 */
   .logo-text {
-    font-size: 1.2em;
+    font-size: 1.3em; /* 稍微增大字体，使其更突出 */
   }
 
   .logo-img {
     height: 32px;
+  }
+
+  /* 移动端搜索框样式 - 如果需要在移动端显示 */
+  .search-container.show-on-mobile {
+    display: block !important;
+    width: 100%;
+    margin: 10px 0;
+    padding: 0 15px;
   }
 }
 
@@ -249,12 +446,24 @@ const handleUserCommand = async (command: string | number | object) => {
   }
 
   .logo-area {
-    margin-right: 20px;
+    margin-right: 15px;
   }
 
-  /* 减少菜单项间距 */
-  .el-menu--horizontal > .el-menu-item {
-    padding: 0 15px;
+  .nav-links {
+    margin-left: 10px;
+  }
+
+  .nav-link {
+    padding: 0 10px;
+  }
+
+  .search-container {
+    width: 200px;
+    margin-right: 15px;
+  }
+
+  .search-container:hover {
+    width: 240px;
   }
 }
 </style>
