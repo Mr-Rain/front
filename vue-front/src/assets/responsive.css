@@ -1,0 +1,186 @@
+/* 响应式工具类和变量 */
+
+/* 响应式断点 */
+:root {
+  --breakpoint-xs: 576px;
+  --breakpoint-sm: 768px;
+  --breakpoint-md: 992px;
+  --breakpoint-lg: 1200px;
+  --breakpoint-xl: 1400px;
+}
+
+/* 响应式容器 */
+.container {
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+/* 响应式间距 */
+.responsive-padding {
+  padding: 20px;
+}
+
+/* 响应式显示/隐藏类 */
+.hide-on-mobile {
+  display: initial;
+}
+
+.show-on-mobile {
+  display: none;
+}
+
+/* 响应式栅格辅助类 */
+.flex-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 媒体查询 */
+@media (max-width: 576px) {
+  .container {
+    max-width: 100%;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .responsive-padding {
+    padding: 10px;
+  }
+
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .show-on-mobile {
+    display: initial !important;
+  }
+}
+
+@media (min-width: 576px) {
+  .container {
+    max-width: 540px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;
+  }
+}
+
+@media (min-width: 992px) {
+  .container {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1140px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .container {
+    max-width: 1320px;
+  }
+}
+
+/* 响应式文本类 */
+.text-center-xs {
+  text-align: inherit;
+}
+
+@media (max-width: 576px) {
+  .text-center-xs {
+    text-align: center;
+  }
+
+  /* 修复移动端布局问题 */
+  .el-container {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .el-main {
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* 确保卡片内容不溢出 */
+  .el-card__body {
+    padding: 15px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* 响应式间距调整 */
+.mb-xs-2 {
+  margin-bottom: inherit;
+}
+
+@media (max-width: 576px) {
+  .mb-xs-2 {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* 卡片布局优化 */
+.responsive-card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  height: 100%;
+  width: 100%; /* 确保卡片占据全宽 */
+  box-sizing: border-box; /* 包含内边距和边框 */
+}
+
+.responsive-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--el-box-shadow-lighter);
+}
+
+/* 表格响应式优化 */
+.responsive-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* 表单响应式优化 */
+.responsive-form .el-form-item__label {
+  font-weight: 500;
+}
+
+@media (max-width: 576px) {
+  /* 修复Element Plus在移动端的一些布局问题 */
+  .el-form-item__label {
+    padding-bottom: 5px;
+  }
+
+  .el-card__header {
+    padding: 12px 15px;
+  }
+
+  .el-card__body {
+    padding: 15px;
+  }
+
+  /* 修复行间距问题 */
+  .el-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .el-col {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+  }
+}

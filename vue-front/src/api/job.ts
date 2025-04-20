@@ -1,5 +1,5 @@
 import request from '@/utils/request';
-import type { JobInfo, JobListParams } from '@/types/job';
+import type { JobInfo, JobListParams, JobStatus } from '@/types/job';
 // TODO: 定义分页响应类型 PaginatedResponse<T>
 
 // 获取职位列表 (带筛选和分页)
@@ -127,4 +127,21 @@ export function deleteJob(id: string | number) {
     url: `/api/company/jobs/${id}`,
     method: 'delete',
   });
+}
+
+// --- Placeholder for missing API function ---
+// (企业端) 更新职位状态
+export function updateJobStatus(jobId: string | number, status: JobStatus): Promise<any> {
+  console.warn(`API MOCK: updateJobStatus(${jobId}, ${status}) called.`);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ data: { success: true } }); // Mock success response
+    }, 300);
+  });
+  // Replace with actual API call:
+  // return request({
+  //   url: `/api/company/jobs/${jobId}/status`,
+  //   method: 'patch', // or 'put'
+  //   data: { status },
+  // });
 } 

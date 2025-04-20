@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import type { JobInfo, JobListParams, JobStatus } from '@/types/job';
-import { getJobList, getJobDetail, getCompanyJobList, createJob as createJobApi, updateJob as updateJobApi, updateJobStatus as updateJobStatusApi, deleteJob as deleteJobApi } from '@/api/job';
+import { getJobList, getJobDetail, createJob, updateJob, deleteJob } from '@/api/job';
+import { updateJobStatus } from '@/api/job';
+import { getCompanyJobList } from '@/api/company';
 import { ElMessage } from 'element-plus';
 
 interface JobState {
@@ -84,7 +86,6 @@ export const useJobStore = defineStore('job', {
     async fetchCompanyJobList(params: any = {}) {
         this.loadingCompanyList = true;
         try {
-            // TODO: Ensure getCompanyJobList API exists and handles company context
             const response = await getCompanyJobList(params);
             this.companyJobList = response.data.list;
             this.companyJobTotal = response.data.total;
@@ -101,8 +102,7 @@ export const useJobStore = defineStore('job', {
     async createJob(data: Partial<JobInfo>) {
         this.submitting = true;
         try {
-            // TODO: Ensure createJobApi exists
-            const response = await createJobApi(data);
+            const response = await createJob(data);
             ElMessage.success('职位发布成功');
             await this.fetchCompanyJobList(); // Refresh list
             return response.data; // Return created job info if needed
@@ -118,8 +118,7 @@ export const useJobStore = defineStore('job', {
     async updateJob(id: string | number, data: Partial<JobInfo>) {
         this.submitting = true;
         try {
-             // TODO: Ensure updateJobApi exists
-            await updateJobApi(id, data);
+            await updateJob(id, data);
             ElMessage.success('职位信息更新成功');
             await this.fetchCompanyJobList(); // Refresh list
             // Also update currentJob if it matches
@@ -138,8 +137,7 @@ export const useJobStore = defineStore('job', {
     async updateJobStatus(id: string | number, status: JobStatus) {
         this.submitting = true;
         try {
-            // TODO: Ensure updateJobStatusApi exists
-            await updateJobStatusApi(id, { status });
+            await updateJobStatus(id, status);
             ElMessage.success(`职位状态已更新为 ${status === 'open' ? '招聘中' : '已关闭'}`);
             // Refresh the list to reflect status change
             const index = this.companyJobList.findIndex(job => job.id === id);
@@ -162,8 +160,7 @@ export const useJobStore = defineStore('job', {
     async deleteJob(id: string | number) {
         this.submitting = true;
         try {
-            // TODO: Ensure deleteJobApi exists
-            await deleteJobApi(id);
+            await deleteJob(id);
             ElMessage.success('职位删除成功');
             await this.fetchCompanyJobList(); // Refresh list
              // Clear current job if it was deleted

@@ -1,10 +1,13 @@
 <template>
-  <div class="resume-manage-page" v-loading="resumeStore.loadingList">
-    <el-card shadow="never" class="page-card">
+  <div class="resume-manage-page responsive-padding" v-loading="resumeStore.loadingList">
+    <el-card shadow="never" class="page-card responsive-card">
       <template #header>
         <div class="card-header">
           <span>我的简历</span>
-          <el-button type="primary" :icon="UploadFilled" @click="handleUploadResume">上传新简历</el-button>
+          <el-button type="primary" :icon="UploadFilled" @click="handleUploadResume">
+            <span class="hide-on-mobile">上传新简历</span>
+            <span class="show-on-mobile">上传</span>
+          </el-button>
         </div>
       </template>
 
@@ -25,8 +28,11 @@
               </div>
               <template #footer>
                  <div class="resume-actions">
-                   <el-button type="primary" link size="small" @click="handleSetDefault(resume.id)" :disabled="resume.is_default">设为默认</el-button>
-                   <el-button link size="small" @click="handlePreview(resume)">预览</el-button> 
+                   <el-button type="primary" link size="small" @click="handleSetDefault(resume.id)" :disabled="resume.is_default">
+                     <span class="hide-on-mobile">设为默认</span>
+                     <span class="show-on-mobile">默认</span>
+                   </el-button>
+                   <el-button link size="small" @click="handlePreview(resume)">预览</el-button>
                    <el-button link size="small" @click="handleEdit(resume.id)">编辑</el-button>
                    <el-popconfirm title="确定删除这份简历吗?" @confirm="handleDelete(resume.id)">
                      <template #reference>
@@ -47,14 +53,14 @@
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px" :close-on-click-modal="false">
        <!-- Upload Section (only for new resumes) -->
         <div v-if="!currentResumeId">
-             <ResumeUploader 
-                ref="uploaderRef" 
+             <ResumeUploader
+                ref="uploaderRef"
                 @upload-success="handleUploadSuccess"
-                :limit="1" 
+                :limit="1"
                 drag
              />
-             <el-input 
-                v-model="newResumeTitle" 
+             <el-input
+                v-model="newResumeTitle"
                 placeholder="请输入简历标题 (可选，默认为文件名)"
                 style="margin-top: 15px;"
              />
@@ -110,7 +116,7 @@ const formatTime = (timeStr: string | undefined): string => {
   if (!timeStr) return '未知';
   try {
     // More user-friendly format
-    return new Date(timeStr).toLocaleString(); 
+    return new Date(timeStr).toLocaleString();
   } catch (e) {
     return timeStr;
   }
@@ -176,7 +182,7 @@ const handleUploadSuccess = (response: any) => { // Argument type depends on upl
     dialogVisible.value = false;
     fetchResumes(); // Refresh the list
     // Optionally pass the title if the uploader doesn't handle it
-    // resumeStore.updateResume(response.id, { title: newResumeTitle.value }); 
+    // resumeStore.updateResume(response.id, { title: newResumeTitle.value });
 };
 
 const handleSubmitResume = async () => {
@@ -216,9 +222,7 @@ const closeDialog = () => {
   padding: 20px;
 }
 
-.page-card {
-  /* Styles for the main card */
-}
+/* 暂时移除空的.page-card样式，需要时再添加 */
 
 .card-header {
   display: flex;
@@ -231,10 +235,16 @@ const closeDialog = () => {
   height: 100%; /* Make cards in a row equal height */
   display: flex;
   flex-direction: column;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.resume-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--el-box-shadow-lighter);
 }
 
 .resume-card :deep(.el-card__body) {
-    flex-grow: 1; /* Allow body to grow */
+  flex-grow: 1; /* Allow body to grow */
 }
 
 .resume-card-header {
@@ -261,16 +271,64 @@ const closeDialog = () => {
 }
 
 .resume-actions {
-    display: flex;
-    justify-content: space-around; /* Distribute buttons evenly */
-    align-items: center;
-    flex-wrap: wrap; /* Wrap buttons if needed */
-    gap: 5px; /* Spacing between buttons */
+  display: flex;
+  justify-content: space-around; /* Distribute buttons evenly */
+  align-items: center;
+  flex-wrap: wrap; /* Wrap buttons if needed */
+  gap: 5px; /* Spacing between buttons */
 }
 
 .resume-actions .el-button {
-    padding: 0 5px; /* Adjust padding for link buttons */
+  padding: 0 5px; /* Adjust padding for link buttons */
 }
 
+/* 移动端适配 */
+@media (max-width: 576px) {
+  .resume-manage-page {
+    padding: 10px;
+  }
 
-</style> 
+  .card-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .resume-card {
+    margin-bottom: 15px;
+  }
+
+  .resume-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .resume-title {
+    margin-right: 0;
+    margin-bottom: 5px;
+  }
+
+  .resume-actions {
+    justify-content: flex-start;
+    padding: 5px 0;
+  }
+
+  /* 调整对话框宽度 */
+  :deep(.el-dialog) {
+    width: 90% !important;
+    max-width: 600px;
+  }
+}
+
+/* 平板设备适配 */
+@media (min-width: 577px) and (max-width: 992px) {
+  .resume-card-header {
+    flex-wrap: wrap;
+  }
+
+  .resume-title {
+    width: 100%;
+    margin-bottom: 5px;
+  }
+}
+</style>

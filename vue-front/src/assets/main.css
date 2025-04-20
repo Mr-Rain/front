@@ -1,10 +1,18 @@
 @import './base.css';
+@import './responsive.css';
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  /* Remove width restrictions and padding */
+  /* max-width: 1280px; */
+  /* margin: 0 auto; */
+  /* padding: 2rem; */
   font-weight: normal;
+  /* Let app occupy full width */
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden; /* 防止水平滚动条出现 */
 }
 
 a,
@@ -21,15 +29,51 @@ a,
   }
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
+/* 移动端优化 */
+@media (max-width: 576px) {
+  html, body {
+    font-size: 14px;
   }
 
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
+  .el-card {
+    margin-bottom: 10px;
+  }
+
+  .el-form-item {
+    margin-bottom: 15px;
+  }
+}
+
+/* 平板设备优化 */
+@media (min-width: 577px) and (max-width: 992px) {
+  html, body {
+    font-size: 15px;
+  }
+}
+
+/* 全局响应式表格样式 */
+.responsive-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* 全局响应式卡片样式 */
+.responsive-card {
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+/* 全局响应式表单样式 */
+.responsive-form .el-form-item__label {
+  font-size: inherit;
+}
+
+@media (max-width: 576px) {
+  .responsive-form .el-form-item {
+    margin-bottom: 12px;
+  }
+
+  .responsive-form .el-form-item__label {
+    padding-bottom: 4px;
   }
 }

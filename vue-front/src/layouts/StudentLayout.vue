@@ -1,83 +1,108 @@
 <template>
-  <el-container class="app-layout student-layout">
+  <div class="app-wrapper">
     <!-- Sidebar -->
-    <Sidebar class="sidebar-container" />
+    <Sidebar class="sidebar-container" @collapse-change="handleSidebarCollapse" />
 
-    <el-container class="main-container">
+    <!-- Main Container (includes Navbar and Content) -->
+    <div class="main-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
       <!-- Navbar -->
-      <Navbar />
+      <header class="navbar-container">
+        <Navbar />
+      </header>
 
       <!-- Main Content Area -->
-      <el-main class="app-main">
-        <el-scrollbar>
-          <router-view v-slot="{ Component, route }">
-            <transition name="fade-transform" mode="out-in">
-              <keep-alive> 
-                <component :is="Component" :key="route.path" />
-              </keep-alive>
-            </transition>
-          </router-view>
-        </el-scrollbar>
-      </el-main>
-
-      <!-- Optional Footer -->
-      <!-- <Footer /> -->
-    </el-container>
-  </el-container>
+      <main class="app-main">
+        <div class="el-scrollbar">
+          <div class="el-scrollbar__wrap el-scrollbar__wrap--hidden-default">
+            <div class="el-scrollbar__view">
+              <router-view v-slot="{ Component, route }">
+                <transition name="fade-transform" mode="out-in">
+                  <keep-alive>
+                    <component :is="Component" :key="route.path" />
+                  </keep-alive>
+                </transition>
+              </router-view>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
+// Reusing common components
 import Navbar from '@/components/common/Navbar.vue';
 import Sidebar from '@/components/common/Sidebar.vue';
-// import Footer from '@/components/common/Footer.vue'; // Optional
+
+// 侧边栏折叠状态
+const isSidebarCollapsed = ref(false);
+
+// 处理侧边栏折叠状态变化
+const handleSidebarCollapse = (collapsed: boolean) => {
+  isSidebarCollapsed.value = collapsed;
+};
 </script>
 
 <style lang="scss" scoped>
-.app-layout {
+.app-wrapper {
+  position: relative;
   height: 100vh;
-  background-color: #f0f2f5; /* Background for the main area */
+  width: 100%;
 }
 
 .sidebar-container {
-  // Sidebar styles are mostly handled within the Sidebar component itself
-  transition: width 0.28s;
-  height: 100%; 
-  position: fixed; /* Or relative depending on layout needs */
+  position: fixed;
   top: 0;
-  bottom: 0;
   left: 0;
+  bottom: 0;
+  width: 200px;
+  height: 100%;
   z-index: 1001;
+  transition: width 0.28s;
   overflow: hidden;
 }
 
 .main-container {
-  min-height: 100%;
-  transition: margin-left .28s;
-  // Adjust margin based on sidebar width (example)
-  margin-left: 200px; // Same as expanded sidebar width
   position: relative;
+  height: 100vh;
+  margin-left: 200px;
+  width: calc(100% - 200px);
+  transition: margin-left 0.28s, width 0.28s;
+  display: flex;
+  flex-direction: column;
+  background-color: #f0f2f5;
 }
 
-// Adjust main container margin when sidebar collapses (example)
-// You might need a global state (e.g., Pinia store) to track collapse state
-// .sidebar-collapsed .main-container {
-//   margin-left: 64px; 
-// }
+.sidebar-collapsed .main-container {
+  margin-left: 64px;
+  width: calc(100% - 64px);
+}
+
+.navbar-container {
+  height: 60px;
+  width: 100%;
+  background-color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
 
 .app-main {
-  /* Navbar height */
-  min-height: calc(100vh - 60px);
-  width: 100%;
-  position: relative;
+  flex: 1;
+  padding: 0;
   overflow: hidden;
-  padding: 20px; 
+  position: relative;
 }
 
-.el-main {
-    padding: 0; /* Remove default padding */
+.el-scrollbar {
+  height: 100%;
 }
 
-/* Transition for router view */
+.el-scrollbar__view {
+  padding: 20px;
+}
+
+/* Transition styles */
 .fade-transform-leave-active,
 .fade-transform-enter-active {
   transition: all .5s;
@@ -92,4 +117,4 @@ import Sidebar from '@/components/common/Sidebar.vue';
   opacity: 0;
   transform: translateX(30px);
 }
-</style> 
+</style>

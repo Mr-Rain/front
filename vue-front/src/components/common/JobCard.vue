@@ -40,7 +40,7 @@ const props = defineProps({
 const router = useRouter();
 
 // Provide a default logo if company logo is missing
-const defaultCompanyLogo = ref('https://cube.elemecdn.com/9/c2/f0ee8a3c7c9638a54940382568c9dpng.png'); 
+const defaultCompanyLogo = ref('https://cube.elemecdn.com/9/c2/f0ee8a3c7c9638a54940382568c9dpng.png');
 
 const handleClick = () => {
   // Navigate to job detail page
@@ -67,8 +67,9 @@ const handleClick = () => {
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start; /* 改为顶部对齐，避免标题和薪资不对齐 */
   margin-bottom: 10px;
+  gap: 10px; /* 添加间距，确保标题和薪资之间有足够空间 */
 }
 
 .title {
@@ -77,13 +78,15 @@ const handleClick = () => {
   color: #303133;
   /* Allow title to wrap */
   word-break: break-word;
-  margin-right: 10px; /* Space between title and salary */
+  flex: 1; /* 让标题占据剩余空间 */
+  min-width: 0; /* 确保flex项可以正确缩小 */
 }
 
 .salary {
   color: #e6a23c; /* Salary color */
   font-weight: bold;
   white-space: nowrap; /* Prevent salary from wrapping */
+  flex-shrink: 0; /* 防止薪资被压缩 */
 }
 
 .details {
@@ -97,10 +100,12 @@ const handleClick = () => {
 .details span {
   display: inline-flex;
   align-items: center;
+  white-space: nowrap; /* 防止内容换行 */
 }
 
 .details .el-icon {
   margin-right: 5px;
+  flex-shrink: 0; /* 防止图标被压缩 */
 }
 
 .tags {
@@ -135,13 +140,19 @@ const handleClick = () => {
     }
     .salary {
         font-size: 15px;
+        margin-top: 2px; /* 增加与标题的间距 */
     }
     .title {
         font-size: 15px;
+        width: 100%; /* 确保标题占据整行 */
     }
     .details {
         gap: 10px;
         font-size: 13px;
+        margin-top: 8px; /* 增加与上方内容的间距 */
+    }
+    .company-info {
+        margin-top: 8px; /* 调整公司信息的上边距 */
     }
 }
-</style> 
+</style>

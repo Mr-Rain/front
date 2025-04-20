@@ -29,6 +29,7 @@ export function getCompanyProfile(): Promise<{ data: CompanyProfile }> {
         location: '北京市海淀区示例路1号',
         description: '我们是一家领先的互联网技术公司，致力于...',
         audit_status: 'approved',
+        status: 'active'
       };
       resolve({ data: mockProfile });
     }, 400);
@@ -100,3 +101,52 @@ export function approveCompany(companyId: string | number, approved: boolean, me
     data: { approved, message },
   });
 }
+
+// --- Placeholders for missing API functions ---
+
+// 上传公司 Logo
+export function uploadCompanyLogo(file: File): Promise<any> {
+  console.warn('API MOCK: uploadCompanyLogo called.');
+  const formData = new FormData();
+  formData.append('file', file);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ data: { url: 'https://via.placeholder.com/100/00FF00/FFFFFF?text=NewLogo' } }); // Mock success response with URL
+    }, 500);
+  });
+  // Replace with actual API call:
+  // return request({
+  //   url: '/api/company/logo', // Adjust endpoint as needed
+  //   method: 'post',
+  //   data: formData, // Send FormData
+  //   headers: {
+  //     'Content-Type': 'multipart/form-data',
+  //   },
+  // });
+}
+
+// 上传公司营业执照
+export function uploadCompanyLicense(file: File): Promise<any> {
+  console.warn('API MOCK: uploadCompanyLicense called.');
+    const formData = new FormData();
+  formData.append('file', file);
+    return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ data: { url: 'https://via.placeholder.com/200/FFFF00/000000?text=LicenseUploaded' } }); // Mock success response
+    }, 500);
+  });
+  // Replace with actual API call:
+  // return request({
+  //   url: '/api/company/license', // Adjust endpoint as needed
+  //   method: 'post',
+  //   data: formData,
+  //   headers: {
+  //     'Content-Type': 'multipart/form-data',
+  //   },
+  // });
+}
+
+// 注意：getCompanyAuditList 和 submitCompanyAuditResult 的功能
+// 可能由现有的 getPendingCompanies 和 approveCompany 实现，
+// stores/company.ts 中的导入需要相应调整。
+// 如果确实需要独立的函数，则在此处添加占位符。

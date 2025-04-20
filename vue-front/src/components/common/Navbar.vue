@@ -1,32 +1,55 @@
 <template>
-  <el-header class="navbar">
-    <div class="navbar-content">
-      <div class="logo-area">
-        <router-link to="/">
-          <!-- Replace with your actual logo or text -->
-          <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="logo-img" />
-          <span v-else class="logo-text">校园招聘</span>
-        </router-link>
-      </div>
+  <div class="navbar-content">
+    <!-- 移动端菜单 - 仅在小屏幕显示 -->
+    <MobileMenu class="mobile-menu-component" />
 
-      <!-- Navigation Links - Can be dynamic based on user role -->
+    <div class="logo-area">
+      <router-link to="/">
+        <!-- Replace with your actual logo or text -->
+        <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="logo-img" />
+        <span v-else class="logo-text">校园招聘</span>
+      </router-link>
+    </div>
+
+      <!-- 导航菜单 - 在大屏幕显示 -->
       <el-menu
         mode="horizontal"
-        :ellipsis="false" 
+        :ellipsis="false"
         :default-active="activeIndex"
-        class="nav-menu"
-        router 
+        class="nav-menu hide-on-mobile"
+        router
       >
         <el-menu-item index="/">首页</el-menu-item>
-        <el-menu-item index="/jobs">职位列表</el-menu-item> 
-        <!-- Add more links based on roles -->
-        <el-menu-item v-if="userStore.userInfo?.user_type === 'student'" index="/student/applications">我的申请</el-menu-item>
-        <el-menu-item v-if="userStore.userInfo?.user_type === 'company'" index="/company/jobs">职位管理</el-menu-item>
+        <el-menu-item index="/jobs">职位列表</el-menu-item>
+        <!-- 学生角色菜单 -->
+        <el-sub-menu v-if="userStore.userInfo?.user_type === 'student'" index="/student">
+          <template #title>学生中心</template>
+          <el-menu-item index="/student/dashboard">个人工作台</el-menu-item>
+          <el-menu-item index="/student/profile">个人信息</el-menu-item>
+          <el-menu-item index="/student/resume">我的简历</el-menu-item>
+          <el-menu-item index="/student/applications">我的申请</el-menu-item>
+          <el-menu-item index="/student/recommendations">推荐职位</el-menu-item>
+        </el-sub-menu>
+        <!-- 企业角色菜单 -->
+        <el-sub-menu v-if="userStore.userInfo?.user_type === 'company'" index="/company">
+          <template #title>企业中心</template>
+          <el-menu-item index="/company/dashboard">企业工作台</el-menu-item>
+          <el-menu-item index="/company/profile">企业信息</el-menu-item>
+          <el-menu-item index="/company/jobs">职位管理</el-menu-item>
+          <el-menu-item index="/company/applications">申请管理</el-menu-item>
+        </el-sub-menu>
+        <!-- 管理员角色菜单 -->
+        <el-sub-menu v-if="userStore.userInfo?.user_type === 'admin'" index="/admin">
+          <template #title>管理中心</template>
+          <el-menu-item index="/admin/dashboard">管理工作台</el-menu-item>
+          <el-menu-item index="/admin/users">用户管理</el-menu-item>
+          <el-menu-item index="/admin/companies">企业审核</el-menu-item>
+        </el-sub-menu>
       </el-menu>
 
       <div class="spacer"></div>
 
-      <div class="user-area">
+      <div class="user-area hide-on-mobile">
         <template v-if="userStore.token && userStore.userInfo">
           <el-dropdown @command="handleUserCommand">
             <span class="el-dropdown-link">
@@ -48,8 +71,7 @@
           <el-button plain @click="goToRegister">注册</el-button>
         </template>
       </div>
-    </div>
-  </el-header>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -58,6 +80,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { ArrowDown } from '@element-plus/icons-vue';
+import MobileMenu from './MobileMenu.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -116,18 +139,13 @@ const handleUserCommand = async (command: string | number | object) => {
 </script>
 
 <style scoped>
-.navbar {
-  border-bottom: 1px solid var(--el-border-color-light);
-  background-color: #fff;
-  height: 60px; /* Standard header height */
-}
-
 .navbar-content {
   display: flex;
   align-items: center;
   height: 100%;
-  max-width: 1200px; /* Or your desired max width */
-  margin: 0 auto; /* Center content */
+  width: 100%;
+  background-color: #fff;
+  border-bottom: 1px solid var(--el-border-color-light);
   padding: 0 20px;
 }
 
@@ -160,7 +178,7 @@ const handleUserCommand = async (command: string | number | object) => {
     border-bottom: none;
     height: 100%;
     display: inline-flex; /* Align items vertically */
-    align-items: center; 
+    align-items: center;
 }
 
 .spacer {
@@ -170,6 +188,7 @@ const handleUserCommand = async (command: string | number | object) => {
 .user-area {
   display: flex;
   align-items: center;
+  gap: 10px; /* Space between buttons */
 }
 
 .el-dropdown-link {
@@ -191,19 +210,51 @@ const handleUserCommand = async (command: string | number | object) => {
     margin-right: 4px;
 }
 
-/* Responsive considerations (Example using media query) */
+/* 移动端菜单组件样式 */
+.mobile-menu-component {
+  display: none; /* 默认隐藏，在小屏幕上显示 */
+}
+
+/* 响应式调整 */
 @media (max-width: 768px) {
-  .nav-menu {
-    display: none; /* Hide menu items on smaller screens, use a drawer menu instead */
+  .mobile-menu-component {
+    display: block; /* 在小屏幕上显示移动端菜单 */
   }
-  .username {
-      display: none; /* Hide username on smaller screens */
-  }
+
   .logo-area {
-    margin-right: 10px;
+    margin: 0 auto; /* 将logo居中显示 */
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
   }
+
   .navbar-content {
-      padding: 0 10px;
+    padding: 0 10px;
+  }
+
+  /* 在移动端上调整logo大小 */
+  .logo-text {
+    font-size: 1.2em;
+  }
+
+  .logo-img {
+    height: 32px;
   }
 }
-</style> 
+
+/* 平板设备优化 */
+@media (min-width: 769px) and (max-width: 992px) {
+  .navbar-content {
+    padding: 0 15px;
+  }
+
+  .logo-area {
+    margin-right: 20px;
+  }
+
+  /* 减少菜单项间距 */
+  .el-menu--horizontal > .el-menu-item {
+    padding: 0 15px;
+  }
+}
+</style>

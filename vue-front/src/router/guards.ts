@@ -16,7 +16,7 @@ const homePathMap: Record<string, string> = {
   admin: '/admin/dashboard',   // TODO: Update with actual admin dashboard path
 };
 
-/**
+/*
  * 获取用户角色对应的首页路径
  * @param roles 用户角色列表
  * @returns 首页路径，默认为 '/'

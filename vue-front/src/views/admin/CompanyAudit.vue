@@ -209,7 +209,7 @@ const handleAuditSubmit = async () => {
             console.log(`Auditing company ${companyId} with status ${auditData.status}`);
             // TODO: Ensure companyStore has submitAuditResult action
              try {
-                 await companyStore.submitAuditResult(companyId, auditData);
+                 await companyStore.submitAudit(companyId, auditData.status === 'approved', auditData.message);
                  ElMessage.success('审核结果提交成功');
                  detailDialogVisible.value = false;
                  fetchAuditList(); // Refresh list

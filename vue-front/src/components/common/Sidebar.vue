@@ -4,7 +4,7 @@
       <el-menu
         :default-active="activeMenu"
         :collapse="isCollapsed"
-        :unique-opened="true" 
+        :unique-opened="true"
         :collapse-transition="false"
         mode="vertical"
         router
@@ -42,18 +42,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePermissionStore } from '@/stores/permission';
-import { 
-    Document, 
-    Menu as IconMenu, 
-    Setting, 
-    User, 
-    Briefcase, 
+import {
+    Document,
+    Menu as IconMenu,
+    Setting,
+    User,
+    Briefcase,
     DataAnalysis,
     Fold,
-    Expand 
+    Expand
 } from '@element-plus/icons-vue'; // Import icons
 import type { Component } from 'vue'; // Import Component type
 
@@ -61,6 +61,9 @@ const route = useRoute();
 const permissionStore = usePermissionStore();
 
 const isCollapsed = ref(false);
+
+// 定义事件
+const emit = defineEmits(['collapse-change']);
 
 // Calculate active menu based on current route
 const activeMenu = computed(() => {
@@ -115,7 +118,14 @@ const menuItems = computed((): MenuItem[] => { // Specify return type
 
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
+  // 触发折叠状态变化事件
+  emit('collapse-change', isCollapsed.value);
 };
+
+// 监听折叠状态变化
+watch(isCollapsed, (newValue) => {
+  emit('collapse-change', newValue);
+});
 </script>
 
 <style scoped>
@@ -136,12 +146,12 @@ const toggleCollapse = () => {
 /* Ensure menu fills the scrollbar area */
 .el-menu {
   border-right: none; /* Remove the default border */
-  height: 100%; 
+  height: 100%;
 }
 
 /* Remove border for collapsed menu */
 .el-menu--collapse {
-  width: 100%; 
+  width: 100%;
 }
 
 .collapse-button {
@@ -158,4 +168,4 @@ const toggleCollapse = () => {
     vertical-align: middle;
 }
 
-</style> 
+</style>

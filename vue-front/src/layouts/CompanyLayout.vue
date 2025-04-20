@@ -1,74 +1,104 @@
 <template>
-  <el-container class="app-layout company-layout">
+  <div class="app-wrapper">
     <!-- Sidebar -->
-    <Sidebar class="sidebar-container" />
+    <Sidebar class="sidebar-container" @collapse-change="handleSidebarCollapse" />
 
-    <el-container class="main-container">
+    <!-- Main Container (includes Navbar and Content) -->
+    <div class="main-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
       <!-- Navbar -->
-      <Navbar />
+      <header class="navbar-container">
+        <Navbar />
+      </header>
 
       <!-- Main Content Area -->
-      <el-main class="app-main">
-        <el-scrollbar>
-          <router-view v-slot="{ Component, route }">
-            <transition name="fade-transform" mode="out-in">
-              <!-- Add keep-alive based on needs -->
-              <component :is="Component" :key="route.path" />
-            </transition>
-          </router-view>
-        </el-scrollbar>
-      </el-main>
-
-      <!-- Optional Footer -->
-      <!-- <Footer /> -->
-    </el-container>
-  </el-container>
+      <main class="app-main">
+        <div class="el-scrollbar">
+          <div class="el-scrollbar__wrap el-scrollbar__wrap--hidden-default">
+            <div class="el-scrollbar__view">
+              <router-view v-slot="{ Component, route }">
+                <transition name="fade-transform" mode="out-in">
+                  <!-- Add keep-alive based on needs -->
+                  <component :is="Component" :key="route.path" />
+                </transition>
+              </router-view>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 // Reusing common components
 import Navbar from '@/components/common/Navbar.vue';
-import Sidebar from '@/components/common/Sidebar.vue'; 
-// import Footer from '@/components/common/Footer.vue';
+import Sidebar from '@/components/common/Sidebar.vue';
 
-// No specific logic needed for basic layout
+// 侧边栏折叠状态
+const isSidebarCollapsed = ref(false);
+
+// 处理侧边栏折叠状态变化
+const handleSidebarCollapse = (collapsed: boolean) => {
+  isSidebarCollapsed.value = collapsed;
+};
 </script>
 
 <style lang="scss" scoped>
-// Styles can be identical or similar to StudentLayout
-.app-layout {
+.app-wrapper {
+  position: relative;
   height: 100vh;
-  background-color: #f0f2f5; 
+  width: 100%;
 }
 
 .sidebar-container {
-  transition: width 0.28s;
-  height: 100%; 
   position: fixed;
   top: 0;
-  bottom: 0;
   left: 0;
+  bottom: 0;
+  width: 200px;
+  height: 100%;
   z-index: 1001;
+  transition: width 0.28s;
   overflow: hidden;
 }
 
 .main-container {
-  min-height: 100%;
-  transition: margin-left .28s;
-  margin-left: 200px; // TODO: Make dynamic based on actual sidebar state
   position: relative;
+  height: 100vh;
+  margin-left: 200px;
+  width: calc(100% - 200px);
+  transition: margin-left 0.28s, width 0.28s;
+  display: flex;
+  flex-direction: column;
+  background-color: #f0f2f5;
+}
+
+.sidebar-collapsed .main-container {
+  margin-left: 64px;
+  width: calc(100% - 64px);
+}
+
+.navbar-container {
+  height: 60px;
+  width: 100%;
+  background-color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .app-main {
-  min-height: calc(100vh - 60px); /* Adjust if navbar height changes */
-  width: 100%;
-  position: relative;
+  flex: 1;
+  padding: 0;
   overflow: hidden;
-  padding: 20px; 
+  position: relative;
 }
 
-.el-main {
-    padding: 0; 
+.el-scrollbar {
+  height: 100%;
+}
+
+.el-scrollbar__view {
+  padding: 20px;
 }
 
 /* Transition styles */
@@ -86,4 +116,4 @@ import Sidebar from '@/components/common/Sidebar.vue';
   opacity: 0;
   transform: translateX(30px);
 }
-</style> 
+</style>

@@ -16,100 +16,103 @@
         ref="profileFormRef"
         :model="profileData"
         :rules="profileRules"
-        label-width="120px" 
+        label-width="120px"
         label-position="top"
         :disabled="!isEditing"
         v-loading="companyStore.loadingProfile || loading"
+        class="company-profile-form"
       >
-        <el-row :gutter="30">
-           <el-col :xs="24" :md="8" :lg="6" style="text-align: center;">
-             <UserAvatar 
-                :image-url="profileData.logo" 
-                :editable="isEditing"
-                :size="150"
-                shape="square"
-                @upload-success="handleLogoSuccess"
-                style="margin-bottom: 20px;"
+        <!-- 公司基本信息区域 - 上下布局 -->
+        <div class="company-info-section">
+          <div class="company-logo-section" style="text-align: center;">
+            <UserAvatar
+              :image-url="profileData.logo"
+              :editable="isEditing"
+              :size="150"
+              shape="square"
+              @upload-success="handleLogoSuccess"
+              style="margin-bottom: 20px;"
             />
-             <div v-if="!isEditing" class="company-name-display">{{ profileData.company_name }}</div>
-             <div v-if="!isEditing && profileData.audit_status" class="audit-status-display">
-                 <el-tag :type="getAuditStatusType(profileData.audit_status)" size="large">
-                     审核状态: {{ formatAuditStatus(profileData.audit_status) }}
-                 </el-tag>
-                 <p v-if="profileData.audit_status === 'rejected' && profileData.audit_message" class="audit-message">
-                     原因: {{ profileData.audit_message }}
-                 </p>
-             </div>
-           </el-col>
+            <div v-if="!isEditing" class="company-name-display">{{ profileData.company_name }}</div>
+            <div v-if="!isEditing && profileData.audit_status" class="audit-status-display">
+              <el-tag :type="getAuditStatusType(profileData.audit_status)" size="large">
+                审核状态: {{ formatAuditStatus(profileData.audit_status) }}
+              </el-tag>
+              <p v-if="profileData.audit_status === 'rejected' && profileData.audit_message" class="audit-message">
+                原因: {{ profileData.audit_message }}
+              </p>
+            </div>
+          </div>
+        </div>
 
-           <el-col :xs="24" :md="16" :lg="18">
-              <el-row :gutter="20">
-                <el-col :xs="24" :sm="12">
-                   <el-form-item label="公司全称" prop="company_name">
-                     <el-input v-model="profileData.company_name" placeholder="请输入公司完整名称"></el-input>
-                   </el-form-item>
-                 </el-col>
-                <el-col :xs="24" :sm="12">
-                   <el-form-item label="公司简称" prop="short_name">
-                     <el-input v-model="profileData.short_name" placeholder="请输入公司简称"></el-input>
-                   </el-form-item>
-                 </el-col>
-                 <el-col :xs="24" :sm="12">
-                   <el-form-item label="公司官网" prop="website">
-                     <el-input v-model="profileData.website" placeholder="https://..."></el-input>
-                   </el-form-item>
-                 </el-col>
-                 <el-col :xs="24" :sm="12">
-                   <el-form-item label="所属行业" prop="industry">
-                     <el-input v-model="profileData.industry" placeholder="如 互联网/软件/信息技术"></el-input>
-                   </el-form-item>
-                 </el-col>
-                  <el-col :xs="24" :sm="12">
-                   <el-form-item label="公司规模" prop="scale">
-                     <el-select v-model="profileData.scale" placeholder="请选择公司规模" style="width: 100%;">
-                        <el-option label="0-20人" value="0-20人"></el-option>
-                        <el-option label="20-99人" value="20-99人"></el-option>
-                        <el-option label="100-499人" value="100-499人"></el-option>
-                        <el-option label="500-999人" value="500-999人"></el-option>
-                        <el-option label="1000-9999人" value="1000-9999人"></el-option>
-                        <el-option label="10000人以上" value="10000人以上"></el-option>
-                      </el-select>
-                   </el-form-item>
-                 </el-col>
-                  <el-col :xs="24" :sm="12">
-                   <el-form-item label="融资阶段" prop="financing">
-                     <el-select v-model="profileData.financing" placeholder="请选择融资阶段" style="width: 100%;">
-                        <el-option label="未融资" value="未融资"></el-option>
-                        <el-option label="天使轮" value="天使轮"></el-option>
-                        <el-option label="Pre-A轮" value="Pre-A轮"></el-option>
-                        <el-option label="A轮" value="A轮"></el-option>
-                        <el-option label="A+轮" value="A+轮"></el-option>
-                        <el-option label="B轮" value="B轮"></el-option>
-                        <el-option label="C轮" value="C轮"></el-option>
-                        <el-option label="D轮及以上" value="D轮及以上"></el-option>
-                        <el-option label="已上市" value="已上市"></el-option>
-                        <el-option label="不需要融资" value="不需要融资"></el-option>
-                      </el-select>
-                   </el-form-item>
-                 </el-col>
-                 <el-col :span="24">
-                   <el-form-item label="公司地址" prop="location">
-                     <el-input v-model="profileData.location" placeholder="请输入公司详细地址"></el-input>
-                   </el-form-item>
-                 </el-col>
-                  <el-col :span="24">
-                   <el-form-item label="公司简介" prop="description">
-                     <el-input 
-                        type="textarea" 
-                        :rows="6" 
-                        v-model="profileData.description"
-                        placeholder="介绍一下您的公司吧，支持 Markdown 格式"
-                    ></el-input>
-                   </el-form-item>
-                 </el-col>
-             </el-row>
-           </el-col>
-        </el-row>
+        <!-- 表单区域 -->
+        <div class="form-section">
+          <el-row :gutter="20">
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="公司全称" prop="company_name">
+                <el-input v-model="profileData.company_name" placeholder="请输入公司完整名称"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="公司简称" prop="short_name">
+                <el-input v-model="profileData.short_name" placeholder="请输入公司简称"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="公司官网" prop="website">
+                <el-input v-model="profileData.website" placeholder="https://..."></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="所属行业" prop="industry">
+                <el-input v-model="profileData.industry" placeholder="如 互联网/软件/信息技术"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="公司规模" prop="scale">
+                <el-select v-model="profileData.scale" placeholder="请选择公司规模" style="width: 100%;">
+                  <el-option label="0-20人" value="0-20人"></el-option>
+                  <el-option label="20-99人" value="20-99人"></el-option>
+                  <el-option label="100-499人" value="100-499人"></el-option>
+                  <el-option label="500-999人" value="500-999人"></el-option>
+                  <el-option label="1000-9999人" value="1000-9999人"></el-option>
+                  <el-option label="10000人以上" value="10000人以上"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="融资阶段" prop="financing">
+                <el-select v-model="profileData.financing" placeholder="请选择融资阶段" style="width: 100%;">
+                  <el-option label="未融资" value="未融资"></el-option>
+                  <el-option label="天使轮" value="天使轮"></el-option>
+                  <el-option label="Pre-A轮" value="Pre-A轮"></el-option>
+                  <el-option label="A轮" value="A轮"></el-option>
+                  <el-option label="A+轮" value="A+轮"></el-option>
+                  <el-option label="B轮" value="B轮"></el-option>
+                  <el-option label="C轮" value="C轮"></el-option>
+                  <el-option label="D轮及以上" value="D轮及以上"></el-option>
+                  <el-option label="已上市" value="已上市"></el-option>
+                  <el-option label="不需要融资" value="不需要融资"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="公司地址" prop="location">
+                <el-input v-model="profileData.location" placeholder="请输入公司详细地址"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="公司简介" prop="description">
+                <el-input
+                  type="textarea"
+                  :rows="6"
+                  v-model="profileData.description"
+                  placeholder="介绍一下您的公司吧，支持 Markdown 格式"
+                ></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
       </el-form>
     </el-card>
   </div>
@@ -128,7 +131,7 @@ import _ from 'lodash';
 const companyStore = useCompanyStore();
 const profileFormRef = ref<FormInstance>();
 const isEditing = ref(false);
-const loading = ref(false); 
+const loading = ref(false);
 
 const profileData = reactive<Partial<CompanyProfile>>({
     company_name: '',
@@ -201,7 +204,7 @@ const saveProfile = async () => {
 const cancelEdit = () => {
   isEditing.value = false;
   Object.assign(profileData, originalProfileData);
-  profileFormRef.value?.clearValidate(); 
+  profileFormRef.value?.clearValidate();
 };
 
 // --- Display Helpers ---
@@ -244,13 +247,74 @@ const getAuditStatusType = (status: CompanyAuditStatus | undefined): ('success' 
 .audit-status-display {
     margin-top: 15px;
 }
+
 .audit-message {
     font-size: 12px;
     color: var(--el-color-danger);
     margin-top: 5px;
 }
 
-.el-form-item {
-    margin-bottom: 18px;
+/* 公司信息区域样式 */
+.company-info-section {
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+    padding-bottom: 20px;
 }
-</style> 
+
+.company-logo-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* 表单区域样式 */
+.form-section {
+    margin-top: 20px;
+}
+
+/* 表单样式优化 */
+.company-profile-form .el-form-item {
+    margin-bottom: 20px;
+}
+
+.company-profile-form .el-input,
+.company-profile-form .el-select {
+    width: 100%;
+}
+
+/* 确保表单项对齐 */
+.company-profile-form .el-form-item__label {
+    padding-bottom: 8px;
+    line-height: 1.2;
+    font-weight: 500;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .company-profile-page {
+        padding: 10px;
+    }
+
+    .company-info-section {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+    }
+
+    .company-logo-section {
+        margin-bottom: 15px;
+    }
+
+    .form-section {
+        margin-top: 15px;
+    }
+
+    .company-profile-form .el-form-item {
+        margin-bottom: 15px;
+    }
+
+    .company-profile-form .el-form-item__label {
+        padding-bottom: 5px;
+    }
+}
+</style>

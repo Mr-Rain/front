@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import type { UserInfo, UserType, UserStatus } from '@/types/user';
-import { login as loginApi, register as registerApi, getUserInfo as getUserInfoApi, logout as logoutApi } from '@/api/user';
+import { login as loginApi, register as registerApi, getUserInfo as getUserInfoApi, logout as logoutApi, updateUserStatusApi } from '@/api/user';
 // import { updateUserStatus as updateUserStatusApi } from '@/api/permission'; // <-- Temporarily commented out: Needs implementation in api/permission.ts
 import { usePermissionStore } from './permission'; // 引入 permission store
 import { ElMessage } from 'element-plus';
@@ -163,14 +163,15 @@ export const useUserStore = defineStore('user', {
     async updateUserStatus(id: string | number, status: UserStatus) {
          // TODO: Ensure updateUserStatus is exported from @/api/permission.ts
          try {
-            await updateUserStatusApi(id, { status }); // Now uses the import from @/api/permission
+            await updateUserStatusApi(id, status); // Now uses the import from @/api/user
             // Refresh the specific user in the list
             const index = this.userList.findIndex(user => user.id === id);
             if (index !== -1) {
+                 // Directly update the status in the list
                  this.userList[index].status = status;
             }
             // Do NOT show success message here, let the component handle it?
-            // Or show it: ElMessage.success('用户状态更新成功');
+            ElMessage.success('用户状态更新成功'); // Or show it here
          } catch (error) {
              console.error('Failed to update user status:', error);
              ElMessage.error('更新用户状态失败');

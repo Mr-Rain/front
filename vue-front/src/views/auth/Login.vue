@@ -13,6 +13,16 @@
         <el-form-item label="密码" prop="password">
           <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" show-password></el-input>
         </el-form-item>
+
+        <!-- 模拟登录角色选择 -->
+        <el-form-item label="模拟角色">
+          <el-radio-group v-model="mockUserType">
+            <el-radio label="student">学生</el-radio>
+            <el-radio label="company">企业</el-radio>
+            <el-radio label="admin">管理员</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
         <el-form-item>
           <el-button type="primary" @click="handleLogin" :loading="loading">登录</el-button>
           <el-button @click="goToRegister">注册</el-button>
@@ -37,6 +47,9 @@ const userStore = useUserStore();
 const loginFormRef = ref<FormInstance>();
 const loading = ref(false);
 
+// 模拟用户角色选择
+const mockUserType = ref('student');
+
 const loginForm = reactive({
   username: '',
   password: '',
@@ -53,17 +66,28 @@ const handleLogin = () => {
     if (valid) {
       loading.value = true;
       try {
-        // TODO: 调用 userStore 的登录 action
-        // await userStore.login(loginForm);
+        // 将选择的角色保存到localStorage
+        localStorage.setItem('mockUserType', mockUserType.value);
+
+        // 设置模拟的token
+        userStore.setToken('mock_token_' + mockUserType.value);
+
+        // 获取用户信息
+        await userStore.getUserInfo();
+
         ElMessage.success('登录成功 (模拟)');
-        // TODO: 获取用户信息并根据角色跳转
-        // await userStore.getUserInfo();
-        // const redirect = router.currentRoute.value.query.redirect as string || '/';
-        // router.push(redirect);
-        router.push('/'); // 暂时跳转首页
+
+        // 根据角色跳转到相应页面
+        if (mockUserType.value === 'admin') {
+          router.push('/admin/dashboard');
+        } else if (mockUserType.value === 'company') {
+          router.push('/company/dashboard');
+        } else {
+          router.push('/student/dashboard');
+        }
       } catch (error) {
         console.error('Login failed:', error);
-        // ElMessage.error('登录失败，请检查用户名和密码'); // 由 API 或 Store 处理错误提示
+        ElMessage.error('登录失败，请检查用户名和密码');
       } finally {
         loading.value = false;
       }
@@ -104,4 +128,4 @@ const goToForgotPassword = () => {
   text-align: right;
   margin-top: -10px; /* Adjust spacing */
 }
-</style> 
+</style>

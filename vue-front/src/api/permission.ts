@@ -11,8 +11,8 @@ export function getUserPermissions(): Promise<{ data: UserPermissionInfo }> {
   // ---- Mock Data Start ----
   console.warn('API MOCK: getUserPermissions is using mock data.');
   // 模拟不同角色的权限
-  // const userType = useUserStore().userInfo?.user_type; // 假设可以拿到用户类型
-  const userType = 'student'; // 手动模拟
+  // 从localStorage获取当前模拟的用户角色
+  const userType = localStorage.getItem('mockUserType') || 'student';
 
   let mockPermissions: UserPermissionInfo;
   if (userType === 'student') {
@@ -58,4 +58,4 @@ export function getUserPermissions(): Promise<{ data: UserPermissionInfo }> {
 // export function getAllPermissions() { ... }
 
 // (管理端) 更新角色权限
-// export function updateRolePermissions(roleId, permissionIds) { ... } 
+// export function updateRolePermissions(roleId, permissionIds) { ... }

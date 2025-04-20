@@ -8,8 +8,8 @@ import {
   getCompanyJobList,
   uploadCompanyLogo,
   uploadCompanyLicense,
-  getCompanyAuditList,
-  submitCompanyAuditResult
+  getPendingCompanies,
+  approveCompany,
 } from '@/api/company';
 import { getCompanyApplicationList } from '@/api/application';
 import { ElMessage } from 'element-plus';
@@ -110,44 +110,13 @@ export const useCompanyStore = defineStore('company', {
       }
     },
 
-    // --- Logo & License Upload (Placeholders, implement API calls) ---
-    async uploadLogo(file: File): Promise<string> {
-      this.submitting = true;
-      try {
-        // TODO: Implement uploadCompanyLogo API call
-        const response = await uploadCompanyLogo(file);
-        return response.data.url; // Assuming API returns { data: { url: '...' } }
-      } catch (error) {
-        console.error("Logo upload failed:", error);
-        throw error;
-      } finally {
-        this.submitting = false;
-      }
-    },
-    
-    async uploadLicense(file: File): Promise<{url: string, name: string}> {
-      this.submitting = true;
-      try {
-        // TODO: Implement uploadCompanyLicense API call
-        const response = await uploadCompanyLicense(file);
-        // Assuming API returns { data: { url: '...', name: '...' } }
-        return response.data; 
-      } catch (error) {
-        console.error("License upload failed:", error);
-        throw error;
-      } finally {
-        this.submitting = false;
-      }
-    },
-
-    // --- Admin Audit Actions ---
+    // (Admin) Fetch pending companies for audit
     async fetchAuditList(params: any = {}) {
       this.loadingAuditList = true;
       try {
-        // TODO: Ensure getCompanyAuditList API exists
-        const response = await getCompanyAuditList(params);
-        this.auditList = response.data.list;
-        this.auditTotal = response.data.total;
+        const response = await getPendingCompanies(params);
+        this.auditList = response.data.list || [];
+        this.auditTotal = response.data.total || 0;
       } catch (error) {
         console.error('Failed to fetch company audit list:', error);
         ElMessage.error('获取企业审核列表失败');
@@ -158,28 +127,59 @@ export const useCompanyStore = defineStore('company', {
       }
     },
 
-    async submitAuditResult(companyId: string | number, payload: AuditPayload) {
+    // (Admin) Submit audit result for a company
+    async submitAudit(companyId: string | number, approved: boolean, message?: string) {
       this.submittingAudit = true;
       try {
-        // TODO: Ensure submitCompanyAuditResult API exists
-        await submitCompanyAuditResult(companyId, payload);
-        // Optionally update the status in the auditList locally or refetch
-        const index = this.auditList.findIndex(c => c.id === companyId);
-        if (index !== -1) {
-          this.auditList[index].audit_status = payload.status;
-          this.auditList[index].audit_message = payload.message;
-        }
-        // Refresh profile if the audited company is the current profile ( unlikely scenario )
-        // if (this.profile?.id === companyId) {
-        //    await this.fetchProfile();
-        // }
-        // Success message handled by component?
+        await approveCompany(companyId, approved, message);
+        ElMessage.success(`公司审核操作成功`);
+        this.fetchAuditList();
       } catch (error) {
-        console.error('Failed to submit audit result:', error);
-        ElMessage.error('提交审核结果失败');
+        console.error(`Failed to submit audit for company ${companyId}:`, error);
+        ElMessage.error('审核提交失败');
         throw error;
       } finally {
         this.submittingAudit = false;
+      }
+    },
+
+    // Upload company logo
+    async uploadLogo(file: File) {
+      this.submitting = true;
+      try {
+        const response = await uploadCompanyLogo(file);
+        const logoUrl = response.data.url;
+        if (this.profile) {
+          this.profile.logo = logoUrl;
+        }
+        ElMessage.success('Logo 上传成功');
+        return logoUrl;
+      } catch (error) {
+        console.error('Failed to upload logo:', error);
+        ElMessage.error('Logo 上传失败');
+        throw error;
+      } finally {
+        this.submitting = false;
+      }
+    },
+
+    // Upload company license
+    async uploadLicense(file: File) {
+      this.submitting = true;
+      try {
+        const response = await uploadCompanyLicense(file);
+        const licenseUrl = response.data.url;
+        if (this.profile) {
+          this.profile.business_license = licenseUrl;
+        }
+        ElMessage.success('营业执照上传成功');
+        return licenseUrl;
+      } catch (error) {
+        console.error('Failed to upload license:', error);
+        ElMessage.error('营业执照上传失败');
+        throw error;
+      } finally {
+        this.submitting = false;
       }
     },
 

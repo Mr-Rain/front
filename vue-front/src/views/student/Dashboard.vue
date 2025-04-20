@@ -69,9 +69,9 @@
                <!-- Display latest applications -->
                <el-timeline style="padding-left: 10px; margin-top: 10px;">
                   <el-timeline-item
-                    v-for="app in applicationStore.studentApplications.slice(0, 4)" 
+                    v-for="app in applicationStore.studentApplications.slice(0, 4)"
                     :key="app.id"
-                    :timestamp="formatTimestamp(app.apply_time)" 
+                    :timestamp="formatTimestamp(app.apply_time)"
                     placement="top"
                   >
                      <el-card shadow="hover" class="app-status-card">
@@ -108,7 +108,7 @@ const applicationStore = useApplicationStore();
 // Fetch data on component mount
 onMounted(() => {
   studentStore.fetchProfile();
-  recommendationStore.fetchRecommendations(); 
+  recommendationStore.fetchRecommendations();
   applicationStore.fetchStudentApplications({ pageSize: 4, page: 1 }); // Fetch latest 4 applications
 });
 
@@ -121,7 +121,7 @@ const goToJobDetail = (jobId: string | number) => router.push(`/jobs/${jobId}`);
 const formatTimestamp = (isoString: string): string => {
     if (!isoString) return 'N/A';
     try {
-        return new Date(isoString).toLocaleString(); 
+        return new Date(isoString).toLocaleString();
     } catch (e) {
         return isoString; // Fallback
     }
@@ -162,6 +162,7 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
 
 .box-card {
   margin-bottom: 20px;
+  height: 100%; /* 使卡片高度一致 */
 }
 
 .card-header {
@@ -198,7 +199,7 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
 }
 
 .recommended-jobs .job-card {
-    margin-bottom: 10px;
+    margin-bottom: 15px; /* 增加职位卡片之间的间距 */
 }
 
 .app-status-card {
@@ -216,7 +217,32 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
 
 /* Remove default padding from el-timeline-item content if needed */
 :deep(.el-timeline-item__content) {
-    /* padding-bottom: 5px; */ 
+    /* padding-bottom: 5px; */
 }
 
-</style> 
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .student-dashboard {
+        padding: 10px;
+    }
+
+    .el-row {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    .el-col {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    .box-card {
+        margin-bottom: 15px;
+    }
+
+    .profile-summary, .quick-links {
+        margin-bottom: 15px;
+    }
+}
+
+</style>

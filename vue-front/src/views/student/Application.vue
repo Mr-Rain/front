@@ -169,30 +169,3 @@ const viewApplicationDetail = (id: string | number) => {
 */
 
 </script>
-
-<style scoped>
-.application-list-page {
-  padding: 20px;
-}
-
-.page-card {
-  /* Styles for the main card */
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.list-pagination {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end;
-}
-
-.el-table .el-link {
-    font-size: inherit; /* Make link size consistent with table text */
-}
-
-</style> 

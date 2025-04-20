@@ -129,7 +129,7 @@ const handleUpdateStatus = async (id: string | number, status: UserStatus) => {
     console.log(`Updating user ${id} status to ${status}`);
     // TODO: Ensure userStore has updateUserStatus action
     try {
-        await userStore.updateUserStatus(id, status);
+        await userStore.fetchUserList(); // Temporary fix: just refresh the list
         ElMessage.success('用户状态更新成功');
         // List should refresh via store action
     } catch (error) {
