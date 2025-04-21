@@ -31,7 +31,7 @@
         </el-scrollbar>
         <!-- 折叠按钮 -->
         <div class="collapse-button" @click="toggleCollapse">
-          <el-icon>
+          <el-icon :class="{ 'is-rotated': isCollapsed }">
             <component :is="isCollapsed ? Expand : Fold" />
           </el-icon>
         </div>
@@ -132,6 +132,10 @@ const handleCommand = async (command: string) => {
 .sidebar-menu {
   border-right: none;
   background-color: transparent;
+  user-select: none; /* Prevent text selection */
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
 }
 
 .sidebar-menu .el-menu-item {
@@ -155,10 +159,24 @@ const handleCommand = async (command: string) => {
   cursor: pointer;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   color: #bfcbd9;
+  width: 100%; /* Make button width 100% of parent container */
+  transition: width 0.28s; /* Add transition to match sidebar */
+  user-select: none; /* Prevent text selection */
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
 }
 
 .collapse-button:hover {
   background-color: #263445;
+}
+
+.collapse-button .el-icon {
+  transition: transform 0.3s; /* Add transition for icon rotation */
+}
+
+.collapse-button .el-icon.is-rotated {
+  transform: rotate(180deg);
 }
 
 .main-container {

@@ -77,3 +77,25 @@ a,
     padding-bottom: 4px;
   }
 }
+
+/* 禁用文本选择 - 全局交互元素 */
+.el-button,
+.el-menu-item,
+.el-submenu__title,
+.el-dropdown-menu__item,
+.el-tabs__item,
+.el-pagination__sizes,
+.el-pagination__jump,
+.el-pagination button,
+.el-select-dropdown__item,
+.el-checkbox,
+.el-radio,
+.el-switch,
+.el-tag,
+.el-badge,
+.el-link {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}

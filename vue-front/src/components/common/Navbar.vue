@@ -221,6 +221,10 @@ const handleUserCommand = async (command: string | number | object) => {
   background-color: #fff;
   border-bottom: 1px solid var(--el-border-color-light);
   padding: 0 20px;
+  user-select: none; /* Prevent text selection */
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
 }
 
 .logo-area {
@@ -271,6 +275,10 @@ const handleUserCommand = async (command: string | number | object) => {
   font-size: 14px;
   transition: all 0.3s;
   position: relative;
+  user-select: none; /* Prevent text selection */
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
 }
 
 .nav-link:hover {
@@ -370,6 +378,10 @@ const handleUserCommand = async (command: string | number | object) => {
   display: flex;
   align-items: center;
   gap: 10px; /* Space between buttons */
+  user-select: none; /* Prevent text selection */
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
 }
 
 .el-dropdown-link {

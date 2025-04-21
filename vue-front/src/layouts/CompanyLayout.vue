@@ -7,7 +7,7 @@
 
     <div class="content-wrapper">
       <!-- Sidebar - Now below navbar -->
-      <Sidebar class="sidebar-container" @collapse-change="handleSidebarCollapse" />
+      <Sidebar class="sidebar-container" :class="{ 'collapsed': isSidebarCollapsed }" @collapse-change="handleSidebarCollapse" />
 
       <!-- Main Container -->
       <div class="main-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
@@ -79,6 +79,11 @@ const handleSidebarCollapse = (collapsed: boolean) => {
   z-index: 1001;
   background-color: #fff;
   border-right: 1px solid var(--el-border-color-light);
+}
+
+/* 折叠时的侧边栏宽度 */
+.app-wrapper .sidebar-container.collapsed {
+  width: 64px;
 }
 
 .main-container {
