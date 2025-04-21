@@ -149,6 +149,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { useNotificationStore } from '@/stores/notification';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { DEFAULT_AVATAR } from '@/utils/defaultImages';
 import {
   Menu, House, Briefcase, User, OfficeBuilding,
   Setting, Key, UserFilled, SwitchButton, Search,
@@ -161,7 +162,7 @@ const userStore = useUserStore();
 const notificationStore = useNotificationStore();
 
 const drawerVisible = ref(false);
-const defaultAvatar = ref('https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png');
+const defaultAvatar = ref(DEFAULT_AVATAR);
 const searchKeyword = ref('');
 
 // 计算当前活动菜单项

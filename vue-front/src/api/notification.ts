@@ -1,7 +1,7 @@
 import request from '@/utils/request';
-import type { 
-  NotificationInfo, 
-  NotificationQueryParams, 
+import type {
+  NotificationInfo,
+  NotificationQueryParams,
   NotificationListResponse,
   NotificationType
 } from '@/types/notification';
@@ -19,7 +19,7 @@ export function getNotifications(params: NotificationQueryParams): Promise<{ dat
 
   // ---- Mock Data Start ----
   console.warn('API MOCK: getNotifications is using mock data.');
-  
+
   // 模拟通知数据
   const mockNotifications: NotificationInfo[] = [
     {
@@ -44,7 +44,7 @@ export function getNotifications(params: NotificationQueryParams): Promise<{ dat
       recipient_id: 1,
       sender_id: 101,
       sender_name: '示例科技有限公司',
-      sender_avatar: 'https://via.placeholder.com/40',
+      sender_avatar: '',
       link: '/student/applications/1'
     },
     {
@@ -59,7 +59,7 @@ export function getNotifications(params: NotificationQueryParams): Promise<{ dat
       recipient_id: 1,
       sender_id: 102,
       sender_name: '创意设计工作室',
-      sender_avatar: 'https://via.placeholder.com/40',
+      sender_avatar: '',
       link: '/student/applications/2'
     },
     {
@@ -85,43 +85,43 @@ export function getNotifications(params: NotificationQueryParams): Promise<{ dat
       recipient_id: 1,
       sender_id: 103,
       sender_name: '科技创新公司',
-      sender_avatar: 'https://via.placeholder.com/40',
+      sender_avatar: '',
       link: '/student/applications/3'
     }
   ];
 
   // 模拟分页和筛选
   let filteredNotifications = [...mockNotifications];
-  
+
   // 按类型筛选
   if (params.type) {
     filteredNotifications = filteredNotifications.filter(n => n.type === params.type);
   }
-  
+
   // 按状态筛选
   if (params.status) {
     filteredNotifications = filteredNotifications.filter(n => n.status === params.status);
   }
-  
+
   // 按关键词筛选
   if (params.keyword) {
     const keyword = params.keyword.toLowerCase();
-    filteredNotifications = filteredNotifications.filter(n => 
-      n.title.toLowerCase().includes(keyword) || 
+    filteredNotifications = filteredNotifications.filter(n =>
+      n.title.toLowerCase().includes(keyword) ||
       n.content.toLowerCase().includes(keyword)
     );
   }
-  
+
   // 计算总数
   const total = filteredNotifications.length;
-  
+
   // 分页
   const page = params.page || 1;
   const limit = params.limit || 10;
   const start = (page - 1) * limit;
   const end = start + limit;
   const pagedNotifications = filteredNotifications.slice(start, end);
-  
+
   // 统计信息
   const stats = {
     total: mockNotifications.length,
@@ -130,7 +130,7 @@ export function getNotifications(params: NotificationQueryParams): Promise<{ dat
     application: mockNotifications.filter(n => n.type === 'application').length,
     interview: mockNotifications.filter(n => n.type === 'interview').length
   };
-  
+
   // 模拟响应
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -227,7 +227,7 @@ export function deleteNotification(id: string | number): Promise<{ data: { succe
 /**
  * 获取通知设置
  */
-export function getNotificationSettings(): Promise<{ data: { 
+export function getNotificationSettings(): Promise<{ data: {
   enableEmail: boolean;
   enableBrowser: boolean;
   mutedTypes: NotificationType[];

@@ -42,7 +42,7 @@ export function getUserInfo(): Promise<{ data: UserInfo }> { // 明确返回类�
           id: '1',
           username: 'adminUser',
           user_type: 'admin',
-          avatar: 'https://via.placeholder.com/150/FF0000/FFFFFF?text=Admin',
+          avatar: '',
           email: 'admin@example.com',
           status: 'active'
         };
@@ -51,7 +51,7 @@ export function getUserInfo(): Promise<{ data: UserInfo }> { // 明确返回类�
           id: '2',
           username: 'companyUser',
           user_type: 'company',
-          avatar: 'https://via.placeholder.com/150/00FF00/FFFFFF?text=Company',
+          avatar: '',
           email: 'company@example.com',
           status: 'active'
         };
@@ -61,7 +61,7 @@ export function getUserInfo(): Promise<{ data: UserInfo }> { // 明确返回类�
           id: '3',
           username: 'studentUser',
           user_type: 'student',
-          avatar: 'https://via.placeholder.com/150/0000FF/FFFFFF?text=Student',
+          avatar: '',
           email: 'student@example.com',
           status: 'active'
         };

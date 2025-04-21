@@ -28,6 +28,7 @@ import type { PropType } from 'vue';
 import { useRouter } from 'vue-router';
 import type { CompanyProfile } from '@/types/company';
 import { Location, OfficeBuilding, User } from '@element-plus/icons-vue';
+import { DEFAULT_COMPANY_LOGO } from '@/utils/defaultImages';
 
 const props = defineProps({
   company: {
@@ -38,12 +39,12 @@ const props = defineProps({
 
 const router = useRouter();
 
-const defaultLogo = ref('https://cube.elemecdn.com/9/c2/f0ee8a3c7c9638a54940382568c9dpng.png');
+const defaultLogo = ref(DEFAULT_COMPANY_LOGO);
 
 // Example computed property for tags (adapt based on your data model)
 const companyTags = computed(() => {
     // Placeholder: return an empty array or extract from description/other fields
-    return []; 
+    return [];
 });
 
 const handleClick = () => {
@@ -142,4 +143,4 @@ const handleClick = () => {
     }
 }
 
-</style> 
+</style>

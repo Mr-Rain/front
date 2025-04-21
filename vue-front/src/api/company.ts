@@ -18,10 +18,10 @@ export function getCompanyProfile(): Promise<{ data: CompanyProfile }> {
         user_type: 'company',
         email: 'hr@company.com',
         phone: '010-88888888',
-        avatar: 'https://via.placeholder.com/150/FF0000/FFFFFF?text=Company',
+        avatar: '',
         company_name: '示例科技有限公司',
         short_name: '示例科技',
-        logo: 'https://via.placeholder.com/100/FF0000/FFFFFF?text=Logo',
+        logo: '',
         website: 'https://example.com',
         industry: '互联网/软件',
         scale: '100-499人',
@@ -111,7 +111,7 @@ export function uploadCompanyLogo(file: File): Promise<any> {
   formData.append('file', file);
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve({ data: { url: 'https://via.placeholder.com/100/00FF00/FFFFFF?text=NewLogo' } }); // Mock success response with URL
+      resolve({ data: { url: '' } }); // Mock success response with URL
     }, 500);
   });
   // Replace with actual API call:
@@ -132,7 +132,7 @@ export function uploadCompanyLicense(file: File): Promise<any> {
   formData.append('file', file);
     return new Promise((resolve) => {
     setTimeout(() => {
-      resolve({ data: { url: 'https://via.placeholder.com/200/FFFF00/000000?text=LicenseUploaded' } }); // Mock success response
+      resolve({ data: { url: '' } }); // Mock success response
     }, 500);
   });
   // Replace with actual API call:

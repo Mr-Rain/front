@@ -47,7 +47,7 @@ export function getResumeDetail(id: string | number): Promise<{ data: ResumeInfo
       name: 'Mock 学生',
       phone: '13800138000',
       email: 'student@example.com',
-      avatar: 'https://via.placeholder.com/150/0000FF/808080?text=Student',
+      avatar: '',
       education_experiences: [
           { id: 'edu1', school: '示例大学', major: '计算机科学', degree: '学士', start_date: '2020-09', end_date: '2024-07', description: '获得过奖学金' }
       ],

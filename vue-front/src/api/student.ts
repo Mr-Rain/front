@@ -18,7 +18,7 @@ export function getStudentProfile(): Promise<{ data: StudentProfile }> {
         status: 'active',
         email: 'student@example.com',
         phone: '13800138000',
-        avatar: 'https://via.placeholder.com/150/0000FF/808080?text=Student',
+        avatar: '',
         student_id: '20230001',
         major: '计算机科学与技术',
         grade: '2023',

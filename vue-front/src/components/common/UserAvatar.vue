@@ -3,7 +3,7 @@
     <el-upload
       v-if="editable"
       class="avatar-uploader"
-      action="#" 
+      action="#"
       :show-file-list="false"
       :before-upload="beforeAvatarUpload"
       :http-request="handleUpload"
@@ -32,8 +32,9 @@ import { ref, computed } from 'vue';
 import { ElMessage } from 'element-plus';
 import type { UploadProps, UploadRequestOptions } from 'element-plus';
 import { Loading } from '@element-plus/icons-vue';
+import { DEFAULT_AVATAR } from '@/utils/defaultImages';
 // TODO: Import your actual API function for uploading avatar
-// import { uploadAvatarApi } from '@/api/user'; 
+// import { uploadAvatarApi } from '@/api/user';
 
 const props = defineProps({
   imageUrl: {
@@ -64,7 +65,7 @@ const props = defineProps({
 
 const emit = defineEmits(['upload-success']); // Emit event on successful upload
 
-const defaultAvatar = ref('https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png');
+const defaultAvatar = ref(DEFAULT_AVATAR);
 const uploading = ref(false);
 const uploadProgress = ref(0);
 const uploadError = ref('');
@@ -96,7 +97,7 @@ const handleUpload = async (options: UploadRequestOptions) => {
   formData.append('avatarFile', file); // Adjust field name based on your API
 
   try {
-    // --- Replace with your actual API upload call --- 
+    // --- Replace with your actual API upload call ---
     console.warn('Using mock avatar upload. Replace with actual API call.');
     // Example structure:
     // const response = await uploadAvatarApi(formData, {
@@ -112,7 +113,7 @@ const handleUpload = async (options: UploadRequestOptions) => {
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000)); // Simulate network delay
     uploadProgress.value = 100;
     const mockImageUrl = URL.createObjectURL(file); // Use local URL for mock display
-    // --- End Mock --- 
+    // --- End Mock ---
 
     ElMessage.success('头像上传成功!');
     emit('upload-success', mockImageUrl); // Emit the new image URL
@@ -149,7 +150,7 @@ const handleUpload = async (options: UploadRequestOptions) => {
 
 /* Style for square shape */
 .avatar-uploader[shape="square"] :deep(.el-upload) {
-    border-radius: 6px; 
+    border-radius: 6px;
 }
 
 .avatar-uploader .el-avatar {
@@ -177,7 +178,7 @@ const handleUpload = async (options: UploadRequestOptions) => {
 
 /* Use deep selector for progress text color if needed */
 .upload-overlay :deep(.el-progress__text) {
-    color: #fff; 
+    color: #fff;
 }
 
 .error-tip {
@@ -186,4 +187,4 @@ const handleUpload = async (options: UploadRequestOptions) => {
     margin-top: 5px;
     text-align: center;
 }
-</style> 
+</style>

@@ -14,21 +14,21 @@ export function getJobList(params: JobListParams): Promise<{ data: { list: JobIn
   const allJobs: JobInfo[] = [
     {
       id: 'job1', title: '前端开发工程师', company_id: '2', company_name: '示例科技',
-      company_logo: 'https://via.placeholder.com/100/FF0000/FFFFFF?text=Logo', location: '北京',
+      company_logo: '', location: '北京',
       salary_range: '15k-25k', job_type: '全职', experience_required: '1-3年',
       education_required: '本科', tags: ['Vue', 'React'], description: '...', requirements: '...',
       publish_time: '2024-01-15T10:00:00Z', status: 'open'
     },
     {
       id: 'job2', title: '后端开发工程师', company_id: '2', company_name: '示例科技',
-      company_logo: 'https://via.placeholder.com/100/FF0000/FFFFFF?text=Logo', location: '上海',
+      company_logo: '', location: '上海',
       salary_range: '20k-30k', job_type: '全职', experience_required: '3-5年',
       education_required: '本科', tags: ['Java', 'Spring'], description: '...', requirements: '...',
       publish_time: '2024-01-14T11:00:00Z', status: 'open'
     },
     {
       id: 'job3', title: '产品经理', company_id: '3', company_name: '另一家公司',
-      company_logo: 'https://via.placeholder.com/100/0000FF/FFFFFF?text=LogoB', location: '深圳',
+      company_logo: '', location: '深圳',
       salary_range: '18k-28k', job_type: '全职', experience_required: '3-5年',
       education_required: '本科', tags: ['互联网', 'B端'], description: '...', requirements: '...',
       publish_time: '2024-01-16T09:00:00Z', status: 'open'
@@ -76,7 +76,7 @@ export function getJobDetail(id: string | number): Promise<{ data: JobInfo }> {
       title: `职位详情 (${id})`,
       company_id: '2',
       company_name: '示例科技',
-      company_logo: 'https://via.placeholder.com/100/FF0000/FFFFFF?text=Logo',
+      company_logo: '',
       location: '北京',
       salary_range: '15k-25k',
       job_type: '全职',
@@ -144,4 +144,4 @@ export function updateJobStatus(jobId: string | number, status: JobStatus): Prom
   //   method: 'patch', // or 'put'
   //   data: { status },
   // });
-} 
+}

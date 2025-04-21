@@ -15,11 +15,11 @@
     <div v-for="(work, index) in modelValue" :key="index" class="experience-item">
       <div class="experience-header">
         <h4>{{ work.company_name || '新工作经历' }} {{ work.position ? `(${work.position})` : '' }}</h4>
-        <el-button 
-          v-if="editable" 
-          type="danger" 
-          plain 
-          size="small" 
+        <el-button
+          v-if="editable"
+          type="danger"
+          plain
+          size="small"
           @click="removeWorkExperience(index)"
         >
           <el-icon><Delete /></el-icon>
@@ -76,10 +76,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, defineProps, defineEmits } from 'vue';
+import { ref, watch } from 'vue';
 import type { WorkExperience } from '@/types/student';
 import { Plus, Delete } from '@element-plus/icons-vue';
-import marked from 'marked'; // 需要安装: pnpm add marked
+import * as marked from 'marked'; // 需要安装: pnpm add marked
 
 const props = defineProps({
   modelValue: {
@@ -111,10 +111,10 @@ const addWorkExperience = () => {
     end_date: '',
     description: ''
   };
-  
+
   const updatedValue = [...props.modelValue, newWorkExperience];
   emit('update:modelValue', updatedValue);
-  
+
   // 为新添加的工作经历初始化日期范围
   dateRange.value.push(['', ''] as [string, string]);
 };
@@ -124,7 +124,7 @@ const removeWorkExperience = (index: number) => {
   const updatedValue = [...props.modelValue];
   updatedValue.splice(index, 1);
   emit('update:modelValue', updatedValue);
-  
+
   // 同时移除对应的日期范围
   dateRange.value.splice(index, 1);
 };
@@ -238,7 +238,7 @@ const renderMarkdown = (content: string): string => {
   .hide-on-mobile {
     display: none;
   }
-  
+
   .experience-item {
     padding: 10px;
   }
