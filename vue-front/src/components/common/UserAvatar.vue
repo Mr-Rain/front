@@ -55,7 +55,7 @@ const props = defineProps({
   },
   maxSizeMb: {
     type: Number,
-    default: 2, // Max file size in MB
+    default: 100, // Max file size in MB (increased to 100MB)
   },
   allowedTypes: {
       type: Array as () => string[],
@@ -78,12 +78,13 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
     uploadError.value = errorMsg;
     return false;
   }
-  if (rawFile.size / 1024 / 1024 > props.maxSizeMb) {
-    const errorMsg = `头像图片大小不能超过 ${props.maxSizeMb}MB!`;
-    ElMessage.error(errorMsg);
-    uploadError.value = errorMsg;
-    return false;
-  }
+  // 已移除文件大小限制
+  // if (rawFile.size / 1024 / 1024 > props.maxSizeMb) {
+  //   const errorMsg = `头像图片大小不能超过 ${props.maxSizeMb}MB!`;
+  //   ElMessage.error(errorMsg);
+  //   uploadError.value = errorMsg;
+  //   return false;
+  // }
   return true;
 };
 
