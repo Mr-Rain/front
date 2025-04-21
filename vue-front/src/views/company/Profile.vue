@@ -200,7 +200,7 @@ import type { CompanyProfile, CompanyAuditStatus } from '@/types/company';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage } from 'element-plus';
 import { Edit, Check, Close, InfoFilled, QuestionFilled } from '@element-plus/icons-vue';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 const companyStore = useCompanyStore();
 const profileFormRef = ref<FormInstance>();

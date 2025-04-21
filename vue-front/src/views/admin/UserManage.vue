@@ -2,7 +2,17 @@
   <div class="user-manage-page">
     <el-card shadow="never">
       <template #header>
-        <span>用户管理</span>
+        <div class="card-header">
+          <span>用户管理</span>
+          <div class="header-actions">
+            <el-button type="primary" size="small" @click="handleManagePermissions()">
+              <el-icon><Setting /></el-icon> 权限管理
+            </el-button>
+            <el-button type="primary" size="small" @click="handleBatchAction" :disabled="selectedUsers.length === 0">
+              批量操作
+            </el-button>
+          </div>
+        </div>
       </template>
 
       <!-- Filters -->
@@ -47,20 +57,27 @@
             <div class="search-button-group">
               <el-form-item class="search-button-item">
                 <el-button type="primary" @click="handleFilter" :icon="Search" class="search-button">搜索</el-button>
+                <el-button @click="resetFilter" class="search-button">重置</el-button>
               </el-form-item>
             </div>
           </div>
         </el-form>
       </div>
 
-      <el-table :data="userStore.userList" v-loading="userStore.loadingList" style="width: 100%">
+      <el-table
+        :data="userStore.userList"
+        v-loading="userStore.loadingList"
+        style="width: 100%"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="55" />
         <el-table-column prop="id" label="ID" width="80"></el-table-column>
         <el-table-column prop="username" label="用户名" min-width="150"></el-table-column>
         <el-table-column prop="email" label="邮箱" min-width="180"></el-table-column>
         <el-table-column prop="phone" label="手机号" width="150"></el-table-column>
         <el-table-column prop="user_type" label="用户类型" width="100" align="center">
             <template #default="scope">
-                <el-tag>{{ formatUserType(scope.row.user_type) }}</el-tag>
+                <el-tag :type="getUserTypeTagType(scope.row.user_type)">{{ formatUserType(scope.row.user_type) }}</el-tag>
             </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100" align="center">
@@ -71,12 +88,37 @@
          <el-table-column prop="create_time" label="注册时间" width="180">
             <template #default="scope">{{ formatTime(scope.row.create_time) }}</template>
          </el-table-column>
-        <el-table-column label="操作" width="150" align="center" fixed="right">
+        <el-table-column label="操作" width="200" align="center" fixed="right">
           <template #default="scope">
-            <!-- <el-button link type="primary" size="small" @click="handleViewDetail(scope.row.id)">详情</el-button> -->
-             <el-button v-if="scope.row.status === 'active'" link type="danger" size="small" @click="handleUpdateStatus(scope.row.id, 'inactive')">禁用</el-button>
-             <el-button v-else link type="success" size="small" @click="handleUpdateStatus(scope.row.id, 'active')">启用</el-button>
-             <!-- TODO: Add edit/delete functionality if needed -->
+            <el-button link type="primary" size="small" @click="handleViewDetail(scope.row.id)">
+              <el-icon><View /></el-icon> 详情
+            </el-button>
+            <el-button
+              v-if="scope.row.status === 'active'"
+              link
+              type="danger"
+              size="small"
+              @click="handleUpdateStatus(scope.row.id, 'inactive')"
+            >
+              <el-icon><Lock /></el-icon> 禁用
+            </el-button>
+            <el-button
+              v-else
+              link
+              type="success"
+              size="small"
+              @click="handleUpdateStatus(scope.row.id, 'active')"
+            >
+              <el-icon><Unlock /></el-icon> 启用
+            </el-button>
+            <el-button
+              link
+              type="warning"
+              size="small"
+              @click="handleManagePermissions(scope.row)"
+            >
+              <el-icon><Setting /></el-icon> 权限
+            </el-button>
           </template>
         </el-table-column>
         <template #empty>
@@ -95,19 +137,124 @@
       />
 
     </el-card>
+
+    <!-- 用户详情抽屉 -->
+    <user-detail-drawer
+      v-model:visible="detailDrawerVisible"
+      :user-id="selectedUserId"
+      :user-detail="currentUserDetail"
+      :student-profile="studentProfile"
+      :company-profile="companyProfile"
+      :loading="loadingDetail"
+      :submitting="submitting"
+      @status-change="handleUpdateStatus"
+      @view-company="handleViewCompanyDetail"
+    />
+
+    <!-- 批量操作对话框 -->
+    <el-dialog v-model="batchDialogVisible" title="批量操作" width="500px">
+      <div class="batch-dialog-content">
+        <p>已选择 <span class="selected-count">{{ selectedUsers.length }}</span> 个用户</p>
+
+        <el-form :model="batchForm" label-position="top">
+          <el-form-item label="操作类型" required>
+            <el-radio-group v-model="batchForm.action">
+              <el-radio label="active">启用账号</el-radio>
+              <el-radio label="inactive">禁用账号</el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </el-form>
+
+        <div class="selected-users">
+          <h4>选中的用户：</h4>
+          <el-scrollbar height="200px">
+            <div class="user-list">
+              <div v-for="user in selectedUsers" :key="user.id" class="user-item">
+                <div class="user-info">
+                  <div class="username">{{ user.username }}</div>
+                  <div class="user-type">
+                    <el-tag size="small" :type="getUserTypeTagType(user.user_type)">{{ formatUserType(user.user_type) }}</el-tag>
+                  </div>
+                </div>
+                <div class="user-status">
+                  <el-tag size="small" :type="user.status === 'active' ? 'success' : 'danger'">
+                    {{ user.status === 'active' ? '正常' : '禁用' }}
+                  </el-tag>
+                </div>
+              </div>
+            </div>
+          </el-scrollbar>
+        </div>
+      </div>
+
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="batchDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleBatchSubmit" :loading="submitting">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 权限管理对话框 -->
+    <role-permission-manager
+      v-model:visible="permissionDialogVisible"
+      :user="currentUserDetail"
+      :loading="permissionStore.loadingRoles || permissionStore.loadingPermissions"
+      :submitting="permissionStore.submitting"
+      :is-admin="isAdmin"
+      @save-role="handleSaveRole"
+      @delete-role="handleDeleteRole"
+      @save-role-permissions="handleSaveRolePermissions"
+      @save-user-roles="handleSaveUserRoles"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
-import { useUserStore } from '@/stores/user'; // Assuming user store manages user list for admin
+import { ref, reactive, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useUserStore } from '@/stores/user';
+import { useCompanyStore } from '@/stores/company';
+import { usePermissionStore } from '@/stores/permission';
 import type { UserInfo, UserType, UserStatus } from '@/types/user';
-import { ElCard, ElTable, ElTableColumn, ElTag, ElButton, ElEmpty, ElMessage, ElForm, ElFormItem, ElInput, ElSelect, ElOption } from 'element-plus';
-import { Search } from '@element-plus/icons-vue';
+import type { CompanyProfile } from '@/types/company';
+import type { StudentProfile } from '@/types/student';
+import type { RoleInfo, UserRoleUpdatePayload } from '@/types/permission';
+import { ElCard, ElTable, ElTableColumn, ElTag, ElButton, ElEmpty, ElMessage, ElMessageBox, ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElDialog, ElScrollbar, ElRadioGroup, ElRadio, ElIcon } from 'element-plus';
+import { Search, View, Lock, Unlock, Setting } from '@element-plus/icons-vue';
 import Pagination from '@/components/common/Pagination.vue';
+import UserDetailDrawer from '@/components/admin/UserDetailDrawer.vue';
+import RolePermissionManager from '@/components/admin/RolePermissionManager.vue';
 
 const userStore = useUserStore();
+const companyStore = useCompanyStore();
+const permissionStore = usePermissionStore();
+const router = useRouter();
 
+// 表格选中的用户
+
+const selectedUsers = ref<UserInfo[]>([]);
+const selectedUserId = ref<string | number>('');
+const currentUserDetail = ref<UserInfo | null>(null);
+const studentProfile = ref<StudentProfile | null>(null);
+const companyProfile = ref<CompanyProfile | null>(null);
+const detailDrawerVisible = ref(false);
+const batchDialogVisible = ref(false);
+const permissionDialogVisible = ref(false);
+const loadingDetail = ref(false);
+const submitting = ref(false);
+
+// 判断当前用户是否为管理员
+const isAdmin = computed(() => {
+  return userStore.currentUser?.user_type === 'admin';
+});
+
+// 批量操作表单
+const batchForm = reactive({
+  action: 'inactive' as UserStatus
+});
+
+// 查询参数
 const listQuery = reactive({
     page: 1,
     pageSize: 10,
@@ -116,30 +263,51 @@ const listQuery = reactive({
     keyword: ''
 });
 
+// 获取用户列表
 const fetchUsers = () => {
-    // TODO: Ensure userStore has fetchUserList action supporting filters/pagination
-    console.log("Fetching users with query:", listQuery);
     userStore.fetchUserList(listQuery);
 };
 
+// 页面加载时获取数据
 onMounted(() => {
     fetchUsers();
+    // 获取角色列表
+    permissionStore.fetchRoles();
+    // 获取权限列表
+    permissionStore.fetchPermissions();
 });
 
+// 处理表格选择变化
+const handleSelectionChange = (selection: UserInfo[]) => {
+    selectedUsers.value = selection;
+};
+
+// 处理筛选
 const handleFilter = () => {
   listQuery.page = 1;
   fetchUsers();
 };
 
+// 重置筛选
+const resetFilter = () => {
+  listQuery.page = 1;
+  listQuery.userType = undefined;
+  listQuery.status = undefined;
+  listQuery.keyword = '';
+  fetchUsers();
+};
+
+// 格式化时间
 const formatTime = (timeStr: string | undefined): string => {
   if (!timeStr) return '-';
   try {
     return new Date(timeStr).toLocaleString();
   } catch (e) {
-    return timeStr;
+    return timeStr || '-';
   }
 };
 
+// 格式化用户类型
 const formatUserType = (type: UserType | undefined): string => {
     if (!type) return '未知';
     const map: Record<UserType, string> = {
@@ -150,24 +318,171 @@ const formatUserType = (type: UserType | undefined): string => {
     return map[type] || type;
 };
 
-const handleUpdateStatus = async (id: string | number, status: UserStatus) => {
-    console.log(`Updating user ${id} status to ${status}`);
-    // TODO: Ensure userStore has updateUserStatus action
+// 获取用户类型标签样式
+const getUserTypeTagType = (type: UserType | undefined): string => {
+    if (!type) return 'info';
+    const map: Record<UserType, string> = {
+        student: 'success',
+        company: 'primary',
+        admin: 'danger'
+    };
+    return map[type] || 'info';
+};
+
+// 查看用户详情
+const handleViewDetail = async (id: string | number) => {
+    selectedUserId.value = id;
+    loadingDetail.value = true;
+    detailDrawerVisible.value = true;
+
     try {
-        await userStore.fetchUserList(); // Temporary fix: just refresh the list
-        ElMessage.success('用户状态更新成功');
-        // List should refresh via store action
+        // 获取用户详情
+        const userDetail = await userStore.getUserDetail(id);
+        currentUserDetail.value = userDetail;
+
+        // 根据用户类型获取相应的详细信息
+        if (userDetail.user_type === 'student') {
+            // 模拟学生信息
+            studentProfile.value = {
+                id: userDetail.id,
+                name: `学生${userDetail.id}`,
+                school: '测试大学',
+                major: '计算机科学',
+                education: '本科',
+                graduation_year: '2023'
+            };
+            companyProfile.value = null;
+        } else if (userDetail.user_type === 'company') {
+            // 获取公司信息
+            try {
+                const company = await companyStore.getCompanyDetail(userDetail.id);
+                companyProfile.value = company;
+            } catch (error) {
+                companyProfile.value = null;
+            }
+            studentProfile.value = null;
+        } else {
+            studentProfile.value = null;
+            companyProfile.value = null;
+        }
     } catch (error) {
-        ElMessage.error('更新失败');
+        currentUserDetail.value = null;
+        studentProfile.value = null;
+        companyProfile.value = null;
+        ElMessage.error('获取用户详情失败');
+    } finally {
+        loadingDetail.value = false;
     }
 };
 
-/* Placeholder for detail view
-const handleViewDetail = (id: string | number) => {
-    console.log(`Viewing detail for user ${id}`);
-    // Navigate to a detail page or open a modal
+// 查看公司详情
+const handleViewCompanyDetail = (id: string | number) => {
+    router.push(`/admin/company-audit?id=${id}`);
 };
-*/
+
+// 打开权限管理对话框
+const handleManagePermissions = async (user?: UserInfo) => {
+    if (user) {
+        // 如果指定了用户，获取该用户的角色
+        selectedUserId.value = user.id;
+        currentUserDetail.value = user;
+        await permissionStore.fetchUserRoles(user.id);
+    } else {
+        // 如果没有指定用户，打开角色管理页面
+        selectedUserId.value = '';
+        currentUserDetail.value = null;
+    }
+
+    permissionDialogVisible.value = true;
+};
+
+// 处理保存角色
+const handleSaveRole = async (role: RoleInfo) => {
+    const savedRole = await permissionStore.saveRole(role);
+    if (savedRole) {
+        ElMessage.success(role.id ? '角色更新成功' : '角色创建成功');
+    }
+};
+
+// 处理删除角色
+const handleDeleteRole = async (roleId: string | number) => {
+    const success = await permissionStore.deleteRole(roleId);
+    if (success) {
+        ElMessage.success('角色删除成功');
+    }
+};
+
+// 处理保存角色权限
+const handleSaveRolePermissions = async (data: { roleId: string | number; permissionIds: (string | number)[] }) => {
+    const success = await permissionStore.updateRolePermissions(data);
+    if (success) {
+        ElMessage.success('角色权限更新成功');
+    }
+};
+
+// 处理保存用户角色
+const handleSaveUserRoles = async (data: UserRoleUpdatePayload) => {
+    const success = await permissionStore.updateUserRoles(data);
+    if (success) {
+        ElMessage.success('用户角色更新成功');
+    }
+};
+
+// 更新用户状态
+const handleUpdateStatus = async (id: string | number, status: UserStatus) => {
+    submitting.value = true;
+    try {
+        await userStore.updateUserStatus(id, status);
+        ElMessage.success('用户状态更新成功');
+
+        // 更新当前详情中的状态
+        if (currentUserDetail.value && currentUserDetail.value.id === id) {
+            currentUserDetail.value.status = status;
+        }
+    } catch (error) {
+        ElMessage.error('更新用户状态失败');
+    } finally {
+        submitting.value = false;
+    }
+};
+
+// 批量操作
+const handleBatchAction = () => {
+    if (selectedUsers.value.length === 0) {
+        ElMessage.warning('请选择要操作的用户');
+        return;
+    }
+
+    batchDialogVisible.value = true;
+};
+
+// 提交批量操作
+const handleBatchSubmit = async () => {
+    if (selectedUsers.value.length === 0) {
+        ElMessage.warning('请选择要操作的用户');
+        return;
+    }
+
+    const ids = selectedUsers.value.map(user => user.id);
+    const status = batchForm.action;
+
+    submitting.value = true;
+    try {
+        await userStore.batchUpdateUserStatus(ids, status);
+        ElMessage.success(`成功${status === 'active' ? '启用' : '禁用'} ${ids.length} 个用户账号`);
+        batchDialogVisible.value = false;
+
+        // 清除选中状态
+        const table = document.querySelector('.el-table__header-wrapper th.el-table-column--selection .el-checkbox');
+        if (table) {
+            (table as HTMLElement).click();
+        }
+    } catch (error) {
+        ElMessage.error('批量操作失败');
+    } finally {
+        submitting.value = false;
+    }
+};
 
 </script>
 
@@ -176,13 +491,117 @@ const handleViewDetail = (id: string | number) => {
   padding: 20px;
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.filter-card {
+  background-color: var(--el-fill-color-light);
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
 .filter-form {
-    margin-bottom: 15px;
+  margin-bottom: 15px;
+}
+
+.search-form-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.search-inputs-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  flex: 1;
+}
+
+.search-button-group {
+  display: flex;
+  gap: 10px;
 }
 
 .list-pagination {
-    margin-top: 20px;
-    display: flex;
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 批量操作对话框样式 */
+.batch-dialog-content {
+  padding: 0 10px;
+}
+
+.selected-count {
+  font-weight: bold;
+  color: var(--el-color-primary);
+}
+
+.selected-users h4 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-radius: 4px;
+  background-color: var(--el-fill-color-light);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.username {
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+}
+
+.user-type {
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .user-manage-page {
+    padding: 10px;
+  }
+
+  .search-form-container {
+    flex-direction: column;
+  }
+
+  .search-inputs-group {
+    width: 100%;
+  }
+
+  .search-button-group {
+    width: 100%;
     justify-content: flex-end;
+  }
+
+  .search-form-item {
+    margin-bottom: 10px;
+  }
 }
 </style>

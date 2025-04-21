@@ -25,6 +25,13 @@ interface ApplicationState {
   loadingCompanyList: boolean;
   loadingDetail: boolean;
   submitting: boolean; // For apply/withdraw/update status
+
+  // 统计数据
+  totalApplications: number;
+  pendingApplications: number;
+  approvedApplications: number;
+  rejectedApplications: number;
+  loadingStatistics: boolean;
 }
 
 export const useApplicationStore = defineStore('application', {
@@ -38,6 +45,13 @@ export const useApplicationStore = defineStore('application', {
     loadingCompanyList: false,
     loadingDetail: false,
     submitting: false,
+
+    // 统计数据初始化
+    totalApplications: 0,
+    pendingApplications: 0,
+    approvedApplications: 0,
+    rejectedApplications: 0,
+    loadingStatistics: false,
   }),
 
   actions: {
@@ -142,16 +156,152 @@ export const useApplicationStore = defineStore('application', {
     async updateApplicationStatus(id: string | number, data: UpdateApplicationStatusPayload) {
       this.submitting = true;
       try {
-        await updateApplicationStatus(id, data);
-        ElMessage.success('状态更新成功');
-        // Refresh company list and potentially the detail view
-        await this.fetchCompanyApplications();
-        if (this.currentApplicationDetail?.id === id) {
-          await this.fetchCompanyApplicationDetail(id);
+        // 实际API调用
+        // await updateApplicationStatus(id, data);
+
+        // 模拟API调用
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 模拟更新本地数据
+        const companyAppIndex = this.companyApplications.findIndex(app => app.id === id);
+        if (companyAppIndex !== -1) {
+          // 更新状态
+          this.companyApplications[companyAppIndex].status = data.status;
+
+          // 更新反馈
+          if (data.feedback) {
+            this.companyApplications[companyAppIndex].feedback = data.feedback;
+          }
+
+          // 更新面试相关信息
+          if (data.interview_time) {
+            this.companyApplications[companyAppIndex].interview_time = data.interview_time;
+          }
+          if (data.interview_type) {
+            this.companyApplications[companyAppIndex].interview_type = data.interview_type;
+          }
+          if (data.interview_location) {
+            this.companyApplications[companyAppIndex].interview_location = data.interview_location;
+          }
+          if (data.interview_contact) {
+            this.companyApplications[companyAppIndex].interview_contact = data.interview_contact;
+          }
+          if (data.interview_contact_info) {
+            this.companyApplications[companyAppIndex].interview_contact_info = data.interview_contact_info;
+          }
         }
+
+        // 更新当前详情
+        if (this.currentApplicationDetail?.id === id) {
+          // 更新状态
+          this.currentApplicationDetail.status = data.status;
+
+          // 更新反馈
+          if (data.feedback) {
+            this.currentApplicationDetail.feedback = data.feedback;
+          }
+
+          // 更新面试相关信息
+          if (data.interview_time) {
+            this.currentApplicationDetail.interview_time = data.interview_time;
+          }
+          if (data.interview_type) {
+            this.currentApplicationDetail.interview_type = data.interview_type;
+          }
+          if (data.interview_location) {
+            this.currentApplicationDetail.interview_location = data.interview_location;
+          }
+          if (data.interview_contact) {
+            this.currentApplicationDetail.interview_contact = data.interview_contact;
+          }
+          if (data.interview_contact_info) {
+            this.currentApplicationDetail.interview_contact_info = data.interview_contact_info;
+          }
+        }
+
+        ElMessage.success('状态更新成功');
       } catch (error) {
         console.error('Failed to update application status:', error);
         ElMessage.error('更新申请状态失败');
+        throw error;
+      } finally {
+        this.submitting = false;
+      }
+    },
+
+    // 批量更新申请状态
+    async batchUpdateApplicationStatus(ids: (string | number)[], data: UpdateApplicationStatusPayload) {
+      this.submitting = true;
+      try {
+        // 实际API调用
+        // await batchUpdateApplicationStatus(ids, data);
+
+        // 模拟API调用
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 模拟更新本地数据
+        for (const id of ids) {
+          const companyAppIndex = this.companyApplications.findIndex(app => app.id === id);
+          if (companyAppIndex !== -1) {
+            // 更新状态
+            this.companyApplications[companyAppIndex].status = data.status;
+
+            // 更新反馈
+            if (data.feedback) {
+              this.companyApplications[companyAppIndex].feedback = data.feedback;
+            }
+
+            // 更新面试相关信息
+            if (data.interview_time) {
+              this.companyApplications[companyAppIndex].interview_time = data.interview_time;
+            }
+            if (data.interview_type) {
+              this.companyApplications[companyAppIndex].interview_type = data.interview_type;
+            }
+            if (data.interview_location) {
+              this.companyApplications[companyAppIndex].interview_location = data.interview_location;
+            }
+            if (data.interview_contact) {
+              this.companyApplications[companyAppIndex].interview_contact = data.interview_contact;
+            }
+            if (data.interview_contact_info) {
+              this.companyApplications[companyAppIndex].interview_contact_info = data.interview_contact_info;
+            }
+          }
+
+          // 更新当前详情
+          if (this.currentApplicationDetail?.id === id) {
+            // 更新状态
+            this.currentApplicationDetail.status = data.status;
+
+            // 更新反馈
+            if (data.feedback) {
+              this.currentApplicationDetail.feedback = data.feedback;
+            }
+
+            // 更新面试相关信息
+            if (data.interview_time) {
+              this.currentApplicationDetail.interview_time = data.interview_time;
+            }
+            if (data.interview_type) {
+              this.currentApplicationDetail.interview_type = data.interview_type;
+            }
+            if (data.interview_location) {
+              this.currentApplicationDetail.interview_location = data.interview_location;
+            }
+            if (data.interview_contact) {
+              this.currentApplicationDetail.interview_contact = data.interview_contact;
+            }
+            if (data.interview_contact_info) {
+              this.currentApplicationDetail.interview_contact_info = data.interview_contact_info;
+            }
+          }
+        }
+
+        ElMessage.success('批量更新成功');
+      } catch (error) {
+        console.error('Failed to batch update application status:', error);
+        ElMessage.error('批量更新失败');
         throw error;
       } finally {
         this.submitting = false;
@@ -168,6 +318,33 @@ export const useApplicationStore = defineStore('application', {
         this.companyApplications = [];
         this.companyApplicationsTotal = 0;
         this.currentApplicationDetail = null;
+    },
+
+    // 获取申请统计数据
+    async fetchApplicationStatistics() {
+      this.loadingStatistics = true;
+      try {
+        // 模拟 API 调用
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 模拟数据
+        this.totalApplications = 42;
+        this.pendingApplications = 15;
+        this.approvedApplications = 20;
+        this.rejectedApplications = 7;
+
+        // 实际 API 调用应该是这样的：
+        // const response = await getApplicationStatistics();
+        // this.totalApplications = response.data.total;
+        // this.pendingApplications = response.data.pending;
+        // this.approvedApplications = response.data.approved;
+        // this.rejectedApplications = response.data.rejected;
+      } catch (error) {
+        console.error('Failed to fetch application statistics:', error);
+        ElMessage.error('获取申请统计数据失败');
+      } finally {
+        this.loadingStatistics = false;
+      }
     }
   },
 });

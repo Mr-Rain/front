@@ -6,7 +6,7 @@
     </el-breadcrumb>
 
     <el-card shadow="never">
-      <el-form 
+      <el-form
         ref="jobFormRef"
         :model="jobData"
         :rules="jobRules"
@@ -72,19 +72,19 @@
          </el-form-item>
 
         <el-form-item label="职位描述" prop="description">
-          <el-input 
-            type="textarea" 
-            v-model="jobData.description" 
-            :rows="8" 
+          <el-input
+            type="textarea"
+            v-model="jobData.description"
+            :rows="8"
             placeholder="详细描述工作内容、职责等 (支持Markdown)"
            ></el-input>
         </el-form-item>
 
          <el-form-item label="职位要求" prop="requirements">
-          <el-input 
-            type="textarea" 
-            v-model="jobData.requirements" 
-            :rows="8" 
+          <el-input
+            type="textarea"
+            v-model="jobData.requirements"
+            :rows="8"
             placeholder="详细描述任职资格、技能要求等 (支持Markdown)"
            ></el-input>
         </el-form-item>
@@ -100,8 +100,25 @@
                 placeholder="输入或选择标签，回车创建"
                 style="width: 100%;"
               >
-                <!-- Options can be dynamically populated based on common tags -->
+                <el-option v-for="tag in commonTags" :key="tag" :label="tag" :value="tag" />
               </el-select>
+              <div class="form-tip">添加标签可以提高职位曝光度，最多可添加 10 个标签</div>
+         </el-form-item>
+
+         <el-form-item label="工作福利" prop="benefits">
+             <el-select
+                v-model="jobData.benefits"
+                multiple
+                filterable
+                allow-create
+                default-first-option
+                :reserve-keyword="false"
+                placeholder="输入或选择福利，回车创建"
+                style="width: 100%;"
+              >
+                <el-option v-for="benefit in commonBenefits" :key="benefit" :label="benefit" :value="benefit" />
+              </el-select>
+              <div class="form-tip">添加福利可以提高应聘者兴趣</div>
          </el-form-item>
 
         <el-form-item>
@@ -131,6 +148,25 @@ const jobId = computed(() => route.params.id as string | undefined);
 const isEditing = computed(() => !!jobId.value);
 const loading = ref(false); // Local loading state for fetching detail
 
+// 常用标签
+const commonTags = [
+  'Vue', 'React', 'Angular', 'TypeScript', 'JavaScript', 'HTML/CSS',
+  'Java', 'Python', 'C++', 'Go', 'PHP', 'Node.js', 'Spring Boot',
+  '前端', '后端', '全栈', '移动端', '大数据', '人工智能',
+  '云计算', 'DevOps', '微服务', '数据库', 'UI/UX', '产品',
+  '运营', '市场', '销售', '客服', '行政', '人力资源',
+  '财务', '法务', '技术支持', '项目管理'
+];
+
+// 常用福利
+const commonBenefits = [
+  '五险一金', '补充医疗保险', '带薪年假', '带薪病假',
+  '弹性工作', '远程办公', '加班补贴', '全勤奖',
+  '定期体检', '节日福利', '生日福利', '员工旅游',
+  '员工活动', '免费午餐', '免费班车', '员工折扣',
+  '股票期权', '技能培训', '晋升空间', '绩效奖金'
+];
+
 // Initialize form data
 const jobData = reactive<Partial<JobInfo>>({
     title: '',
@@ -141,7 +177,8 @@ const jobData = reactive<Partial<JobInfo>>({
     education_required: '不限',
     description: '',
     requirements: '',
-    tags: []
+    tags: [],
+    benefits: []
 });
 
 const jobRules = reactive<FormRules>({
@@ -166,7 +203,7 @@ onMounted(() => {
         Object.assign(jobData, {
             title: '', location: '', job_type: '全职', salary_range: '',
             experience_required: '不限', education_required: '不限',
-            description: '', requirements: '', tags: []
+            description: '', requirements: '', tags: [], benefits: []
         });
         jobStore.clearCurrentJob(); // Clear any previous detail
     }
@@ -230,14 +267,33 @@ const goBack = () => {
 
 /* Add some spacing below form items */
 .el-form-item {
-    margin-bottom: 22px;
+  margin-bottom: 22px;
 }
 
 /* Style for the tags select */
 :deep(.el-select .el-select__tags-text) {
-    max-width: 100px; /* Limit tag text width */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  max-width: 100px; /* Limit tag text width */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Form tips */
+.form-tip {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .job-edit-page {
+    padding: 10px;
+  }
+
+  .el-form-item {
+    margin-bottom: 15px;
+  }
 }
 </style>

@@ -60,4 +60,11 @@ export interface ApplyJobPayload {
 export interface UpdateApplicationStatusPayload {
   status: ApplicationStatus;
   feedback?: string;
+
+  // 面试相关信息
+  interview_time?: string;
+  interview_type?: 'onsite' | 'video' | 'phone';
+  interview_location?: string;
+  interview_contact?: string;
+  interview_contact_info?: string;
 }

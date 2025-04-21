@@ -30,7 +30,6 @@
                 </el-select>
               </el-form-item>
               <el-form-item label="申请职位" prop="jobId" class="search-form-item">
-                <!-- TODO: Fetch job list for company to populate this select -->
                 <el-select
                   v-model="listQuery.jobId"
                   placeholder="所有职位"
@@ -39,7 +38,12 @@
                   @change="handleFilter"
                   class="search-select"
                 >
-                  <!-- <el-option v-for="job in companyJobs" :key="job.id" :label="job.title" :value="job.id"></el-option> -->
+                  <el-option
+                    v-for="job in jobStore.companyJobList"
+                    :key="job.id"
+                    :label="job.title"
+                    :value="job.id"
+                  ></el-option>
                 </el-select>
               </el-form-item>
               <el-form-item label="关键词" class="search-form-item">
@@ -60,7 +64,21 @@
         </el-form>
       </div>
 
-      <el-table :data="applicationStore.companyApplications" v-loading="applicationStore.loadingCompanyList" style="width: 100%">
+      <!-- 批量操作栏 -->
+      <batch-action-bar
+        :selected-items="multipleSelection"
+        @batch-action="handleBatchAction"
+        @clear-selection="handleClearSelection"
+      />
+
+      <el-table
+        :data="applicationStore.companyApplications"
+        v-loading="applicationStore.loadingCompanyList"
+        style="width: 100%"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="55" />
+
         <el-table-column label="申请人信息" min-width="200">
             <template #default="scope">
                  <div><strong>{{ scope.row.student_info?.name || '-' }}</strong></div>
@@ -85,22 +103,39 @@
                 <el-tag :type="getStatusTagType(scope.row.status)" effect="light">{{ formatStatus(scope.row.status) }}</el-tag>
             </template>
         </el-table-column>
-        <el-table-column label="操作" width="180" align="center" fixed="right">
+        <el-table-column label="操作" width="250" align="center" fixed="right">
           <template #default="scope">
-            <el-button link type="primary" size="small" @click="handleViewDetail(scope.row.id)">查看详情</el-button>
-            <!-- TODO: Add actions like Mark as Interview, Offer, Reject based on status -->
-             <el-dropdown @command="(command) => handleUpdateStatus(scope.row.id, command)">
-                <el-button link type="primary" size="small">
-                更新状态<el-icon class="el-icon--right"><arrow-down /></el-icon>
-                </el-button>
-                <template #dropdown>
+            <el-button link type="primary" size="small" @click="handleViewDetail(scope.row.id)">
+              <el-icon><View /></el-icon> 详情
+            </el-button>
+
+            <el-dropdown trigger="click">
+              <el-button link type="primary" size="small">
+                <el-icon><Calendar /></el-icon> 面试
+              </el-button>
+              <template #dropdown>
                 <el-dropdown-menu>
-                    <el-dropdown-item command="viewed" :disabled="scope.row.status !== 'pending'">标记为已查看</el-dropdown-item>
-                    <el-dropdown-item command="interview" :disabled="!canProgress(scope.row.status)">邀请面试</el-dropdown-item>
-                    <el-dropdown-item command="offer" :disabled="!canProgress(scope.row.status)">发放Offer</el-dropdown-item>
-                    <el-dropdown-item command="rejected" :disabled="!canProgress(scope.row.status)">标记不合适</el-dropdown-item>
+                  <el-dropdown-item @click="handleScheduleInterview(scope.row)" :disabled="!canProgress(scope.row.status)">
+                    安排面试
+                  </el-dropdown-item>
+                  <el-dropdown-item @click="handleAddFeedback(scope.row, 'interview')" :disabled="scope.row.status !== 'interview'">
+                    添加面试反馈
+                  </el-dropdown-item>
                 </el-dropdown-menu>
-                </template>
+              </template>
+            </el-dropdown>
+
+            <el-dropdown @command="(command) => handleUpdateStatus(scope.row.id, command)">
+              <el-button link type="primary" size="small">
+                <el-icon><ChatLineRound /></el-icon> 状态
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="viewed" :disabled="scope.row.status !== 'pending'">标记为已查看</el-dropdown-item>
+                  <el-dropdown-item command="offer" :disabled="!canProgress(scope.row.status)">发放Offer</el-dropdown-item>
+                  <el-dropdown-item command="rejected" :disabled="!canProgress(scope.row.status)">标记不合适</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
             </el-dropdown>
           </template>
         </el-table-column>
@@ -142,11 +177,52 @@
             <!-- Or Embed Resume Preview Component -->
              <!-- <ResumeViewer :resumeId="applicationStore.currentApplicationDetail.resume_id" /> -->
 
-             <h4>沟通/反馈记录 (待实现)</h4>
-             <!-- Display feedback/interview notes -->
-             <!-- Add input for new feedback -->
-             <el-input type="textarea" placeholder="添加备注或面试反馈..."></el-input>
-             <el-button type="primary" size="small" style="margin-top: 10px;">添加记录</el-button>
+             <h4>面试信息</h4>
+             <div v-if="applicationStore.currentApplicationDetail.status === 'interview' || applicationStore.currentApplicationDetail.interview_time">
+               <el-descriptions :column="1" border size="small">
+                 <el-descriptions-item label="面试时间">
+                   {{ formatTime(applicationStore.currentApplicationDetail.interview_time) || '未设置' }}
+                 </el-descriptions-item>
+                 <el-descriptions-item label="面试方式">
+                   {{ formatInterviewType(applicationStore.currentApplicationDetail.interview_type) || '未设置' }}
+                 </el-descriptions-item>
+                 <el-descriptions-item v-if="applicationStore.currentApplicationDetail.interview_type === 'onsite'" label="面试地点">
+                   {{ applicationStore.currentApplicationDetail.interview_location || '未设置' }}
+                 </el-descriptions-item>
+                 <el-descriptions-item label="面试联系人">
+                   {{ applicationStore.currentApplicationDetail.interview_contact || '未设置' }}
+                 </el-descriptions-item>
+                 <el-descriptions-item label="联系方式">
+                   {{ applicationStore.currentApplicationDetail.interview_contact_info || '未设置' }}
+                 </el-descriptions-item>
+               </el-descriptions>
+               <div class="action-buttons" style="margin-top: 10px;">
+                 <el-button type="primary" size="small" @click="handleScheduleInterview(applicationStore.currentApplicationDetail)">
+                   {{ applicationStore.currentApplicationDetail.interview_time ? '修改面试安排' : '安排面试' }}
+                 </el-button>
+                 <el-button v-if="applicationStore.currentApplicationDetail.status === 'interview'" type="success" size="small" @click="handleAddFeedback(applicationStore.currentApplicationDetail, 'interview')">
+                   添加面试反馈
+                 </el-button>
+               </div>
+             </div>
+             <el-empty v-else description="暂无面试信息" :image-size="100"></el-empty>
+
+             <h4>反馈记录</h4>
+             <div v-if="applicationStore.currentApplicationDetail.feedback" class="feedback-content">
+               <div class="feedback-text">
+                 {{ applicationStore.currentApplicationDetail.feedback }}
+               </div>
+               <div class="feedback-time">
+                 更新时间：{{ formatTime(applicationStore.currentApplicationDetail.update_time) }}
+               </div>
+             </div>
+             <el-empty v-else description="暂无反馈记录" :image-size="100"></el-empty>
+
+             <div class="action-buttons" style="margin-top: 15px;">
+               <el-button type="primary" size="small" @click="handleAddFeedback(applicationStore.currentApplicationDetail, 'general')">
+                 添加反馈
+               </el-button>
+             </div>
 
              <div style="margin-top: 20px; text-align: right;">
                  <el-button @click="detailDrawerVisible = false">关闭</el-button>
@@ -156,18 +232,49 @@
          <el-empty v-else description="无法加载申请详情"></el-empty>
     </el-drawer>
 
+    <!-- 面试安排对话框 -->
+    <interview-scheduler
+      ref="interviewSchedulerRef"
+      v-model:visible="interviewDialogVisible"
+      :application="selectedApplication"
+      @submit="handleInterviewSubmit"
+    />
+
+    <!-- 批量面试安排对话框 -->
+    <batch-interview-dialog
+      ref="batchInterviewDialogRef"
+      v-model:visible="batchInterviewDialogVisible"
+      :applications="multipleSelection"
+      @submit="handleBatchInterviewSubmit"
+    />
+
+    <!-- 反馈表单对话框 -->
+    <el-dialog v-model="feedbackDialogVisible" :title="getFeedbackTitle" width="500px">
+      <feedback-form
+        :type="feedbackType"
+        :initial-content="selectedApplication?.feedback || ''"
+        :loading="applicationStore.submitting"
+        @submit="handleFeedbackSubmit"
+        @cancel="feedbackDialogVisible = false"
+      />
+    </el-dialog>
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, watch } from 'vue';
+import { ref, reactive, onMounted, computed, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useApplicationStore } from '@/stores/application';
 import { useJobStore } from '@/stores/job'; // For fetching job list filter
 import type { ApplicationInfo, ApplicationStatus, UpdateApplicationStatusPayload } from '@/types/application';
-import { ElCard, ElTable, ElTableColumn, ElTag, ElButton, ElEmpty, ElMessage, ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElLink, ElDropdown, ElDropdownMenu, ElDropdownItem, ElIcon, ElDrawer, ElDescriptions, ElDescriptionsItem } from 'element-plus';
-import { Search, ArrowDown } from '@element-plus/icons-vue';
+import { ElCard, ElTable, ElTableColumn, ElTag, ElButton, ElEmpty, ElMessage, ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElLink, ElDropdown, ElDropdownMenu, ElDropdownItem, ElIcon, ElDrawer, ElDescriptions, ElDescriptionsItem, ElMessageBox, ElCheckbox } from 'element-plus';
+import { Search, ArrowDown, Calendar, ChatLineRound, DocumentCopy, View, Check, Close } from '@element-plus/icons-vue';
 import Pagination from '@/components/common/Pagination.vue';
+import BatchActionBar from '@/components/company/BatchActionBar.vue';
+import InterviewScheduler from '@/components/company/InterviewScheduler.vue';
+import BatchInterviewDialog from '@/components/company/BatchInterviewDialog.vue';
+import FeedbackForm from '@/components/company/FeedbackForm.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -175,6 +282,14 @@ const applicationStore = useApplicationStore();
 const jobStore = useJobStore(); // Inject job store
 
 const detailDrawerVisible = ref(false);
+const interviewDialogVisible = ref(false);
+const batchInterviewDialogVisible = ref(false);
+const feedbackDialogVisible = ref(false);
+const selectedApplication = ref<ApplicationInfo | null>(null);
+const multipleSelection = ref<ApplicationInfo[]>([]);
+const interviewSchedulerRef = ref<InstanceType<typeof InterviewScheduler>>();
+const batchInterviewDialogRef = ref<InstanceType<typeof BatchInterviewDialog>>();
+const feedbackType = ref<'interview' | 'rejection' | 'offer' | 'general'>('general');
 
 const listQuery = reactive({
     page: 1,
@@ -182,6 +297,20 @@ const listQuery = reactive({
     status: undefined as ApplicationStatus | undefined,
     jobId: undefined as string | number | undefined,
     keyword: ''
+});
+
+// 反馈对话框标题
+const getFeedbackTitle = computed(() => {
+  switch (feedbackType.value) {
+    case 'interview':
+      return '面试反馈';
+    case 'rejection':
+      return '拒绝原因';
+    case 'offer':
+      return '录用信息';
+    default:
+      return '添加反馈';
+  }
 });
 
 // Watch for route query changes (e.g., coming from JobManage link)
@@ -250,6 +379,16 @@ const getStatusTagType = (status: ApplicationStatus | undefined): ('primary' | '
     }
 };
 
+const formatInterviewType = (type: 'onsite' | 'video' | 'phone' | undefined): string => {
+    if (!type) return '';
+    const typeMap: Record<string, string> = {
+        'onsite': '现场面试',
+        'video': '视频面试',
+        'phone': '电话面试'
+    };
+    return typeMap[type] || type;
+};
+
 // Check if status can be updated (e.g., cannot reject an offered application directly)
 const canProgress = (status: ApplicationStatus | undefined): boolean => {
     return status !== 'offer' && status !== 'rejected' && status !== 'withdrawn';
@@ -291,6 +430,157 @@ const previewResume = (resumeId: string | number | undefined, studentId: string 
     ElMessage.info('简历预览功能待实现');
 };
 
+// 多选相关方法
+const handleSelectionChange = (selection: ApplicationInfo[]) => {
+    multipleSelection.value = selection;
+};
+
+const handleClearSelection = () => {
+    // 清除表格选择
+    const table = document.querySelector('.el-table__header-wrapper th.el-table-column--selection .el-checkbox');
+    if (table) {
+        (table as HTMLElement).click();
+    }
+};
+
+// 批量操作方法
+const handleBatchAction = async (data: { action: ApplicationStatus; items: ApplicationInfo[] }) => {
+    const { action, items } = data;
+
+    if (items.length === 0) {
+        ElMessage.warning('请选择要操作的申请');
+        return;
+    }
+
+    if (action === 'interview') {
+        // 打开批量面试安排对话框
+        batchInterviewDialogVisible.value = true;
+        nextTick(() => {
+            batchInterviewDialogRef.value?.initForm();
+        });
+    } else {
+        // 其他状态更新
+        let confirmMessage = '';
+        switch (action) {
+            case 'viewed':
+                confirmMessage = `确定将选中的 ${items.length} 条申请标记为已查看吗？`;
+                break;
+            case 'offer':
+                confirmMessage = `确定向选中的 ${items.length} 名候选人发放Offer吗？`;
+                break;
+            case 'rejected':
+                confirmMessage = `确定将选中的 ${items.length} 条申请标记为不合适吗？`;
+                break;
+            default:
+                confirmMessage = `确定更新选中的 ${items.length} 条申请状态吗？`;
+        }
+
+        try {
+            await ElMessageBox.confirm(confirmMessage, '批量操作确认', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            });
+
+            // 执行批量更新
+            const payload: UpdateApplicationStatusPayload = { status: action };
+            const applicationIds = items.map(item => item.id);
+
+            try {
+                await applicationStore.batchUpdateApplicationStatus(applicationIds, payload);
+                ElMessage.success(`成功更新 ${items.length} 条申请状态`);
+                handleClearSelection();
+            } catch (error) {
+                console.error('Failed to batch update applications:', error);
+                ElMessage.error('批量更新失败');
+            }
+        } catch {
+            // 用户取消操作
+        }
+    }
+};
+
+// 面试安排相关方法
+const handleScheduleInterview = (application: ApplicationInfo) => {
+    selectedApplication.value = application;
+    interviewDialogVisible.value = true;
+    nextTick(() => {
+        interviewSchedulerRef.value?.initForm();
+    });
+};
+
+const handleInterviewSubmit = async (data: any) => {
+    if (!selectedApplication.value) return;
+
+    try {
+        await applicationStore.updateApplicationStatus(selectedApplication.value.id, data);
+        ElMessage.success('面试安排成功');
+        interviewDialogVisible.value = false;
+    } catch (error) {
+        console.error('Failed to schedule interview:', error);
+        ElMessage.error('面试安排失败');
+    }
+};
+
+const handleBatchInterviewSubmit = async (data: any) => {
+    try {
+        await applicationStore.batchUpdateApplicationStatus(data.applicationIds, {
+            status: 'interview',
+            interview_time: data.interview_time,
+            interview_type: data.interview_type,
+            interview_location: data.interview_location,
+            interview_contact: data.interview_contact,
+            interview_contact_info: data.interview_contact_info,
+            feedback: data.feedback
+        });
+        ElMessage.success(`成功为 ${data.applicationIds.length} 名候选人安排面试`);
+        batchInterviewDialogVisible.value = false;
+        handleClearSelection();
+    } catch (error) {
+        console.error('Failed to batch schedule interviews:', error);
+        ElMessage.error('批量安排面试失败');
+    }
+};
+
+// 反馈相关方法
+const handleAddFeedback = (application: ApplicationInfo, type: 'interview' | 'rejection' | 'offer' | 'general') => {
+    selectedApplication.value = application;
+    feedbackType.value = type;
+    feedbackDialogVisible.value = true;
+};
+
+const handleFeedbackSubmit = async (data: any) => {
+    if (!selectedApplication.value) return;
+
+    try {
+        let status: ApplicationStatus | undefined;
+
+        // 根据反馈类型设置状态
+        if (feedbackType.value === 'interview' && data.result) {
+            if (data.result === 'pass') {
+                status = 'offer';
+            } else if (data.result === 'fail') {
+                status = 'rejected';
+            }
+        } else if (feedbackType.value === 'rejection') {
+            status = 'rejected';
+        } else if (feedbackType.value === 'offer') {
+            status = 'offer';
+        }
+
+        await applicationStore.updateApplicationStatus(selectedApplication.value.id, {
+            status: status || selectedApplication.value.status,
+            feedback: data.content
+        });
+
+        ElMessage.success('反馈提交成功');
+        feedbackDialogVisible.value = false;
+    } catch (error) {
+        console.error('Failed to submit feedback:', error);
+        ElMessage.error('反馈提交失败');
+    }
+};
+
 </script>
 
 <style scoped>
@@ -304,32 +594,112 @@ const previewResume = (resumeId: string | number | undefined, studentId: string 
   align-items: center;
 }
 
+.filter-card {
+  background-color: var(--el-fill-color-light);
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
 .filter-form {
-    margin-bottom: 15px;
+  margin-bottom: 15px;
+}
+
+.search-form-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.search-inputs-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  flex: 1;
+}
+
+.search-button-group {
+  display: flex;
+  gap: 10px;
 }
 
 .list-pagination {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end;
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .sub-info {
-    font-size: 12px;
-    color: #909399;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
 }
 
 .el-dropdown .el-button {
-    margin-left: 8px; /* Space between buttons */
+  margin-left: 8px; /* Space between buttons */
 }
 
 .detail-content h4 {
-    margin-top: 25px;
-    margin-bottom: 10px;
-    font-size: 1.1em;
-}
-.detail-content h4:first-child {
-    margin-top: 0;
+  margin-top: 25px;
+  margin-bottom: 10px;
+  font-size: 1.1em;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
 }
 
+.detail-content h4:first-child {
+  margin-top: 0;
+}
+
+.feedback-content {
+  background-color: var(--el-fill-color-light);
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.feedback-text {
+  white-space: pre-line;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.feedback-time {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  text-align: right;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 768px) {
+  .application-manage-page {
+    padding: 10px;
+  }
+
+  .search-form-container {
+    flex-direction: column;
+  }
+
+  .search-inputs-group {
+    width: 100%;
+  }
+
+  .search-button-group {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .search-form-item {
+    margin-bottom: 10px;
+  }
+
+  .action-buttons {
+    flex-wrap: wrap;
+  }
+}
 </style>

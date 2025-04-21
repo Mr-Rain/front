@@ -26,6 +26,7 @@ export interface JobInfo {
   experience_required: string; // 经验要求 (例如: 不限, 1-3年, 3-5年)
   education_required: string; // 学历要求 (例如: 不限, 大专, 本科, 硕士)
   tags?: string[]; // 职位标签 (例如: 前端, Vue, 技术氛围好)
+  benefits?: string[]; // 工作福利 (例如: 五险一金, 带薪年假, 弹性工作)
   description: string; // 职位描述 (Markdown格式)
   requirements: string; // 职位要求 (Markdown格式)
   publish_time?: string; // 发布时间 (ISO 8601 格式)
@@ -51,4 +52,4 @@ export interface JobListParams {
   pageSize?: number; // 每页数量
   sortBy?: string; // 排序字段 (如 publish_time)
   order?: 'asc' | 'desc'; // 排序方式
-} 
+}

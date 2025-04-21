@@ -131,15 +131,101 @@ export const useCompanyStore = defineStore('company', {
     async submitAudit(companyId: string | number, approved: boolean, message?: string) {
       this.submittingAudit = true;
       try {
-        await approveCompany(companyId, approved, message);
+        // 实际API调用
+        // await approveCompany(companyId, approved, message);
+
+        // 模拟API调用
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 更新本地数据
+        const index = this.auditList.findIndex(company => company.id === companyId);
+        if (index !== -1) {
+          this.auditList[index].audit_status = approved ? 'approved' : 'rejected';
+          if (message) {
+            this.auditList[index].audit_message = message;
+          }
+        }
+
         ElMessage.success(`公司审核操作成功`);
-        this.fetchAuditList();
+        // 刷新列表
+        // this.fetchAuditList();
       } catch (error) {
         console.error(`Failed to submit audit for company ${companyId}:`, error);
         ElMessage.error('审核提交失败');
         throw error;
       } finally {
         this.submittingAudit = false;
+      }
+    },
+
+    // (Admin) 获取公司审核记录
+    async fetchAuditLogs(companyId: string | number) {
+      try {
+        // 实际API调用
+        // const response = await request.get(`/admin/companies/${companyId}/audit-logs`);
+        // return response.data;
+
+        // 模拟API调用
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 模拟审核记录数据
+        const company = this.auditList.find(company => company.id === companyId);
+        if (!company) {
+          return [];
+        }
+
+        const now = new Date();
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        return [
+          {
+            id: 1,
+            company_id: companyId,
+            action: 'view',
+            operator_id: 1,
+            operator_name: 'admin',
+            audit_time: yesterday.toISOString(),
+            message: ''
+          },
+          {
+            id: 2,
+            company_id: companyId,
+            action: company.audit_status === 'approved' ? 'approve' : (company.audit_status === 'rejected' ? 'reject' : 'comment'),
+            operator_id: 1,
+            operator_name: 'admin',
+            audit_time: now.toISOString(),
+            message: company.audit_message || ''
+          }
+        ];
+      } catch (error) {
+        console.error(`Failed to fetch audit logs for company ${companyId}:`, error);
+        ElMessage.error('获取审核记录失败');
+        return [];
+      }
+    },
+
+    // (Admin) 获取公司详情
+    async getCompanyDetail(companyId: string | number) {
+      try {
+        // 实际API调用
+        // const response = await request.get(`/admin/companies/${companyId}`);
+        // return response.data;
+
+        // 模拟API调用
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 从列表中获取公司信息
+        const company = this.auditList.find(company => company.id === companyId);
+        if (!company) {
+          throw new Error('公司不存在');
+        }
+
+        return company;
+      } catch (error) {
+        console.error(`Failed to get company detail for id ${companyId}:`, error);
+        ElMessage.error('获取公司详情失败');
+        throw error;
       }
     },
 
@@ -192,4 +278,4 @@ export const useCompanyStore = defineStore('company', {
       this.applicationTotal = 0;
     },
   },
-}); 
+});

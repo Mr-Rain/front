@@ -18,6 +18,16 @@
         </div>
       </template>
 
+      <!-- 统计数据展示 -->
+      <job-statistics
+        :total-jobs="jobStatistics.totalJobs"
+        :active-jobs="jobStatistics.activeJobs"
+        :total-applications="jobStatistics.totalApplications"
+        :pending-applications="jobStatistics.pendingApplications"
+        :trends="jobStatistics.trends"
+        class="job-statistics-section"
+      />
+
       <!-- Filters -->
       <div class="filter-card">
         <el-form :inline="true" :model="listQuery" @submit.prevent="handleFilter" class="filter-form">
@@ -75,9 +85,10 @@
                  <el-tag :type="scope.row.status === 'open' ? 'success' : 'info'" effect="light">{{ scope.row.status === 'open' ? '招聘中' : '已关闭' }}</el-tag>
             </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" align="center" fixed="right">
+        <el-table-column label="操作" width="250" align="center" fixed="right">
           <template #default="scope">
             <el-button link type="primary" size="small" @click="goToEditJob(scope.row.id)">编辑</el-button>
+            <el-button link type="info" size="small" @click="handleCopyJob(scope.row)" :icon="CopyDocument">复制</el-button>
             <el-button v-if="scope.row.status === 'open'" link type="warning" size="small" @click="handleCloseJob(scope.row.id)">关闭</el-button>
             <el-button v-else link type="success" size="small" @click="handleOpenJob(scope.row.id)">开启</el-button>
              <el-popconfirm title="确定删除这个职位吗? (不可恢复)" @confirm="handleDeleteJob(scope.row.id)">
@@ -103,6 +114,14 @@
          />
 
     </el-card>
+
+    <!-- 职位复制对话框 -->
+    <job-copy-dialog
+      ref="copyDialogRef"
+      v-model:visible="copyDialogVisible"
+      :job="selectedJob"
+      @copy-confirmed="handleCopyConfirmed"
+    />
   </div>
 </template>
 
@@ -110,14 +129,23 @@
 import { ref, reactive, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useJobStore } from '@/stores/job'; // Assuming job store handles company jobs
+import { useApplicationStore } from '@/stores/application'; // For application statistics
 import type { JobInfo, JobStatus } from '@/types/job';
 import { ElCard, ElButton, ElTable, ElTableColumn, ElTag, ElPopconfirm, ElEmpty, ElMessage, ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElLink } from 'element-plus';
-import { Plus, Search } from '@element-plus/icons-vue';
+import { Plus, Search, CopyDocument } from '@element-plus/icons-vue';
 import Pagination from '@/components/common/Pagination.vue';
 import TableExport from '@/components/common/TableExport.vue'; // Import table export component
+import JobStatistics from '@/components/company/JobStatistics.vue'; // Import job statistics component
+import JobCopyDialog from '@/components/company/JobCopyDialog.vue'; // Import job copy dialog
 
 const router = useRouter();
 const jobStore = useJobStore();
+const applicationStore = useApplicationStore();
+
+// 复制对话框引用
+const copyDialogRef = ref<InstanceType<typeof JobCopyDialog>>();
+const copyDialogVisible = ref(false);
+const selectedJob = ref<JobInfo | null>(null);
 
 const listQuery = reactive({
     page: 1,
@@ -131,8 +159,32 @@ const fetchJobs = () => {
     jobStore.fetchCompanyJobList(listQuery);
 };
 
+// 统计数据
+const jobStatistics = computed(() => {
+  const totalJobs = jobStore.companyJobTotal;
+  const activeJobs = jobStore.companyJobList.filter(job => job.status === 'open').length;
+  const totalApplications = applicationStore.totalApplications;
+  const pendingApplications = applicationStore.pendingApplications;
+
+  return {
+    totalJobs,
+    activeJobs,
+    totalApplications,
+    pendingApplications,
+    // 模拟的趋势数据
+    trends: {
+      totalJobs: 5,
+      activeJobs: 10,
+      totalApplications: -3,
+      pendingApplications: 15
+    }
+  };
+});
+
 onMounted(() => {
     fetchJobs();
+    // 获取申请统计数据
+    applicationStore.fetchApplicationStatistics();
 });
 
 const handleFilter = () => {
@@ -191,6 +243,28 @@ const handleDeleteJob = async (id: string | number) => {
         ElMessage.success('职位已删除');
         // fetchJobs(); // Refresh handled by store?
     } catch(e) { ElMessage.error('删除失败'); }
+};
+
+// 复制职位相关方法
+const handleCopyJob = (job: JobInfo) => {
+    selectedJob.value = job;
+    copyDialogVisible.value = true;
+    // 初始化表单
+    setTimeout(() => {
+        copyDialogRef.value?.initForm();
+    }, 100);
+};
+
+const handleCopyConfirmed = async (newJobData: Partial<JobInfo>) => {
+    try {
+        // 创建新职位
+        await jobStore.createJob(newJobData);
+        // 刷新列表
+        fetchJobs();
+    } catch (error) {
+        console.error('Failed to create copied job:', error);
+        ElMessage.error('复制职位失败');
+    }
 };
 
 // 导出相关方法
@@ -252,19 +326,68 @@ const formatDateTime = (date: Date): string => {
   align-items: center;
 }
 
+.job-statistics-section {
+  margin: 10px 0 25px;
+}
+
 .filter-form {
-    margin-bottom: 15px;
+  margin-bottom: 15px;
+}
+
+.filter-card {
+  background-color: var(--el-fill-color-light);
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.search-form-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.search-inputs-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  flex: 1;
+}
+
+.search-button-group {
+  display: flex;
+  gap: 10px;
 }
 
 .list-pagination {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end;
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* Adjust link color/style within table */
 .el-table .el-link {
-    font-size: inherit;
+  font-size: inherit;
 }
 
+@media (max-width: 768px) {
+  .search-form-container {
+    flex-direction: column;
+  }
+
+  .search-inputs-group {
+    width: 100%;
+  }
+
+  .search-button-group {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .search-form-item {
+    margin-bottom: 10px;
+  }
+}
 </style>

@@ -174,26 +174,83 @@ export const useUserStore = defineStore('user', {
         }
     },
 
-    /* // <-- Temporarily commented out: Needs updateUserStatusApi implementation
+    // 更新用户状态
     async updateUserStatus(id: string | number, status: UserStatus) {
-         // TODO: Ensure updateUserStatus is exported from @/api/permission.ts
-         try {
-            await updateUserStatusApi(id, status); // Now uses the import from @/api/user
-            // Refresh the specific user in the list
+        try {
+            // 实际API调用
+            // await updateUserStatusApi(id, status);
+
+            // 模拟API调用
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // 更新本地数据
             const index = this.userList.findIndex(user => user.id === id);
             if (index !== -1) {
-                 // Directly update the status in the list
-                 this.userList[index].status = status;
+                this.userList[index].status = status;
             }
-            // Do NOT show success message here, let the component handle it?
-            ElMessage.success('用户状态更新成功'); // Or show it here
-         } catch (error) {
-             console.error('Failed to update user status:', error);
-             ElMessage.error('更新用户状态失败');
-             throw error; // Re-throw for component handling
-         }
+
+            ElMessage.success('用户状态更新成功');
+            return true;
+        } catch (error) {
+            console.error('Failed to update user status:', error);
+            ElMessage.error('更新用户状态失败');
+            throw error;
+        }
     },
-    */
+
+    // 获取用户详情
+    async getUserDetail(id: string | number) {
+        try {
+            // 实际API调用
+            // const response = await request.get(`/admin/users/${id}`);
+            // return response.data;
+
+            // 模拟API调用
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // 从列表中获取用户信息
+            const user = this.userList.find(user => user.id === id);
+            if (!user) {
+                throw new Error('用户不存在');
+            }
+
+            // 模拟返回更详细的用户信息
+            return {
+                ...user,
+                create_time: user.create_time || new Date().toISOString()
+            };
+        } catch (error) {
+            console.error(`Failed to get user detail for id ${id}:`, error);
+            ElMessage.error('获取用户详情失败');
+            throw error;
+        }
+    },
+
+    // 批量更新用户状态
+    async batchUpdateUserStatus(ids: (string | number)[], status: UserStatus) {
+        try {
+            // 实际API调用
+            // await request.post('/admin/users/batch-update-status', { ids, status });
+
+            // 模拟API调用
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // 更新本地数据
+            for (const id of ids) {
+                const index = this.userList.findIndex(user => user.id === id);
+                if (index !== -1) {
+                    this.userList[index].status = status;
+                }
+            }
+
+            ElMessage.success(`成功更新 ${ids.length} 个用户的状态`);
+            return true;
+        } catch (error) {
+            console.error('Failed to batch update user status:', error);
+            ElMessage.error('批量更新用户状态失败');
+            throw error;
+        }
+    },
 
     // 发送验证码
     async sendVerificationCode(email: string) {

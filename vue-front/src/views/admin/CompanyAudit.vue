@@ -2,7 +2,14 @@
   <div class="company-audit-page">
     <el-card shadow="never">
       <template #header>
-        <span>企业资质审核</span>
+        <div class="card-header">
+          <span>企业资质审核</span>
+          <div class="header-actions">
+            <el-button type="primary" size="small" @click="handleViewAuditLogs">
+              <el-icon><Document /></el-icon> 审核记录
+            </el-button>
+          </div>
+        </div>
       </template>
 
       <!-- Filters -->
@@ -122,19 +129,34 @@
         </template>
     </el-dialog>
 
+    <!-- 审核记录抽屉 -->
+    <audit-log-drawer
+      v-model:visible="auditLogDrawerVisible"
+      :company-id="selectedCompanyId"
+      :audit-logs="auditLogs"
+      :loading="loadingAuditLogs"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
-import { useCompanyStore } from '@/stores/company'; // Assuming company store handles audit list
+import { ref, reactive, onMounted, computed, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { useCompanyStore } from '@/stores/company';
 import type { CompanyProfile, CompanyAuditStatus, AuditPayload } from '@/types/company';
 import type { FormInstance } from 'element-plus';
-import { ElCard, ElTable, ElTableColumn, ElTag, ElButton, ElEmpty, ElMessage, ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElLink, ElDialog, ElDescriptions, ElDescriptionsItem, ElRadioGroup, ElRadio } from 'element-plus';
-import { Search } from '@element-plus/icons-vue';
+import { ElCard, ElTable, ElTableColumn, ElTag, ElButton, ElEmpty, ElMessage, ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElLink, ElDialog, ElDescriptions, ElDescriptionsItem, ElRadioGroup, ElRadio, ElIcon } from 'element-plus';
+import { Search, Document } from '@element-plus/icons-vue';
 import Pagination from '@/components/common/Pagination.vue';
+import AuditLogDrawer from '@/components/admin/AuditLogDrawer.vue';
 
 const companyStore = useCompanyStore();
+const route = useRoute();
+
+// 审核记录相关
+const auditLogDrawerVisible = ref(false);
+const auditLogs = ref<any[]>([]);
+const loadingAuditLogs = ref(false);
 
 const listQuery = reactive({
     page: 1,
@@ -201,13 +223,60 @@ const previewLicense = (url: string | undefined) => {
     }
 }
 
+const selectedCompanyId = ref<string | number>('');
+
+// 监听路由参数
+watch(() => route.query.id, (newId) => {
+    if (newId && typeof newId === 'string') {
+        // 如果有公司ID参数，直接打开详情对话框
+        selectedCompanyId.value = newId;
+        const company = companyStore.auditList.find(c => c.id === newId);
+        if (company) {
+            handleViewDetail(company);
+        } else {
+            // 如果在当前列表中找不到，可以尝试获取详情
+            companyStore.getCompanyDetail(newId).then(company => {
+                handleViewDetail(company);
+            }).catch(() => {
+                ElMessage.error('无法获取公司信息');
+            });
+        }
+    }
+}, { immediate: true });
+
 const handleViewDetail = (company: CompanyProfile) => {
     currentCompany.value = company; // Store company data for dialog
+    selectedCompanyId.value = company.id;
     // Reset audit form
     auditData.status = 'approved';
     auditData.message = '';
     detailDialogVisible.value = true;
     auditFormRef.value?.clearValidate();
+}
+
+// 查看审核记录
+const handleViewAuditLogs = async () => {
+    if (!selectedCompanyId.value && companyStore.auditList.length > 0) {
+        // 如果没有选中公司，默认选择第一个
+        selectedCompanyId.value = companyStore.auditList[0].id;
+    }
+
+    if (!selectedCompanyId.value) {
+        ElMessage.warning('请先选择一个公司');
+        return;
+    }
+
+    loadingAuditLogs.value = true;
+    auditLogDrawerVisible.value = true;
+
+    try {
+        auditLogs.value = await companyStore.fetchAuditLogs(selectedCompanyId.value);
+    } catch (error) {
+        console.error('Failed to fetch audit logs:', error);
+        ElMessage.error('获取审核记录失败');
+    } finally {
+        loadingAuditLogs.value = false;
+    }
 }
 
 const handleAuditSubmit = async () => {
@@ -246,23 +315,87 @@ const handleAuditSubmit = async () => {
   padding: 20px;
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.filter-card {
+  background-color: var(--el-fill-color-light);
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
 .filter-form {
-    margin-bottom: 15px;
+  margin-bottom: 15px;
+}
+
+.search-form-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.search-inputs-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  flex: 1;
+}
+
+.search-button-group {
+  display: flex;
+  gap: 10px;
 }
 
 .list-pagination {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end;
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .detail-content h4 {
-    margin-top: 20px;
-    margin-bottom: 10px;
-    font-size: 1.1em;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
 }
+
 .detail-content h4:first-child {
-    margin-top: 0;
+  margin-top: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 768px) {
+  .company-audit-page {
+    padding: 10px;
+  }
+
+  .search-form-container {
+    flex-direction: column;
+  }
+
+  .search-inputs-group {
+    width: 100%;
+  }
+
+  .search-button-group {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .search-form-item {
+    margin-bottom: 10px;
+  }
 }
 
 </style>
