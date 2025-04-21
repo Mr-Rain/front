@@ -14,8 +14,16 @@
 
       <!-- 导航链接 -->
       <div class="nav-links hide-on-mobile">
-        <router-link to="/jobs" class="nav-link" :class="{ 'active': activeIndex === '/jobs' }">职位列表</router-link>
-        <router-link to="/companies" class="nav-link" :class="{ 'active': activeIndex === '/companies' }">企业列表</router-link>
+        <router-link :to="getJobsPath()"
+          class="nav-link"
+          :class="{ 'active': isJobsActive() }">
+          职位列表
+        </router-link>
+        <router-link :to="getCompaniesPath()"
+          class="nav-link"
+          :class="{ 'active': isCompaniesActive() }">
+          企业列表
+        </router-link>
       </div>
     </div>
 
@@ -99,6 +107,48 @@ const searchQuery = ref('');
 
 // Computed property for active menu item based on current route
 const activeIndex = computed(() => route.path);
+
+// 根据用户角色获取职位列表路径
+const getJobsPath = () => {
+  if (!userStore.token || !userStore.userInfo) return '/jobs';
+
+  const userType = userStore.userInfo.user_type;
+  if (userType === 'student') return '/student/jobs';
+  if (userType === 'company') return '/company/jobs';
+  if (userType === 'admin') return '/admin/jobs';
+
+  return '/jobs';
+};
+
+// 根据用户角色获取企业列表路径
+const getCompaniesPath = () => {
+  if (!userStore.token || !userStore.userInfo) return '/companies';
+
+  const userType = userStore.userInfo.user_type;
+  if (userType === 'student') return '/student/companies';
+  if (userType === 'company') return '/company/companies';
+  if (userType === 'admin') return '/admin/company-list';
+
+  return '/companies';
+};
+
+// 判断职位列表是否激活
+const isJobsActive = () => {
+  const path = route.path;
+  return path === '/jobs' ||
+         path === '/student/jobs' ||
+         path === '/company/jobs' ||
+         path === '/admin/jobs';
+};
+
+// 判断企业列表是否激活
+const isCompaniesActive = () => {
+  const path = route.path;
+  return path === '/companies' ||
+         path === '/student/companies' ||
+         path === '/company/companies' ||
+         path === '/admin/company-list';
+};
 
 // 搜索建议数据
 interface SearchSuggestion {

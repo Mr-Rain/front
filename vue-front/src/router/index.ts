@@ -88,6 +88,12 @@ const router = createRouter({
           name: 'student-recommendations',
           component: () => import('@/views/student/Recommendation.vue'),
           meta: { title: '智能推荐' }
+        },
+        {
+          path: 'companies',
+          name: 'student-company-list',
+          component: () => import('@/views/common/CompanyList.vue'),
+          meta: { title: '企业列表' }
         }
       ]
     },
@@ -129,6 +135,12 @@ const router = createRouter({
           component: () => import('@/views/company/ApplicationManage.vue'),
           meta: { title: '收到的申请' }
         },
+        {
+          path: 'companies',
+          name: 'company-company-list',
+          component: () => import('@/views/common/CompanyList.vue'),
+          meta: { title: '企业列表' }
+        },
       ]
     },
 
@@ -157,6 +169,18 @@ const router = createRouter({
           component: () => import('@/views/admin/CompanyAudit.vue'),
           meta: { title: '企业审核' }
         },
+        {
+          path: 'jobs',
+          name: 'admin-job-list',
+          component: () => import('@/views/student/JobList.vue'),
+          meta: { title: '职位列表' }
+        },
+        {
+          path: 'company-list',
+          name: 'admin-company-list',
+          component: () => import('@/views/common/CompanyList.vue'),
+          meta: { title: '企业列表' }
+        }
         // Add more admin routes here
       ]
     },

@@ -1,5 +1,8 @@
 <template>
   <div class="job-list-page responsive-padding job-list-container">
+    <!-- 添加面包屑导航 -->
+    <Breadcrumb />
+
     <div class="page-header">
       <div class="title-section">
         <el-button
@@ -111,6 +114,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useJobStore } from '@/stores/job';
 import JobCard from '@/components/common/JobCard.vue';
 import Pagination from '@/components/common/Pagination.vue';
+import Breadcrumb from '@/components/common/Breadcrumb.vue';
 import type { JobListParams } from '@/types/job';
 import { Search, Filter, ArrowLeft } from '@element-plus/icons-vue';
 

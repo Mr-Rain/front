@@ -33,10 +33,15 @@
             <el-icon><House /></el-icon>
             <span>首页</span>
           </el-menu-item>
-          
-          <el-menu-item index="/jobs">
+
+          <el-menu-item :index="getJobsPath()">
             <el-icon><Briefcase /></el-icon>
             <span>职位列表</span>
+          </el-menu-item>
+
+          <el-menu-item :index="getCompaniesPath()">
+            <el-icon><OfficeBuilding /></el-icon>
+            <span>企业列表</span>
           </el-menu-item>
 
           <!-- 学生专属菜单 -->
@@ -111,9 +116,9 @@ import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { 
-  Menu, House, Briefcase, User, OfficeBuilding, 
-  Setting, Key, UserFilled, SwitchButton 
+import {
+  Menu, House, Briefcase, User, OfficeBuilding,
+  Setting, Key, UserFilled, SwitchButton
 } from '@element-plus/icons-vue';
 
 const router = useRouter();
@@ -125,6 +130,30 @@ const defaultAvatar = ref('https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c
 
 // 计算当前活动菜单项
 const activeIndex = computed(() => route.path);
+
+// 根据用户角色获取职位列表路径
+const getJobsPath = () => {
+  if (!userStore.token || !userStore.userInfo) return '/jobs';
+
+  const userType = userStore.userInfo.user_type;
+  if (userType === 'student') return '/student/jobs';
+  if (userType === 'company') return '/company/jobs';
+  if (userType === 'admin') return '/admin/jobs';
+
+  return '/jobs';
+};
+
+// 根据用户角色获取企业列表路径
+const getCompaniesPath = () => {
+  if (!userStore.token || !userStore.userInfo) return '/companies';
+
+  const userType = userStore.userInfo.user_type;
+  if (userType === 'student') return '/student/companies';
+  if (userType === 'company') return '/company/companies';
+  if (userType === 'admin') return '/admin/company-list';
+
+  return '/companies';
+};
 
 // 处理菜单项选择
 const handleSelect = async (index: string) => {

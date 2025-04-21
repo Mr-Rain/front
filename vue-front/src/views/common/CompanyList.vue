@@ -1,7 +1,20 @@
 <template>
   <div class="company-list-page responsive-padding">
+    <!-- 添加面包屑导航 -->
+    <Breadcrumb />
+
     <div class="page-header">
       <div class="title-section">
+        <el-button
+          v-if="showBackButton"
+          @click="goBack"
+          type="primary"
+          plain
+          class="back-button"
+        >
+          <el-icon class="back-icon"><ArrowLeft /></el-icon>
+          <span class="back-text">返回</span>
+        </el-button>
         <h2 class="page-title">企业列表</h2>
       </div>
       <div class="header-actions">
@@ -123,13 +136,28 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { Search } from '@element-plus/icons-vue';
+import { useRouter, useRoute } from 'vue-router';
+import { Search, ArrowLeft } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
+import Breadcrumb from '@/components/common/Breadcrumb.vue';
 
 const router = useRouter();
+const route = useRoute();
 const loading = ref(false);
 const defaultLogo = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
+
+// 返回按钮相关逻辑
+// 始终显示返回按钮
+const showBackButton = ref(true);
+
+// 返回上一页或首页
+const goBack = () => {
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    router.push('/');
+  }
+};
 
 // 移动端适配相关变量
 const showFilterForm = ref(window.innerWidth > 576);
@@ -212,7 +240,7 @@ const companyTotal = ref(5);
 // 获取数据 - 模拟API调用
 const fetchData = () => {
   loading.value = true;
-  
+
   // 模拟API延迟
   setTimeout(() => {
     // 模拟筛选逻辑
@@ -268,7 +296,7 @@ const fetchData = () => {
       if (listQuery.keyword && !company.name.includes(listQuery.keyword)) return false;
       return true;
     });
-    
+
     companyList.value = filteredList;
     companyTotal.value = filteredList.length;
     loading.value = false;
@@ -318,7 +346,7 @@ onMounted(() => {
   // 添加窗口大小变化监听
   window.addEventListener('resize', handleResize);
   handleResize(); // 初始化时调用一次
-  
+
   // 获取数据
   fetchData();
 });
@@ -340,6 +368,22 @@ onMounted(() => {
 .title-section {
   display: flex;
   align-items: center;
+}
+
+.back-button {
+  margin-right: 15px;
+  user-select: none; /* 禁用文本选择 */
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+}
+
+.back-icon {
+  margin-right: 5px;
+}
+
+.back-text {
+  font-size: 14px;
 }
 
 .page-title {
