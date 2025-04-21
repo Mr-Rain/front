@@ -34,7 +34,7 @@ interface UserState {
 
 export const useUserStore = defineStore('user', {
   state: (): UserState => ({
-    token: localStorage.getItem('token') || null,
+    token: localStorage.getItem('token') || sessionStorage.getItem('token') || null,
     userInfo: null,
 
     // Admin User List Management Initial State
@@ -45,12 +45,23 @@ export const useUserStore = defineStore('user', {
 
   actions: {
     // 设置 Token
-    setToken(token: string | null) {
+    setToken(token: string | null, remember: boolean = false) {
       this.token = token;
       if (token) {
-        localStorage.setItem('token', token);
+        if (remember) {
+          // 使用localStorage持久存储
+          localStorage.setItem('token', token);
+          localStorage.setItem('rememberMe', 'true');
+        } else {
+          // 使用sessionStorage，关闭浏览器后失效
+          sessionStorage.setItem('token', token);
+          localStorage.removeItem('rememberMe');
+          localStorage.removeItem('token');
+        }
       } else {
         localStorage.removeItem('token');
+        localStorage.removeItem('rememberMe');
+        sessionStorage.removeItem('token');
       }
     },
 
@@ -60,12 +71,12 @@ export const useUserStore = defineStore('user', {
     },
 
     // 登录
-    async login(payload: LoginPayload) {
+    async login(payload: LoginPayload, remember: boolean = false) {
       try {
         const response = await loginApi(payload);
         // TODO: 根据后端实际返回调整 token 的获取方式
         const token = response?.data?.token || 'mock_token'; // 假设 token 在 response.data.token
-        this.setToken(token);
+        this.setToken(token, remember);
         // 登录成功后获取用户信息和权限
         await this.getUserInfo();
         const permissionStore = usePermissionStore();
@@ -138,7 +149,11 @@ export const useUserStore = defineStore('user', {
     resetAuth() {
       this.setToken(null);
       this.setUserInfo(null);
-       // permission store 的清理在 logout 中完成
+      // 确保清除所有存储中的token
+      localStorage.removeItem('token');
+      localStorage.removeItem('rememberMe');
+      sessionStorage.removeItem('token');
+      // permission store 的清理在 logout 中完成
     },
 
     // --- Admin Actions ---
@@ -180,5 +195,29 @@ export const useUserStore = defineStore('user', {
     },
     */
 
+    // 发送验证码
+    async sendVerificationCode(email: string) {
+      try {
+        // 调用发送验证码的API
+        await request.post('/auth/send-verification-code', { email });
+        return Promise.resolve();
+      } catch (error: any) {
+        ElMessage.error(error?.message || '验证码发送失败');
+        return Promise.reject(error);
+      }
+    },
+
+    // 重置密码
+    async resetPassword(payload: { email: string; code: string }) {
+      try {
+        // 调用重置密码的API
+        await request.post('/auth/reset-password', payload);
+        return Promise.resolve();
+      } catch (error: any) {
+        ElMessage.error(error?.message || '密码重置失败');
+        return Promise.reject(error);
+      }
+    },
+
   },
-}); 
+});

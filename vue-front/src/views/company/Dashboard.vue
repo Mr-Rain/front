@@ -1,33 +1,115 @@
 <template>
   <div class="company-dashboard-page">
-    <el-card shadow="never">
+    <el-card shadow="never" class="welcome-card">
       <template #header>
-        <span>企业工作台</span>
+        <div class="card-header">
+          <span class="card-title">企业工作台</span>
+        </div>
       </template>
-      <p>这里是企业端 Dashboard 页面。</p>
-      <p>后续将展示待处理申请、已发布职位概览、统计数据等。</p>
-      <!-- Placeholder for dashboard widgets -->
-      <el-row :gutter="20" style="margin-top: 20px;">
-         <el-col :span="8">
-            <el-statistic title="待处理申请" :value="stats.pendingApplications || 0" />
-         </el-col>
-         <el-col :span="8">
-             <el-statistic title="在线职位数" :value="stats.activeJobs || 0" />
-         </el-col>
-          <el-col :span="8">
-             <el-statistic title="收到简历总数" :value="stats.totalResumes || 0" />
-          </el-col>
+      <el-row :gutter="20">
+        <el-col :span="24">
+          <div class="welcome-content">
+            <h3>欢迎回来，{{ companyName }}</h3>
+            <p>今天是 {{ currentDate }}，继续管理您的招聘活动吧！</p>
+            <div class="welcome-actions">
+              <el-button type="primary" @click="router.push('/company/jobs/edit')">发布职位</el-button>
+              <el-button @click="router.push('/company/applications')">管理申请</el-button>
+            </div>
+          </div>
+        </el-col>
       </el-row>
+
+      <!-- 概览统计数据 -->
+      <el-row :gutter="20" style="margin-top: 20px;">
+        <el-col :span="8">
+          <el-card shadow="hover" class="stat-card">
+            <div class="stat-content">
+              <div class="stat-icon pending-icon">
+                <el-icon><Document /></el-icon>
+              </div>
+              <div class="stat-info">
+                <div class="stat-title">待处理申请</div>
+                <div class="stat-value">{{ stats.pendingApplications || 0 }}</div>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="8">
+          <el-card shadow="hover" class="stat-card">
+            <div class="stat-content">
+              <div class="stat-icon job-icon">
+                <el-icon><Briefcase /></el-icon>
+              </div>
+              <div class="stat-info">
+                <div class="stat-title">在线职位数</div>
+                <div class="stat-value">{{ stats.activeJobs || 0 }}</div>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="8">
+          <el-card shadow="hover" class="stat-card">
+            <div class="stat-content">
+              <div class="stat-icon resume-icon">
+                <el-icon><Collection /></el-icon>
+              </div>
+              <div class="stat-info">
+                <div class="stat-title">收到简历总数</div>
+                <div class="stat-value">{{ stats.totalResumes || 0 }}</div>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+    </el-card>
+
+    <!-- 数据统计部分 -->
+    <el-card shadow="never" class="statistics-card" style="margin-top: 20px;">
+      <template #header>
+        <div class="card-header">
+          <span class="card-title">数据统计</span>
+          <el-tooltip content="展示您的招聘数据和统计信息" placement="top">
+            <el-icon><InfoFilled /></el-icon>
+          </el-tooltip>
+        </div>
+      </template>
+      <company-statistics />
     </el-card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
-import { ElCard, ElRow, ElCol, ElStatistic } from 'element-plus';
-// TODO: Import relevant stores (e.g., companyStore, jobStore, applicationStore)
+import { ref, reactive, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useUserStore } from '@/stores/user';
+import CompanyStatistics from '@/components/company/CompanyStatistics.vue';
+import {
+  Document,
+  Briefcase,
+  Collection,
+  InfoFilled
+} from '@element-plus/icons-vue';
 
-// Placeholder for stats
+const router = useRouter();
+const userStore = useUserStore();
+
+// 公司名称
+const companyName = computed(() => {
+  return userStore.userInfo?.username || '企业用户';
+});
+
+// 当前日期
+const currentDate = computed(() => {
+  const now = new Date();
+  return now.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long'
+  });
+});
+
+// 统计数据
 const stats = reactive({
     pendingApplications: 0,
     activeJobs: 0,
@@ -35,9 +117,14 @@ const stats = reactive({
 });
 
 onMounted(() => {
-    // TODO: Fetch dashboard data from store/API
-    console.log("Company Dashboard mounted. Need to fetch data.");
-    // Example:
+    // 模拟数据
+    setTimeout(() => {
+      stats.pendingApplications = 12;
+      stats.activeJobs = 5;
+      stats.totalResumes = 48;
+    }, 500);
+
+    // TODO: 从实际API获取数据
     // const companyStore = useCompanyStore();
     // stats.pendingApplications = await companyStore.fetchPendingApplicationCount();
 });
@@ -48,10 +135,137 @@ onMounted(() => {
 .company-dashboard-page {
   padding: 20px;
 }
-.el-statistic {
-    text-align: center;
-    padding: 20px;
-    border: 1px solid var(--el-border-color-lighter);
-    border-radius: 4px;
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-</style> 
+
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  position: relative;
+  padding-left: 12px;
+}
+
+.card-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 18px;
+  background-color: var(--el-color-primary);
+  border-radius: 2px;
+}
+
+.welcome-content {
+  padding: 10px 0;
+}
+
+.welcome-content h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: var(--el-text-color-primary);
+}
+
+.welcome-content p {
+  color: var(--el-text-color-secondary);
+  margin-bottom: 20px;
+}
+
+.welcome-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.stat-card {
+  height: 100%;
+  transition: all 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-content {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.stat-icon .el-icon {
+  font-size: 30px;
+  color: white;
+}
+
+.pending-icon {
+  background-color: var(--el-color-warning);
+}
+
+.job-icon {
+  background-color: var(--el-color-primary);
+}
+
+.resume-icon {
+  background-color: var(--el-color-success);
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-title {
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.statistics-card {
+  margin-bottom: 20px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .company-dashboard-page {
+    padding: 10px;
+  }
+
+  .stat-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .stat-icon .el-icon {
+    font-size: 24px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .welcome-content h3 {
+    font-size: 18px;
+  }
+}
+</style>

@@ -54,7 +54,7 @@ const router = createRouter({
         {
           path: 'profile',
           name: 'student-profile',
-          component: () => import('@/views/student/Profile.vue'),
+          component: () => import('@/views/student/ProfileNew.vue'),
           meta: { title: '个人信息' }
         },
         {
@@ -77,6 +77,18 @@ const router = createRouter({
           component: () => import('@/views/student/Resume.vue'),
           meta: { title: '我的简历' }
         },
+        {
+          path: 'resume/:id/preview',
+          name: 'student-resume-preview',
+          component: () => import('@/views/student/ResumePreview.vue'),
+          meta: { title: '简历预览' }
+        },
+        {
+          path: 'resume/:id/edit',
+          name: 'student-resume-edit',
+          component: () => import('@/views/student/ResumeEdit.vue'),
+          meta: { title: '编辑简历' }
+        },
          {
           path: 'applications',
           name: 'student-applications',
@@ -84,10 +96,22 @@ const router = createRouter({
           meta: { title: '我的申请' }
         },
         {
+          path: 'applications/:id',
+          name: 'student-application-detail',
+          component: () => import('@/views/student/ApplicationDetail.vue'),
+          meta: { title: '申请详情' }
+        },
+        {
           path: 'recommendations',
           name: 'student-recommendations',
           component: () => import('@/views/student/Recommendation.vue'),
           meta: { title: '智能推荐' }
+        },
+        {
+          path: 'recommendations/settings',
+          name: 'student-recommendation-settings',
+          component: () => import('@/views/student/RecommendationSettings.vue'),
+          meta: { title: '推荐设置' }
         },
         {
           path: 'companies',
@@ -232,6 +256,27 @@ const router = createRouter({
     //     component: () => import('@/views/common/NotFound.vue'),
     //     meta: { requiresAuth: true, title: '仪表盘' }
     // },
+
+    // --- 通知相关路由 ---
+    {
+      path: '/notifications',
+      component: DefaultLayout,
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          name: 'notifications',
+          component: () => import('@/views/common/Notifications.vue'),
+          meta: { title: '消息通知' }
+        },
+        {
+          path: 'settings',
+          name: 'notification-settings',
+          component: () => import('@/views/common/NotificationSettings.vue'),
+          meta: { title: '通知设置' }
+        }
+      ]
+    },
 
     // --- Common Routes ---
     {

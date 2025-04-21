@@ -10,16 +10,15 @@
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="forgotPasswordForm.email" placeholder="请输入注册时使用的邮箱"></el-input>
         </el-form-item>
-        <!-- Add verification code input if needed -->
-        <!--
         <el-form-item label="验证码" prop="code">
           <el-input v-model="forgotPasswordForm.code" placeholder="请输入邮箱验证码">
             <template #append>
-              <el-button :disabled="isSendingCode">获取验证码</el-button>
+              <el-button :disabled="isSendingCode" @click="sendVerificationCode">
+                {{ codeButtonText }}
+              </el-button>
             </template>
           </el-input>
         </el-form-item>
-        -->
         <el-form-item>
           <el-button type="primary" @click="handleSubmit" :loading="loading">提交</el-button>
           <el-button @click="goToLogin">返回登录</el-button>
@@ -40,11 +39,13 @@ const router = useRouter();
 const userStore = useUserStore(); // Or call API directly
 const forgotPasswordFormRef = ref<FormInstance>();
 const loading = ref(false);
-// const isSendingCode = ref(false); // For verification code logic
+const isSendingCode = ref(false);
+const countdown = ref(60);
+const codeButtonText = ref('获取验证码');
 
 const forgotPasswordForm = reactive({
   email: '',
-  // code: '' // For verification code logic
+  code: ''
 });
 
 const forgotPasswordRules = reactive<FormRules>({
@@ -52,8 +53,49 @@ const forgotPasswordRules = reactive<FormRules>({
     { required: true, message: '请输入邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入有效的邮箱地址', trigger: ['blur', 'change'] },
   ],
-  // code: [{ required: true, message: '请输入验证码', trigger: 'blur' }] // For verification code logic
+  code: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
 });
+
+// 发送验证码
+ const sendVerificationCode = async () => {
+  // 验证邮箱格式
+  if (!forgotPasswordForm.email) {
+    ElMessage.warning('请先输入邮箱地址');
+    return;
+  }
+
+  const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+  if (!emailPattern.test(forgotPasswordForm.email)) {
+    ElMessage.warning('请输入有效的邮箱地址');
+    return;
+  }
+
+  isSendingCode.value = true;
+  try {
+    // 调用发送验证码的API
+    await userStore.sendVerificationCode(forgotPasswordForm.email);
+    ElMessage.success('验证码已发送到您的邮箱');
+
+    // 开始倒计时
+    countdown.value = 60;
+    codeButtonText.value = `重新发送(${countdown.value}s)`;
+
+    const timer = setInterval(() => {
+      countdown.value--;
+      codeButtonText.value = `重新发送(${countdown.value}s)`;
+
+      if (countdown.value <= 0) {
+        clearInterval(timer);
+        isSendingCode.value = false;
+        codeButtonText.value = '获取验证码';
+      }
+    }, 1000);
+  } catch (error) {
+    console.error('Failed to send verification code:', error);
+    ElMessage.error('验证码发送失败，请稍后重试');
+    isSendingCode.value = false;
+  }
+};
 
 const handleSubmit = () => {
   if (!forgotPasswordFormRef.value) return;
@@ -61,19 +103,31 @@ const handleSubmit = () => {
     if (valid) {
       loading.value = true;
       try {
-        // TODO: 调用 userStore 或 api 的忘记密码 action
-        // await userStore.forgotPassword(forgotPasswordForm.email);
-        ElMessage.success('请求已提交 (模拟)，请检查您的邮箱以重置密码。');
-        // Optionally clear form or redirect
-        // router.push('/login');
-      } catch (error) {
+        // 调用 userStore 或 api 的忘记密码 action
+        await userStore.resetPassword({
+          email: forgotPasswordForm.email,
+          code: forgotPasswordForm.code
+        });
+
+        // 成功响应
+        ElMessage.success('密码重置链接已发送到您的邮箱，请检查邮箱并点击链接重置密码。');
+
+        // 清空表单
+        forgotPasswordForm.email = '';
+        forgotPasswordForm.code = '';
+
+        // 3秒后跳转到登录页面
+        setTimeout(() => {
+          router.push('/login');
+        }, 3000);
+      } catch (error: any) {
         console.error('Forgot password failed:', error);
-        // ElMessage.error('请求失败，请稍后重试');
+        ElMessage.error(error?.message || '密码重置失败，请稍后重试');
       } finally {
         loading.value = false;
       }
     } else {
-      console.log('error submit!!');
+      ElMessage.warning('请正确填写所有必填信息');
     }
   });
 };
@@ -100,4 +154,4 @@ const goToLogin = () => {
   text-align: center;
   font-size: 1.2em;
 }
-</style> 
+</style>

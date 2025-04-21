@@ -69,7 +69,8 @@ const validatePassConfirm = (rule: any, value: any, callback: any) => {
 const registerRules = reactive<FormRules>({
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
-    // TODO: Add more specific username validation rules if needed
+    { min: 3, max: 20, message: '用户名长度应在3-20个字符之间', trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9_\u4e00-\u9fa5]+$/, message: '用户名只能包含字母、数字、下划线和中文', trigger: 'blur' }
   ],
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
@@ -77,7 +78,8 @@ const registerRules = reactive<FormRules>({
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    // TODO: Add password strength validation if needed
+    { min: 6, max: 20, message: '密码长度应在6-20个字符之间', trigger: 'blur' },
+    { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, message: '密码必须包含大小写字母和数字', trigger: 'blur' }
   ],
   confirmPassword: [
     { required: true, message: '请再次输入密码', trigger: 'blur' },
@@ -92,21 +94,22 @@ const handleRegister = () => {
     if (valid) {
       loading.value = true;
       try {
-        // TODO: 调用 userStore 的注册 action
+        // 调用 userStore 的注册 action
         // Destructure needed fields, exclude confirmPassword
         const { confirmPassword, ...registerData } = registerForm;
-        // await userStore.register(registerData);
-        ElMessage.success('注册成功 (模拟)');
-        // Optionally redirect to login or dashboard after successful registration
+        await userStore.register(registerData);
+        ElMessage.success('注册成功！');
+        // 注册成功后跳转到登录页面
         router.push('/login');
-      } catch (error) {
+      } catch (error: any) {
         console.error('Registration failed:', error);
-        // ElMessage.error('注册失败，请稍后重试'); // Error handled by store/API
+        // 显示错误信息，如果有特定错误消息则显示，否则显示通用错误
+        ElMessage.error(error?.message || '注册失败，请稍后重试');
       } finally {
         loading.value = false;
       }
     } else {
-      console.log('error submit!!');
+      ElMessage.warning('请正确填写所有必填信息');
     }
   });
 };
@@ -134,4 +137,4 @@ const goToLogin = () => {
   text-align: center;
   font-size: 1.2em;
 }
-</style> 
+</style>

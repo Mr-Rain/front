@@ -14,6 +14,10 @@
           <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" show-password></el-input>
         </el-form-item>
 
+        <el-form-item>
+          <el-checkbox v-model="rememberMe">记住登录状态</el-checkbox>
+        </el-form-item>
+
         <!-- 模拟登录角色选择 -->
         <el-form-item label="模拟角色">
           <el-radio-group v-model="mockUserType">
@@ -46,6 +50,7 @@ const router = useRouter();
 const userStore = useUserStore();
 const loginFormRef = ref<FormInstance>();
 const loading = ref(false);
+const rememberMe = ref(false);
 
 // 模拟用户角色选择
 const mockUserType = ref('student');
@@ -56,8 +61,14 @@ const loginForm = reactive({
 });
 
 const loginRules = reactive<FormRules>({
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '用户名长度应在3-20个字符之间', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度应在6-20个字符之间', trigger: 'blur' }
+  ],
 });
 
 const handleLogin = () => {
@@ -70,7 +81,7 @@ const handleLogin = () => {
         localStorage.setItem('mockUserType', mockUserType.value);
 
         // 设置模拟的token
-        userStore.setToken('mock_token_' + mockUserType.value);
+        userStore.setToken('mock_token_' + mockUserType.value, rememberMe.value);
 
         // 获取用户信息
         await userStore.getUserInfo();

@@ -8,8 +8,26 @@
       </header>
 
       <!-- Main Content Area -->
-      <main class="app-main">
-        <div class="el-scrollbar">
+      <main class="app-main" :class="{ 'has-tab-bar': isMobile }">
+        <pull-to-refresh
+          v-if="isMobile && enablePullToRefresh"
+          @refresh="handleRefresh"
+          :refreshing="refreshing"
+        >
+          <div class="el-scrollbar">
+            <div class="el-scrollbar__wrap el-scrollbar__wrap--hidden-default">
+              <div class="el-scrollbar__view">
+                <router-view v-slot="{ Component, route }">
+                  <transition name="fade-transform" mode="out-in">
+                    <component :is="Component" :key="route.path" />
+                  </transition>
+                </router-view>
+              </div>
+            </div>
+          </div>
+        </pull-to-refresh>
+
+        <div v-else class="el-scrollbar">
           <div class="el-scrollbar__wrap el-scrollbar__wrap--hidden-default">
             <div class="el-scrollbar__view">
               <router-view v-slot="{ Component, route }">
@@ -21,14 +39,69 @@
           </div>
         </div>
       </main>
+
+      <!-- Mobile Tab Bar -->
+      <mobile-tab-bar v-if="isMobile" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { useRoute } from 'vue-router';
 // 引入通用组件
 import Navbar from '@/components/common/Navbar.vue';
+import MobileTabBar from '@/components/common/MobileTabBar.vue';
+import PullToRefresh from '@/components/common/PullToRefresh.vue';
+
+const route = useRoute();
+
+// 移动端相关状态
+const isMobile = ref(false);
+const refreshing = ref(false);
+const enablePullToRefresh = computed(() => {
+  // 只在特定页面启用下拉刷新
+  const refreshableRoutes = [
+    '/jobs',
+    '/companies',
+    '/student/jobs',
+    '/student/companies',
+    '/student/applications',
+    '/student/recommendations',
+    '/company/applications',
+    '/notifications'
+  ];
+
+  return refreshableRoutes.some(path => route.path.startsWith(path));
+});
+
+// 处理下拉刷新
+const handleRefresh = () => {
+  refreshing.value = true;
+
+  // 模拟刷新操作
+  setTimeout(() => {
+    // 刷新当前页面
+    window.location.reload();
+    refreshing.value = false;
+  }, 1000);
+};
+
+// 检测设备类型
+const checkDeviceType = () => {
+  isMobile.value = window.innerWidth <= 768;
+};
+
+// 组件挂载时添加事件监听
+onMounted(() => {
+  checkDeviceType();
+  window.addEventListener('resize', checkDeviceType);
+});
+
+// 组件卸载前移除事件监听
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', checkDeviceType);
+});
 </script>
 
 <style lang="scss" scoped>
@@ -61,6 +134,10 @@ import Navbar from '@/components/common/Navbar.vue';
   position: relative;
 }
 
+.app-main.has-tab-bar {
+  padding-bottom: var(--mobile-footer-height, 50px);
+}
+
 .el-scrollbar {
   height: 100%;
 }
@@ -83,5 +160,23 @@ import Navbar from '@/components/common/Navbar.vue';
 .fade-transform-leave-to {
   opacity: 0;
   transform: translateX(30px);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .navbar-container {
+    height: var(--mobile-header-height, 56px);
+  }
+
+  .el-scrollbar__view {
+    padding: var(--mobile-padding, 10px);
+  }
+
+  /* 适配底部安全区域 */
+  @supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .app-main.has-tab-bar {
+      padding-bottom: calc(var(--mobile-footer-height, 50px) + env(safe-area-inset-bottom));
+    }
+  }
 }
 </style>

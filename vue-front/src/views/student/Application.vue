@@ -4,7 +4,16 @@
       <template #header>
         <div class="card-header">
           <span>我的申请</span>
-          <!-- Optional: Add filters or actions here -->
+          <div class="header-actions">
+            <table-export
+              :data="applicationStore.studentApplications"
+              :columns="exportColumns"
+              :file-name="'申请列表_' + formatDate(new Date())"
+              title="申请列表导出"
+              subtitle="导出时间：{{ formatDateTime(new Date()) }}"
+              :support-types="['excel', 'pdf', 'csv']"
+            />
+          </div>
         </div>
       </template>
 
@@ -38,16 +47,16 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" align="center">
+        <el-table-column label="操作" width="180" align="center">
           <template #default="scope">
-             <!-- <el-button link type="primary" size="small" @click="viewApplicationDetail(scope.row.id)">查看详情</el-button> -->
+             <el-button link type="primary" size="small" @click="viewApplicationDetail(scope.row.id)">查看详情</el-button>
              <el-button link type="danger" size="small" @click="handleWithdraw(scope.row.id)" :disabled="!canWithdraw(scope.row.status)">撤销申请</el-button>
           </template>
         </el-table-column>
       </el-table>
 
        <!-- Pagination -->
-        <Pagination 
+        <Pagination
             v-if="applicationStore.studentApplicationsTotal > 0"
             :total="applicationStore.studentApplicationsTotal"
             v-model:page="listQuery.page"
@@ -61,12 +70,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useApplicationStore } from '@/stores/application';
 import type { ApplicationInfo, ApplicationStatus } from '@/types/application'; // Assuming types/application.d.ts exists
 import { ElCard, ElTable, ElTableColumn, ElTag, ElButton, ElMessageBox, ElMessage, ElLink } from 'element-plus';
 import Pagination from '@/components/common/Pagination.vue'; // Import pagination component
+import TableExport from '@/components/common/TableExport.vue'; // Import table export component
 
 const router = useRouter();
 const applicationStore = useApplicationStore();
@@ -127,7 +137,7 @@ const getStatusTagType = (status: ApplicationStatus | undefined): ('success' | '
 // Check if application can be withdrawn
 const canWithdraw = (status: ApplicationStatus | undefined): boolean => {
     // Define which statuses allow withdrawal
-    return status === 'pending' || status === 'viewed'; 
+    return status === 'pending' || status === 'viewed';
 };
 
 const handleWithdraw = async (id: string | number) => {
@@ -161,11 +171,68 @@ const goToJobDetail = (jobId: string | number | undefined) => {
     router.push({ name: 'student-job-detail', params: { id: jobId } });
 };
 
-/* Placeholder for viewing application details if needed
+// 查看申请详情
 const viewApplicationDetail = (id: string | number) => {
     console.log(`Viewing application detail for id: ${id}`);
-    // router.push({ name: 'student-application-detail', params: { id } });
+    router.push({ name: 'student-application-detail', params: { id } });
 };
-*/
+
+// 导出相关方法
+
+// 导出列定义
+const exportColumns = computed(() => [
+  { prop: 'job_title', label: '职位名称' },
+  { prop: 'company_name', label: '公司名称' },
+  { prop: 'resume_title', label: '投递简历' },
+  {
+    prop: 'application_time',
+    label: '申请时间',
+    formatter: (row: any) => formatTime(row.application_time)
+  },
+  {
+    prop: 'status',
+    label: '申请状态',
+    formatter: (row: any) => formatStatus(row.status)
+  }
+]);
+
+// 格式化日期（用于文件名）
+const formatDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}${month}${day}`;
+};
+
+// 格式化日期时间（用于显示）
+const formatDateTime = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+};
 
 </script>
+
+<style scoped>
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.list-pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+</style>

@@ -4,10 +4,17 @@
       <template #header>
         <div class="card-header">
           <span>我的简历</span>
-          <el-button type="primary" :icon="UploadFilled" @click="handleUploadResume">
-            <span class="hide-on-mobile">上传新简历</span>
-            <span class="show-on-mobile">上传</span>
-          </el-button>
+          <div class="header-actions">
+            <el-button type="primary" :icon="UploadFilled" @click="handleUploadResume">
+              <span class="hide-on-mobile">上传新简历</span>
+              <span class="show-on-mobile">上传</span>
+            </el-button>
+            <el-button type="success" @click="createNewResume">
+              <el-icon><Plus /></el-icon>
+              <span class="hide-on-mobile">创建简历</span>
+              <span class="show-on-mobile">创建</span>
+            </el-button>
+          </div>
         </div>
       </template>
 
@@ -34,6 +41,10 @@
                    </el-button>
                    <el-button link size="small" @click="handlePreview(resume)">预览</el-button>
                    <el-button link size="small" @click="handleEdit(resume.id)">编辑</el-button>
+                   <el-button link size="small" @click="handleExport(resume)">
+                     <span class="hide-on-mobile">导出</span>
+                     <span class="show-on-mobile"><el-icon><Download /></el-icon></span>
+                   </el-button>
                    <el-popconfirm title="确定删除这份简历吗?" @confirm="handleDelete(resume.id)">
                      <template #reference>
                        <el-button type="danger" link size="small">删除</el-button>
@@ -84,18 +95,51 @@
        </template>
     </el-dialog>
 
+    <!-- 导出对话框 -->
+    <el-dialog v-model="exportDialogVisible" title="导出简历" width="500px">
+      <div class="export-dialog-content">
+        <p>请选择导出格式：</p>
+        <div class="export-options">
+          <el-radio-group v-model="exportFormat">
+            <el-radio label="pdf">PDF文档</el-radio>
+            <el-radio label="image" v-if="selectedResume?.type === 'online'">图片</el-radio>
+          </el-radio-group>
+        </div>
+
+        <el-form label-position="top">
+          <el-form-item label="文件名">
+            <el-input v-model="exportFileName" placeholder="请输入文件名（不含扩展名）"></el-input>
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="exportDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmExport" :loading="exporting">导出</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 简历导出组件 -->
+    <resume-export ref="resumeExportRef" :use-current-user="false" :resume-data="exportResumeData" :file-name="exportFileName" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, reactive } from 'vue';
+import { useRouter } from 'vue-router';
 import { useResumeStore } from '@/stores/resume';
+import { useStudentStore } from '@/stores/student';
 import type { ResumeInfo } from '@/types/resume'; // Assuming types/resume.d.ts exists
-import { ElCard, ElButton, ElEmpty, ElRow, ElCol, ElTag, ElPopconfirm, ElDialog, ElMessage, ElInput, ElForm, ElFormItem } from 'element-plus';
-import { UploadFilled } from '@element-plus/icons-vue';
+import { ElCard, ElButton, ElEmpty, ElRow, ElCol, ElTag, ElPopconfirm, ElDialog, ElMessage, ElInput, ElForm, ElFormItem, ElRadioGroup, ElRadio } from 'element-plus';
+import { UploadFilled, Plus, Download } from '@element-plus/icons-vue';
 import ResumeUploader from '@/components/common/ResumeUploader.vue'; // Import the uploader component
+import ResumeExport from '@/components/student/ResumeExport.vue'; // Import the resume export component
 
 const resumeStore = useResumeStore();
+const studentStore = useStudentStore();
+const router = useRouter();
 
 const dialogVisible = ref(false);
 const dialogTitle = ref('上传简历');
@@ -103,6 +147,33 @@ const currentResumeId = ref<string | number | null>(null);
 const editResumeTitle = ref(''); // Title for editing
 const newResumeTitle = ref(''); // Optional title for new upload
 const uploaderRef = ref<InstanceType<typeof ResumeUploader>>(); // Ref for uploader component
+
+// 导出相关
+
+const exportDialogVisible = ref(false);
+const exportFormat = ref('pdf');
+const exportFileName = ref('');
+const exporting = ref(false);
+const selectedResume = ref<ResumeInfo | null>(null);
+const resumeExportRef = ref<InstanceType<typeof ResumeExport>>();
+
+// 导出简历数据
+const exportResumeData = reactive({
+  name: '',
+  phone: '',
+  email: '',
+  location: '',
+  school: '',
+  major: '',
+  education: '',
+  grade: '',
+  bio: '',
+  skills: [] as string[],
+  education_experiences: [] as any[],
+  work_experiences: [] as any[],
+  expected_salary: '',
+  expected_location: ''
+});
 
 const fetchResumes = () => {
   resumeStore.fetchResumeList();
@@ -132,16 +203,8 @@ const handleUploadResume = () => {
 };
 
 const handleEdit = (id: string | number) => {
-  const resume = resumeStore.resumeList.find(r => r.id === id);
-  if (resume) {
-    dialogTitle.value = '编辑简历信息';
-    currentResumeId.value = id;
-    editResumeTitle.value = resume.title || ''; // Populate edit title
-    newResumeTitle.value = ''; // Clear new title
-    dialogVisible.value = true;
-  } else {
-    ElMessage.error('找不到要编辑的简历信息');
-  }
+  // 跳转到简历编辑页面
+  router.push(`/student/resume/${id}/edit`);
 };
 
 const handleSetDefault = async (id: string | number) => {
@@ -169,11 +232,96 @@ const handleDelete = async (id: string | number) => {
 const handlePreview = (resume: ResumeInfo) => {
     console.log("Previewing resume:", resume);
     if(resume.file_url) {
+        // 如果是附件简历，直接打开文件链接
         window.open(resume.file_url, '_blank');
     } else {
-        ElMessage.warning('该简历没有可预览的文件链接');
+        // 如果是在线简历，跳转到简历预览页面
+        router.push(`/student/resume/${resume.id}/preview`);
     }
-    // Or implement an inline previewer
+};
+
+// 处理导出简历
+const handleExport = async (resume: ResumeInfo) => {
+  selectedResume.value = resume;
+
+  // 设置默认文件名
+  if (studentStore.profile) {
+    exportFileName.value = `${studentStore.profile.username || 'resume'}_简历`;
+  } else {
+    exportFileName.value = `简历_${resume.id}`;
+  }
+
+  // 如果是文件类型的简历，直接下载
+  if (resume.type === 'file' && resume.file_url) {
+    window.open(resume.file_url, '_blank');
+    return;
+  }
+
+  // 如果是在线简历，显示导出对话框
+  if (resume.type === 'online') {
+    // 获取简历详情
+    if (resume.id) {
+      try {
+        await resumeStore.fetchResumeDetail(resume.id);
+
+        // 如果没有用户信息，获取用户信息
+        if (!studentStore.profile) {
+          await studentStore.fetchProfile();
+        }
+
+        // 准备导出数据
+        if (resumeStore.currentResume && studentStore.profile) {
+          // 合并简历数据和用户信息
+          Object.assign(exportResumeData, {
+            name: studentStore.profile.username || '',
+            phone: studentStore.profile.phone || '',
+            email: studentStore.profile.email || '',
+            location: studentStore.profile.location || '',
+            school: studentStore.profile.school || '',
+            major: studentStore.profile.major || '',
+            education: studentStore.profile.education || '',
+            grade: studentStore.profile.grade || '',
+            bio: resumeStore.currentResume.bio || studentStore.profile.bio || '',
+            skills: resumeStore.currentResume.skills || studentStore.profile.skills || [],
+            education_experiences: resumeStore.currentResume.education_experiences || studentStore.profile.education_experiences || [],
+            work_experiences: resumeStore.currentResume.work_experiences || studentStore.profile.work_experiences || [],
+            expected_salary: resumeStore.currentResume.expected_salary || studentStore.profile.expected_salary || '',
+            expected_location: resumeStore.currentResume.expected_location || studentStore.profile.expected_location || ''
+          });
+        }
+
+        // 显示导出对话框
+        exportDialogVisible.value = true;
+      } catch (error) {
+        console.error('Failed to fetch resume details:', error);
+        ElMessage.error('获取简历详情失败');
+      }
+    }
+  }
+};
+
+// 确认导出
+const confirmExport = async () => {
+  if (!resumeExportRef.value) {
+    ElMessage.error('导出组件未初始化');
+    return;
+  }
+
+  try {
+    exporting.value = true;
+
+    // 调用导出组件的导出方法
+    await resumeExportRef.value.exportResume();
+
+    // 关闭对话框
+    exportDialogVisible.value = false;
+    ElMessage.success('简历导出成功');
+  } catch (error) {
+    console.error('Failed to export resume:', error);
+    ElMessage.error('简历导出失败，请重试');
+  } finally {
+    exporting.value = false;
+  }
 };
 
 // Handle successful upload from ResumeUploader component
@@ -215,6 +363,11 @@ const closeDialog = () => {
     // uploaderRef.value?.clearFiles();
 }
 
+// 创建新简历
+const createNewResume = () => {
+    router.push('/student/resume/new/edit');
+};
+
 </script>
 
 <style scoped>
@@ -228,6 +381,11 @@ const closeDialog = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .resume-card {
@@ -282,6 +440,11 @@ const closeDialog = () => {
   padding: 0 5px; /* Adjust padding for link buttons */
 }
 
+/* 移动端显示/隐藏类 */
+.show-on-mobile {
+  display: none;
+}
+
 /* 移动端适配 */
 @media (max-width: 576px) {
   .resume-manage-page {
@@ -291,6 +454,12 @@ const closeDialog = () => {
   .card-header {
     flex-wrap: wrap;
     gap: 10px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 5px;
+    margin-left: auto;
   }
 
   .resume-card {
@@ -329,6 +498,29 @@ const closeDialog = () => {
   .resume-title {
     width: 100%;
     margin-bottom: 5px;
+  }
+}
+
+/* 导出对话框样式 */
+.export-dialog-content {
+  padding: 10px 0;
+}
+
+.export-options {
+  margin: 15px 0;
+}
+
+.hide-on-mobile {
+  display: inline;
+}
+
+@media (max-width: 576px) {
+  .hide-on-mobile {
+    display: none;
+  }
+
+  .show-on-mobile {
+    display: inline;
   }
 }
 </style>

@@ -27,10 +27,23 @@ export interface ApplicationInfo {
   update_time?: string; // 状态更新时间 (ISO 8601)
   feedback?: string; // 企业反馈/面试安排等 (可选, Markdown)
 
+  // 面试相关信息
+  interview_time?: string; // 面试时间 (ISO 8601)
+  interview_location?: string; // 面试地点
+  interview_type?: 'onsite' | 'video' | 'phone'; // 面试方式
+  interview_contact?: string; // 面试联系人
+  interview_contact_info?: string; // 联系人信息
+
   // --- 冗余信息，方便前端展示 ---
   job_info?: Pick<JobInfo, 'id' | 'title' | 'company_name' | 'location' | 'salary_range'>; // 职位简要信息
   student_info?: Pick<StudentProfile, 'id' | 'name' | 'school' | 'major'>; // 学生简要信息 (企业端)
   resume_snapshot?: Partial<ResumeInfo>; // 申请时简历快照 (可选)
+
+  // 直接展示的字段，方便前端使用
+  job_title?: string;
+  company_name?: string;
+  resume_title?: string;
+  application_time?: string; // 申请时间，等同于 apply_time
 }
 
 /**
@@ -47,4 +60,4 @@ export interface ApplyJobPayload {
 export interface UpdateApplicationStatusPayload {
   status: ApplicationStatus;
   feedback?: string;
-} 
+}

@@ -1,0 +1,524 @@
+<template>
+  <div class="company-statistics">
+    <el-row :gutter="20">
+      <!-- 数据概览卡片 -->
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
+        <el-card shadow="hover" class="statistics-summary-card">
+          <div class="summary-content">
+            <div class="summary-icon job-icon">
+              <el-icon><Briefcase /></el-icon>
+            </div>
+            <div class="summary-info">
+              <div class="summary-title">发布职位</div>
+              <div class="summary-value">{{ statistics.totalJobs }}</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
+        <el-card shadow="hover" class="statistics-summary-card">
+          <div class="summary-content">
+            <div class="summary-icon application-icon">
+              <el-icon><Document /></el-icon>
+            </div>
+            <div class="summary-info">
+              <div class="summary-title">收到申请</div>
+              <div class="summary-value">{{ statistics.totalApplications }}</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
+        <el-card shadow="hover" class="statistics-summary-card">
+          <div class="summary-content">
+            <div class="summary-icon interview-icon">
+              <el-icon><ChatLineRound /></el-icon>
+            </div>
+            <div class="summary-info">
+              <div class="summary-title">面试邀请</div>
+              <div class="summary-value">{{ statistics.interviewCount }}</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="6" :lg="6">
+        <el-card shadow="hover" class="statistics-summary-card">
+          <div class="summary-content">
+            <div class="summary-icon offer-icon">
+              <el-icon><GoodsFilled /></el-icon>
+            </div>
+            <div class="summary-info">
+              <div class="summary-title">录用人数</div>
+              <div class="summary-value">{{ statistics.offerCount }}</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <el-row :gutter="20" style="margin-top: 20px;">
+      <!-- 申请趋势统计卡片 -->
+      <el-col :xs="24" :sm="24" :md="12" :lg="12">
+        <el-card shadow="hover" class="statistics-card">
+          <template #header>
+            <div class="card-header">
+              <span class="card-title">申请趋势</span>
+              <el-tooltip content="展示近期收到的申请数量变化趋势" placement="top">
+                <el-icon><InfoFilled /></el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+          <div v-loading="loading" class="chart-container">
+            <echart-component 
+              v-if="!loading && applicationTrendData.xAxis.length > 0" 
+              :options="applicationTrendChartOptions" 
+              height="300px"
+            />
+            <el-empty v-else-if="!loading" description="暂无趋势数据" />
+          </div>
+        </el-card>
+      </el-col>
+
+      <!-- 申请状态统计卡片 -->
+      <el-col :xs="24" :sm="24" :md="12" :lg="12">
+        <el-card shadow="hover" class="statistics-card">
+          <template #header>
+            <div class="card-header">
+              <span class="card-title">申请状态分布</span>
+              <el-tooltip content="展示各状态下的申请数量分布" placement="top">
+                <el-icon><InfoFilled /></el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+          <div v-loading="loading" class="chart-container">
+            <echart-component 
+              v-if="!loading && applicationStatusData.length > 0" 
+              :options="applicationStatusChartOptions" 
+              height="300px"
+            />
+            <el-empty v-else-if="!loading" description="暂无状态数据" />
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <el-row :gutter="20" style="margin-top: 20px;">
+      <!-- 职位热度排行卡片 -->
+      <el-col :xs="24" :sm="24" :md="12" :lg="12">
+        <el-card shadow="hover" class="statistics-card">
+          <template #header>
+            <div class="card-header">
+              <span class="card-title">职位热度排行</span>
+              <el-tooltip content="展示申请人数最多的职位排行" placement="top">
+                <el-icon><InfoFilled /></el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+          <div v-loading="loading" class="chart-container">
+            <echart-component 
+              v-if="!loading && jobPopularityData.yAxis.length > 0" 
+              :options="jobPopularityChartOptions" 
+              height="300px"
+            />
+            <el-empty v-else-if="!loading" description="暂无职位热度数据" />
+          </div>
+        </el-card>
+      </el-col>
+
+      <!-- 应聘者学历分布卡片 -->
+      <el-col :xs="24" :sm="24" :md="12" :lg="12">
+        <el-card shadow="hover" class="statistics-card">
+          <template #header>
+            <div class="card-header">
+              <span class="card-title">应聘者学历分布</span>
+              <el-tooltip content="展示应聘者的学历分布情况" placement="top">
+                <el-icon><InfoFilled /></el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+          <div v-loading="loading" class="chart-container">
+            <echart-component 
+              v-if="!loading && educationData.length > 0" 
+              :options="educationChartOptions" 
+              height="300px"
+            />
+            <el-empty v-else-if="!loading" description="暂无学历分布数据" />
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, computed, onMounted } from 'vue';
+import EChartComponent from '@/components/common/EChartComponent.vue';
+import { 
+  InfoFilled, 
+  Briefcase,
+  Document, 
+  ChatLineRound, 
+  GoodsFilled
+} from '@element-plus/icons-vue';
+import type { EChartsOption } from 'echarts';
+
+const loading = ref(true);
+
+// 统计数据
+const statistics = reactive({
+  totalJobs: 0,
+  totalApplications: 0,
+  interviewCount: 0,
+  offerCount: 0
+});
+
+// 申请趋势数据
+const applicationTrendData = reactive({
+  xAxis: [] as string[],
+  values: [] as number[]
+});
+
+// 申请状态数据
+const applicationStatusData = ref<{ name: string; value: number }[]>([]);
+
+// 职位热度数据
+const jobPopularityData = reactive({
+  yAxis: [] as string[],
+  values: [] as number[]
+});
+
+// 应聘者学历分布数据
+const educationData = ref<{ name: string; value: number }[]>([]);
+
+// 申请趋势图表选项
+const applicationTrendChartOptions = computed<EChartsOption>(() => ({
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: {
+      type: 'shadow'
+    }
+  },
+  xAxis: {
+    type: 'category',
+    data: applicationTrendData.xAxis,
+    axisLabel: {
+      interval: 0,
+      rotate: 30
+    }
+  },
+  yAxis: {
+    type: 'value',
+    minInterval: 1
+  },
+  series: [
+    {
+      name: '申请数量',
+      type: 'line',
+      data: applicationTrendData.values,
+      smooth: true,
+      itemStyle: {
+        color: '#409EFF'
+      },
+      areaStyle: {
+        color: {
+          type: 'linear',
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(64, 158, 255, 0.5)' },
+            { offset: 1, color: 'rgba(64, 158, 255, 0.1)' }
+          ]
+        }
+      }
+    }
+  ]
+}));
+
+// 申请状态图表选项
+const applicationStatusChartOptions = computed<EChartsOption>(() => ({
+  tooltip: {
+    trigger: 'item',
+    formatter: '{b}: {c} ({d}%)'
+  },
+  legend: {
+    orient: 'vertical',
+    left: 'left',
+    data: applicationStatusData.value.map(item => item.name)
+  },
+  series: [
+    {
+      name: '申请状态',
+      type: 'pie',
+      radius: ['40%', '70%'],
+      avoidLabelOverlap: false,
+      itemStyle: {
+        borderRadius: 10,
+        borderColor: '#fff',
+        borderWidth: 2
+      },
+      label: {
+        show: false,
+        position: 'center'
+      },
+      emphasis: {
+        label: {
+          show: true,
+          fontSize: 16,
+          fontWeight: 'bold'
+        }
+      },
+      labelLine: {
+        show: false
+      },
+      data: applicationStatusData.value
+    }
+  ],
+  color: ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399']
+}));
+
+// 职位热度图表选项
+const jobPopularityChartOptions = computed<EChartsOption>(() => ({
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: {
+      type: 'shadow'
+    }
+  },
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: {
+    type: 'value',
+    minInterval: 1
+  },
+  yAxis: {
+    type: 'category',
+    data: jobPopularityData.yAxis,
+    axisLabel: {
+      interval: 0
+    }
+  },
+  series: [
+    {
+      name: '申请人数',
+      type: 'bar',
+      data: jobPopularityData.values,
+      itemStyle: {
+        color: function(params: any) {
+          const colorList = ['#91CC75', '#FAC858', '#EE6666', '#73C0DE', '#3BA272', '#FC8452'];
+          return colorList[params.dataIndex % colorList.length];
+        }
+      }
+    }
+  ]
+}));
+
+// 应聘者学历分布图表选项
+const educationChartOptions = computed<EChartsOption>(() => ({
+  tooltip: {
+    trigger: 'item',
+    formatter: '{b}: {c} ({d}%)'
+  },
+  legend: {
+    orient: 'vertical',
+    left: 'left',
+    data: educationData.value.map(item => item.name)
+  },
+  series: [
+    {
+      name: '学历分布',
+      type: 'pie',
+      radius: '50%',
+      data: educationData.value,
+      emphasis: {
+        itemStyle: {
+          shadowBlur: 10,
+          shadowOffsetX: 0,
+          shadowColor: 'rgba(0, 0, 0, 0.5)'
+        }
+      }
+    }
+  ],
+  color: ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399']
+}));
+
+// 获取企业统计数据
+const fetchCompanyStatistics = async () => {
+  loading.value = true;
+  try {
+    // 这里应该调用API获取实际数据
+    // 模拟数据
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // 统计数据
+    statistics.totalJobs = 12;
+    statistics.totalApplications = 85;
+    statistics.interviewCount = 32;
+    statistics.offerCount = 15;
+    
+    // 申请趋势数据
+    applicationTrendData.xAxis = ['1月', '2月', '3月', '4月', '5月', '6月'];
+    applicationTrendData.values = [10, 15, 12, 20, 18, 25];
+    
+    // 申请状态数据
+    applicationStatusData.value = [
+      { name: '待处理', value: 25 },
+      { name: '已查看', value: 18 },
+      { name: '面试中', value: 15 },
+      { name: '已录用', value: 15 },
+      { name: '未通过', value: 12 }
+    ];
+    
+    // 职位热度数据
+    jobPopularityData.yAxis = ['前端开发工程师', 'UI设计师', '后端开发工程师', '产品经理', '测试工程师'];
+    jobPopularityData.values = [25, 18, 15, 12, 8];
+    
+    // 应聘者学历分布数据
+    educationData.value = [
+      { name: '本科', value: 45 },
+      { name: '硕士', value: 25 },
+      { name: '博士', value: 5 },
+      { name: '大专', value: 10 }
+    ];
+    
+  } catch (error) {
+    console.error('Failed to fetch company statistics:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchCompanyStatistics();
+});
+</script>
+
+<style scoped>
+.company-statistics {
+  padding: 10px 0;
+}
+
+.statistics-card {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  transition: all 0.3s;
+  height: 100%;
+}
+
+.statistics-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.chart-container {
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.statistics-summary-card {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  transition: all 0.3s;
+  height: 100%;
+}
+
+.statistics-summary-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.summary-content {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+}
+
+.summary-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.summary-icon .el-icon {
+  font-size: 30px;
+  color: white;
+}
+
+.job-icon {
+  background-color: #409EFF;
+}
+
+.application-icon {
+  background-color: #67C23A;
+}
+
+.interview-icon {
+  background-color: #E6A23C;
+}
+
+.offer-icon {
+  background-color: #F56C6C;
+}
+
+.summary-info {
+  flex: 1;
+}
+
+.summary-title {
+  font-size: 14px;
+  color: #909399;
+  margin-bottom: 5px;
+}
+
+.summary-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #303133;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .company-statistics {
+    padding: 5px 0;
+  }
+  
+  .statistics-card, .statistics-summary-card {
+    margin-bottom: 15px;
+  }
+  
+  .summary-icon {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .summary-icon .el-icon {
+    font-size: 24px;
+  }
+  
+  .summary-value {
+    font-size: 20px;
+  }
+}
+</style>

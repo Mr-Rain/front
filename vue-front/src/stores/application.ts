@@ -10,6 +10,7 @@ import {
   withdrawApplication,
   getCompanyApplicationList,
   getCompanyApplicationDetail,
+  getStudentApplicationDetail,
   updateApplicationStatus,
 } from '@/api/application';
 import { ElMessage } from 'element-plus';
@@ -122,6 +123,21 @@ export const useApplicationStore = defineStore('application', {
       }
     },
 
+    // (学生端) 获取申请详情
+    async fetchApplicationDetail(id: string | number) {
+      this.loadingDetail = true;
+      this.currentApplicationDetail = null;
+      try {
+        const response = await getStudentApplicationDetail(id);
+        this.currentApplicationDetail = response.data;
+      } catch (error) {
+        console.error(`Failed to fetch application detail for id ${id}:`, error);
+        ElMessage.error('获取申请详情失败');
+      } finally {
+        this.loadingDetail = false;
+      }
+    },
+
     // (企业端) 更新申请状态
     async updateApplicationStatus(id: string | number, data: UpdateApplicationStatusPayload) {
       this.submitting = true;
@@ -154,4 +170,4 @@ export const useApplicationStore = defineStore('application', {
         this.currentApplicationDetail = null;
     }
   },
-}); 
+});

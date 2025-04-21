@@ -71,6 +71,23 @@
         </el-card>
       </el-col>
     </el-row>
+
+    <!-- 数据统计部分 -->
+    <el-row :gutter="20" style="margin-top: 20px;">
+      <el-col :span="24">
+        <el-card class="box-card statistics-card" shadow="hover">
+          <template #header>
+            <div class="card-header">
+              <span class="card-title">数据统计</span>
+              <el-tooltip content="展示您的申请数据和统计信息" placement="top">
+                <el-icon><InfoFilled /></el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+          <student-statistics />
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -80,7 +97,8 @@ import { useRouter } from 'vue-router';
 import { useStudentStore } from '@/stores/student';
 import { useApplicationStore } from '@/stores/application';
 import UserAvatar from '@/components/common/UserAvatar.vue';
-import { School, OfficeBuilding, Collection } from '@element-plus/icons-vue';
+import StudentStatistics from '@/components/student/StudentStatistics.vue';
+import { School, OfficeBuilding, Collection, InfoFilled } from '@element-plus/icons-vue';
 import type { ApplicationStatus } from '@/types/application';
 
 const router = useRouter();

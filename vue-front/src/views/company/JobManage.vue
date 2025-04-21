@@ -4,7 +4,17 @@
       <template #header>
         <div class="card-header">
           <span>职位管理</span>
-          <el-button type="primary" :icon="Plus" @click="goToCreateJob">发布新职位</el-button>
+          <div class="header-actions">
+            <table-export
+              :data="jobStore.companyJobList"
+              :columns="exportColumns"
+              :file-name="'职位列表_' + formatDate(new Date())"
+              title="职位列表导出"
+              subtitle="导出时间：{{ formatDateTime(new Date()) }}"
+              :support-types="['excel', 'pdf', 'csv']"
+            />
+            <el-button type="primary" :icon="Plus" @click="goToCreateJob">发布新职位</el-button>
+          </div>
         </div>
       </template>
 
@@ -97,13 +107,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useJobStore } from '@/stores/job'; // Assuming job store handles company jobs
 import type { JobInfo, JobStatus } from '@/types/job';
 import { ElCard, ElButton, ElTable, ElTableColumn, ElTag, ElPopconfirm, ElEmpty, ElMessage, ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElLink } from 'element-plus';
 import { Plus, Search } from '@element-plus/icons-vue';
 import Pagination from '@/components/common/Pagination.vue';
+import TableExport from '@/components/common/TableExport.vue'; // Import table export component
 
 const router = useRouter();
 const jobStore = useJobStore();
@@ -182,6 +193,46 @@ const handleDeleteJob = async (id: string | number) => {
     } catch(e) { ElMessage.error('删除失败'); }
 };
 
+// 导出相关方法
+
+// 导出列定义
+const exportColumns = computed(() => [
+  { prop: 'title', label: '职位名称' },
+  { prop: 'location', label: '工作地点' },
+  { prop: 'job_type', label: '职位类型' },
+  { prop: 'applications_count', label: '申请数' },
+  {
+    prop: 'publish_time',
+    label: '发布时间',
+    formatter: (row: any) => formatTime(row.publish_time)
+  },
+  {
+    prop: 'status',
+    label: '状态',
+    formatter: (row: any) => row.status === 'open' ? '招聘中' : '已关闭'
+  }
+]);
+
+// 格式化日期（用于文件名）
+const formatDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}${month}${day}`;
+};
+
+// 格式化日期时间（用于显示）
+const formatDateTime = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+};
+
 </script>
 
 <style scoped>
@@ -192,6 +243,12 @@ const handleDeleteJob = async (id: string | number) => {
 .card-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
   align-items: center;
 }
 

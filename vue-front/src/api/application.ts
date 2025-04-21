@@ -126,6 +126,40 @@ export function getCompanyApplicationDetail(id: string | number): Promise<{ data
   // ---- Mock Data End ----
 }
 
+// (学生端) 获取单个申请详情
+export function getStudentApplicationDetail(id: string | number): Promise<{ data: ApplicationInfo }> {
+  // return request({
+  //   url: `/api/student/applications/${id}`,
+  //   method: 'get',
+  // });
+  // ---- Mock Data Start ----
+  console.warn('API MOCK: getStudentApplicationDetail is using mock data.');
+  const mockDetail: ApplicationInfo = {
+        id: id,
+        job_id: 'job1',
+        student_id: '1',
+        resume_id: 'resume1',
+        status: 'interview',
+        apply_time: '2024-01-18T14:00:00Z',
+        update_time: '2024-01-19T10:30:00Z',
+        feedback: '感谢您的申请，我们对您的简历很感兴趣。请按照面试安排准时参加面试。',
+        job_title: '前端开发工程师',
+        company_name: '示例科技',
+        resume_title: '前端开发简历',
+        interview_time: '2024-01-25T14:00:00Z',
+        interview_location: '北京市海淀区中关村软件园1号楼3层',
+        interview_type: 'onsite',
+        interview_contact: '张经理',
+        interview_contact_info: '13800138000'
+  };
+  return new Promise((resolve) => {
+    setTimeout(() => {
+        resolve({ data: mockDetail });
+    }, 350);
+  });
+  // ---- Mock Data End ----
+}
+
 // (企业端) 更新申请状态
 export function updateApplicationStatus(id: string | number, data: UpdateApplicationStatusPayload) {
   return request({
@@ -133,4 +167,4 @@ export function updateApplicationStatus(id: string | number, data: UpdateApplica
     method: 'put',
     data,
   });
-} 
+}

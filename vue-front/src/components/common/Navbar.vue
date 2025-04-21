@@ -53,6 +53,11 @@
 
       <div class="spacer"></div>
 
+      <!-- 通知中心 -->
+      <div v-if="userStore.token && userStore.userInfo" class="notification-center-container hide-on-mobile">
+        <notification-center />
+      </div>
+
       <div class="user-area hide-on-mobile">
         <template v-if="userStore.token && userStore.userInfo">
           <el-dropdown @command="handleUserCommand">
@@ -64,6 +69,7 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item command="profile">个人中心</el-dropdown-item>
+                <el-dropdown-item command="notifications">消息通知</el-dropdown-item>
                 <el-dropdown-item command="settings">账号设置</el-dropdown-item>
                 <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
               </el-dropdown-menu>
@@ -96,6 +102,7 @@ import {
   ChatLineRound
 } from '@element-plus/icons-vue';
 import MobileMenu from './MobileMenu.vue';
+import NotificationCenter from './NotificationCenter.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -176,6 +183,7 @@ const getSearchSuggestions = (): SearchSuggestion[] => {
       { value: '我的简历', path: '/student/resume', icon: Document },
       { value: '我的申请', path: '/student/applications', icon: Collection },
       { value: '推荐职位', path: '/student/recommendations', icon: Briefcase },
+      { value: '消息通知', path: '/notifications', icon: ChatLineRound },
     ];
   } else if (userType === 'company') {
     return [
@@ -184,6 +192,7 @@ const getSearchSuggestions = (): SearchSuggestion[] => {
       { value: '企业信息', path: '/company/profile', icon: OfficeBuilding },
       { value: '职位管理', path: '/company/jobs', icon: Briefcase },
       { value: '申请管理', path: '/company/applications', icon: ChatLineRound },
+      { value: '消息通知', path: '/notifications', icon: ChatLineRound },
     ];
   } else if (userType === 'admin') {
     return [
@@ -191,6 +200,7 @@ const getSearchSuggestions = (): SearchSuggestion[] => {
       { value: '管理工作台', path: '/admin/dashboard', icon: DataAnalysis },
       { value: '用户管理', path: '/admin/users', icon: User },
       { value: '企业审核', path: '/admin/companies', icon: OfficeBuilding },
+      { value: '消息通知', path: '/notifications', icon: ChatLineRound },
     ];
   }
 
@@ -237,9 +247,11 @@ const handleUserCommand = async (command: string | number | object) => {
          router.push('/'); // Fallback or admin profile
       }
       break;
+    case 'notifications':
+      router.push('/notifications');
+      break;
     case 'settings':
-      // router.push('/account/settings'); // TODO: Define settings route
-      ElMessage.info('账号设置功能待开发');
+      router.push('/notification-settings');
       break;
     case 'logout':
       try {
@@ -422,6 +434,10 @@ const handleUserCommand = async (command: string | number | object) => {
 
 .spacer {
   flex-grow: 1; /* Pushes user area to the right */
+}
+
+.notification-center-container {
+  margin-right: 15px;
 }
 
 .user-area {

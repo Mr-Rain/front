@@ -26,6 +26,12 @@
               <span class="hide-on-mobile">刷新推荐</span>
             </el-button>
 
+            <!-- 设置按钮 -->
+            <el-button type="primary" link @click="goToSettings">
+              <el-icon><Setting /></el-icon>
+              <span class="hide-on-mobile">推荐设置</span>
+            </el-button>
+
             <!-- 信息提示 -->
             <el-tooltip content="基于您的简历和浏览历史推荐相关职位" placement="top">
               <el-icon><InfoFilled /></el-icon>
@@ -99,7 +105,7 @@ import {
   ElProgress, ElMessage, ElSelect, ElOption
 } from 'element-plus';
 import {
-  MagicStick, Refresh, InfoFilled, Close
+  MagicStick, Refresh, InfoFilled, Close, Setting
 } from '@element-plus/icons-vue';
 
 const router = useRouter();
@@ -162,6 +168,11 @@ const handleDislike = async (jobId: string | number) => {
 // 跳转到简历页面
 const goToResume = () => {
   router.push('/student/resume');
+};
+
+// 跳转到推荐设置页面
+const goToSettings = () => {
+  router.push('/student/recommendations/settings');
 };
 
 onMounted(() => {

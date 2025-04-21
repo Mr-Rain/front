@@ -33,37 +33,77 @@ service.interceptors.response.use(
   (response: AxiosResponse) => {
     const res = response.data;
 
-    // TODO: 根据后端接口规范调整响应处理逻辑
-    // 示例：如果后端返回的 code 不是成功状态码，则视为错误
-    // if (res.code !== 200) {
-    //   ElMessage({
-    //     message: res.message || 'Error',
-    //     type: 'error',
-    //     duration: 5 * 1000,
-    //   });
+    // 如果响应头中包含新的token，则更新token
+    const newToken = response.headers['new-token'];
+    if (newToken) {
+      const userStore = useUserStore();
+      const rememberMe = localStorage.getItem('rememberMe') === 'true';
+      userStore.setToken(newToken, rememberMe);
+    }
 
-    //   // 示例：处理特定的错误码，如 token 失效
-    //   if (res.code === 401 || res.code === 403) {
-    //     // 处理 token 失效或无权限的情况，例如跳转到登录页
-    //     const userStore = useUserStore();
-    //     userStore.logout();
-    //     // router.push(`/login?redirect=${router.currentRoute.value.fullPath}`);
-    //   }
-    //   return Promise.reject(new Error(res.message || 'Error'));
-    // }
+    // 根据后端接口规范调整响应处理逻辑
+    if (res.code && res.code !== 200) {
+      ElMessage({
+        message: res.message || 'Error',
+        type: 'error',
+        duration: 5 * 1000,
+      });
+
+      // 处理特定的错误码，如 token 失效
+      if (res.code === 401 || res.code === 403) {
+        // 处理 token 失效或无权限的情况
+        const userStore = useUserStore();
+        userStore.resetAuth();
+        // 将当前路径作为重定向参数，登录后可以跳回
+        window.location.href = `/login?redirect=${window.location.pathname}`;
+      }
+      return Promise.reject(new Error(res.message || 'Error'));
+    }
 
     // 如果响应正常，直接返回响应数据
     return res;
   },
   (error) => {
     console.error('Response Error:', error); // for debug
-    ElMessage({
-      message: error.message,
-      type: 'error',
-      duration: 5 * 1000,
-    });
+
+    // 处理请求超时
+    if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
+      ElMessage({
+        message: '请求超时，请检查网络连接',
+        type: 'error',
+        duration: 5 * 1000,
+      });
+      return Promise.reject(error);
+    }
+
+    // 处理服务器错误
+    if (error.response) {
+      const { status } = error.response;
+
+      // 处理401和403错误（未授权或token失效）
+      if (status === 401 || status === 403) {
+        const userStore = useUserStore();
+        userStore.resetAuth();
+        window.location.href = `/login?redirect=${window.location.pathname}`;
+      }
+
+      // 显示错误消息
+      ElMessage({
+        message: error.response.data?.message || `请求失败，状态码: ${status}`,
+        type: 'error',
+        duration: 5 * 1000,
+      });
+    } else {
+      // 网络错误
+      ElMessage({
+        message: '网络错误，请检查您的网络连接',
+        type: 'error',
+        duration: 5 * 1000,
+      });
+    }
+
     return Promise.reject(error);
   }
 );
 
-export default service; 
+export default service;
