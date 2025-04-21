@@ -102,6 +102,16 @@
               </el-form-item>
             </el-col>
             <el-col :span="24">
+              <el-form-item label="公司标签" prop="tags">
+                <company-tags-manager
+                  v-model="companyTags"
+                  :suggestions="industryTagSuggestions"
+                  :max-tags="10"
+                />
+              </el-form-item>
+            </el-col>
+
+            <el-col :span="24">
               <el-form-item label="公司简介" prop="description">
                 <el-input
                   type="textarea"
@@ -112,6 +122,68 @@
               </el-form-item>
             </el-col>
           </el-row>
+
+          <!-- 联系人信息部分 -->
+          <div class="section-divider">
+            <h3 class="section-title">联系人信息</h3>
+          </div>
+
+          <el-row :gutter="20">
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="联系人姓名" prop="contact_person">
+                <el-input v-model="profileData.contact_person" placeholder="请输入联系人姓名"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="联系人电话" prop="contact_phone">
+                <el-input v-model="profileData.contact_phone" placeholder="请输入联系人电话"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="联系人邮箱" prop="contact_email">
+                <el-input v-model="profileData.contact_email" placeholder="请输入联系人邮箱"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+
+          <!-- 资质认证部分 -->
+          <div class="section-divider">
+            <h3 class="section-title">
+              资质认证
+              <el-tooltip content="企业资质认证是确保平台企业真实性和合法性的重要环节" placement="top">
+                <el-icon class="info-icon" @click="showLicenseHelp"><QuestionFilled /></el-icon>
+              </el-tooltip>
+            </h3>
+          </div>
+
+          <el-row>
+            <el-col :span="24">
+              <div class="license-section">
+                <license-uploader
+                  ref="licenseUploaderRef"
+                  v-model="profileData.business_license"
+                  :disabled="!isEditing"
+                  :file-name="profileData.business_license_name || '营业执照.pdf'"
+                  @upload-success="handleLicenseSuccess"
+                />
+
+                <div v-if="profileData.audit_status" class="license-audit-status">
+                  <p>
+                    <strong>审核状态：</strong>
+                    <el-tag :type="getAuditStatusType(profileData.audit_status)">
+                      {{ formatAuditStatus(profileData.audit_status) }}
+                    </el-tag>
+                  </p>
+                  <p v-if="profileData.audit_status === 'rejected' && profileData.audit_message" class="audit-message">
+                    <strong>原因：</strong> {{ profileData.audit_message }}
+                  </p>
+                  <p v-if="profileData.audit_status === 'pending'" class="audit-pending-message">
+                    您的企业资质正在审核中，请耐心等待（1-3个工作日）
+                  </p>
+                </div>
+              </div>
+            </el-col>
+          </el-row>
         </div>
       </el-form>
     </el-card>
@@ -119,19 +191,38 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, reactive, onMounted, watch, computed } from 'vue';
 import { useCompanyStore } from '@/stores/company';
 import UserAvatar from '@/components/common/UserAvatar.vue'; // Reusing avatar component for logo
+import CompanyTagsManager from '@/components/company/CompanyTagsManager.vue';
+import LicenseUploader from '@/components/company/LicenseUploader.vue';
 import type { CompanyProfile, CompanyAuditStatus } from '@/types/company';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage } from 'element-plus';
-import { Edit, Check, Close } from '@element-plus/icons-vue';
-import _ from 'lodash';
+import { Edit, Check, Close, InfoFilled, QuestionFilled } from '@element-plus/icons-vue';
+import * as _ from 'lodash';
 
 const companyStore = useCompanyStore();
 const profileFormRef = ref<FormInstance>();
 const isEditing = ref(false);
 const loading = ref(false);
+const licenseUploaderRef = ref<InstanceType<typeof LicenseUploader>>();
+
+// 计算属性：确保标签始终是数组
+const companyTags = computed({
+  get: () => profileData.tags || [],
+  set: (value: string[]) => {
+    profileData.tags = value;
+  }
+});
+
+// 行业标签建议
+const industryTagSuggestions = [
+  '互联网', '人工智能', '大数据', '云计算', '区块链', '物联网', '5G', '金融科技',
+  '电子商务', '社交媒体', '在线教育', '医疗健康', '生物技术', '新能源', '智能制造',
+  '游戏', '文化创意', '广告营销', '咨询服务', '法律服务', '房地产', '建筑设计',
+  '物流运输', '旅游酒店', '餐饮服务', '零售', '农业科技', '环保', '汽车', '航空航天'
+];
 
 const profileData = reactive<Partial<CompanyProfile>>({
     company_name: '',
@@ -143,6 +234,14 @@ const profileData = reactive<Partial<CompanyProfile>>({
     financing: undefined,
     location: '',
     description: '',
+    tags: [],
+    // 联系人信息
+    contact_person: '',
+    contact_email: '',
+    contact_phone: '',
+    // 资质认证
+    business_license: '',
+    business_license_name: '',
     // Readonly fields
     username: '',
     email: '',
@@ -158,6 +257,12 @@ const profileRules = reactive<FormRules>({
   location: [{ required: true, message: '请输入公司地址', trigger: 'blur' }],
   description: [{ required: true, message: '请输入公司简介', trigger: 'blur' }],
   website: [{ type: 'url', message: '请输入有效的网址', trigger: ['blur', 'change'] }],
+  contact_person: [{ required: true, message: '请输入联系人姓名', trigger: 'blur' }],
+  contact_email: [
+    { required: true, message: '请输入联系人邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入有效的邮箱地址', trigger: ['blur', 'change'] }
+  ],
+  contact_phone: [{ required: true, message: '请输入联系人电话', trigger: 'blur' }],
 });
 
 watch(() => companyStore.profile, (newProfile) => {
@@ -177,6 +282,19 @@ const handleLogoSuccess = (newImageUrl: string) => {
     if ('logo' in profileData) {
         profileData.logo = newImageUrl;
     }
+};
+
+// 显示资质认证帮助对话框
+const showLicenseHelp = () => {
+    if (licenseUploaderRef.value) {
+        licenseUploaderRef.value.showHelpDialog();
+    }
+};
+
+// 处理营业执照上传成功
+const handleLicenseSuccess = (url: string) => {
+    profileData.business_license = url;
+    profileData.business_license_name = '营业执照';
 };
 
 const saveProfile = async () => {
@@ -290,6 +408,47 @@ const getAuditStatusType = (status: CompanyAuditStatus | undefined): ('success' 
     font-weight: 500;
 }
 
+/* 分区样式 */
+.section-divider {
+    margin: 30px 0 20px;
+    border-top: 1px solid var(--el-border-color-lighter);
+    padding-top: 20px;
+    position: relative;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0 0 15px;
+    display: flex;
+    align-items: center;
+}
+
+.info-icon {
+    margin-left: 8px;
+    color: var(--el-color-info);
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* 资质认证部分样式 */
+.license-section {
+    margin-bottom: 20px;
+}
+
+.license-audit-status {
+    margin-top: 15px;
+    padding: 15px;
+    background-color: var(--el-color-info-light-9);
+    border-radius: 4px;
+}
+
+.audit-pending-message {
+    color: var(--el-color-warning-dark);
+    font-size: 14px;
+    margin-top: 10px;
+}
+
 /* 响应式调整 */
 @media (max-width: 768px) {
     .company-profile-page {
@@ -315,6 +474,16 @@ const getAuditStatusType = (status: CompanyAuditStatus | undefined): ('success' 
 
     .company-profile-form .el-form-item__label {
         padding-bottom: 5px;
+    }
+
+    .section-divider {
+        margin: 20px 0 15px;
+        padding-top: 15px;
+    }
+
+    .section-title {
+        font-size: 16px;
+        margin-bottom: 10px;
     }
 }
 </style>

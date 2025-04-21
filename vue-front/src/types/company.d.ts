@@ -29,7 +29,8 @@ export interface CompanyProfile extends UserInfo {
   financing?: FinancingStage; // 融资阶段
   location?: string; // 公司地址
   description?: string; // 公司简介 (可以是 Markdown 格式)
-  
+  tags?: string[]; // 公司标签
+
   // --- 联系人信息 ---
   contact_person?: string; // 联系人姓名
   contact_email?: string;  // 联系人邮箱
@@ -51,4 +52,4 @@ export interface CompanyProfile extends UserInfo {
 export interface AuditPayload {
     status: Exclude<CompanyAuditStatus, 'pending'>; // 审核结果只能是 approved 或 rejected
     message?: string; // 审核意见 (拒绝时必填)
-} 
+}
