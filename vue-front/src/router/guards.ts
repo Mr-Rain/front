@@ -7,7 +7,7 @@ import { usePermissionStore } from '@/stores/permission';
 // NProgress.configure({ showSpinner: false }); // optional configuration
 
 // 白名单，不需要登录即可访问的路由路径
-const whiteList = ['/', '/login', '/register', '/forgot-password', '/404', '/401', '/jobs', '/companies'];
+const whiteList = ['/', '/login', '/register', '/forgot-password', '/404', '/401', '/jobs', '/companies', '/account-settings'];
 
 // 定义角色对应的首页路径
 const homePathMap: Record<string, string> = {

@@ -277,6 +277,20 @@ const router = createRouter({
       ]
     },
 
+    // --- 账号设置路由 ---
+    {
+      path: '/account-settings',
+      component: DefaultLayout,
+      children: [
+        {
+          path: '',
+          name: 'account-settings',
+          component: createLazyComponent('common/AccountSettings'),
+          meta: { title: '账号设置' }
+        }
+      ]
+    },
+
     // --- 搜索结果页面 ---
     {
       path: '/search',

@@ -97,7 +97,8 @@ export const useThemeStore = defineStore('theme', () => {
     const currentPath = window.location.pathname;
 
     // 判断是否在白名单路径上（不应用主题切换）
-    const whiteList = ['/', '/login', '/register', '/forgot-password', '/auth'];
+    // 注意：我们已经将登录、注册和找回密码页面从白名单中移除，使其支持主题切换
+    const whiteList = ['/'];
     const isWhitePath = whiteList.some(path => currentPath === path || currentPath.startsWith(path + '/'));
 
     // 如果是白名单路径，不应用主题切换
@@ -146,7 +147,7 @@ export const useThemeStore = defineStore('theme', () => {
     const currentPath = window.location.pathname;
 
     // 判断是否在白名单路径上（不应用主题切换）
-    const whiteList = ['/', '/login', '/register', '/forgot-password', '/auth'];
+    const whiteList = ['/'];
     const isWhitePath = whiteList.some(path => currentPath === path || currentPath.startsWith(path + '/'));
 
     // 如果是白名单路径，不应用主题颜色

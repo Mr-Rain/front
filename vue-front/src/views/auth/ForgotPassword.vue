@@ -1,5 +1,8 @@
 <template>
   <div class="forgot-password-container">
+    <div class="theme-switch-container">
+      <ThemeSwitcher />
+    </div>
     <el-card class="forgot-password-card">
       <template #header>
         <div class="card-header">
@@ -33,6 +36,7 @@ import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
+import ThemeSwitcher from '@/components/common/ThemeSwitcher.vue';
 import { useUserStore } from '@/stores/user'; // Assuming forgot password logic is in userStore or api
 
 const router = useRouter();
@@ -143,15 +147,58 @@ const goToLogin = () => {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f0f2f5;
+  background-color: var(--el-bg-color-page, #f0f2f5);
+  color: var(--el-text-color-primary);
+  position: relative;
+}
+
+.theme-switch-container {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
 }
 
 .forgot-password-card {
   width: 450px; /* Adjust width as needed */
+  background-color: var(--el-bg-color, #ffffff);
+  border-color: var(--el-border-color-light);
 }
 
 .card-header {
   text-align: center;
   font-size: 1.2em;
+  color: var(--el-text-color-primary);
+}
+
+/* 添加深色主题下的样式 */
+:deep(.dark-theme .el-card) {
+  background-color: var(--theme-card-bg-dark, #252525) !important;
+  border-color: var(--theme-border-color, #333333) !important;
+  color: var(--theme-text-color, #e6e6e6) !important;
+}
+
+:deep(.dark-theme .el-card__header) {
+  border-bottom-color: var(--theme-border-color, #333333) !important;
+}
+
+:deep(.dark-theme .el-input__wrapper) {
+  background-color: var(--theme-input-bg, #2c2c2c) !important;
+  box-shadow: 0 0 0 1px var(--theme-input-border, #444444) inset !important;
+}
+
+:deep(.dark-theme .el-input__inner) {
+  color: var(--theme-input-text, #cccccc) !important;
+  background-color: transparent !important;
+}
+
+:deep(.dark-theme .el-form-item__label) {
+  color: var(--theme-text-color-light, #cccccc) !important;
+}
+
+:deep(.dark-theme .el-button--default) {
+  background-color: var(--theme-bg-color-lighter, #2c2c2c) !important;
+  border-color: var(--theme-border-color, #333333) !important;
+  color: var(--theme-text-color, #e6e6e6) !important;
 }
 </style>

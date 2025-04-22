@@ -35,18 +35,15 @@
         class="search-input"
         @keyup.enter="handleSearch"
         clearable
+        :suffix-icon="null"
       >
         <template #prefix>
           <el-icon class="search-icon"><Search /></el-icon>
         </template>
         <template #suffix>
-          <el-button
-            class="search-button navbar-search-button"
-            type="primary"
-            :icon="Search"
-            circle
-            @click="handleSearch"
-          />
+          <div class="search-button-container">
+            <el-icon class="search-button navbar-search-button" @click="handleSearch"><Search /></el-icon>
+          </div>
         </template>
       </el-input>
     </div>
@@ -90,21 +87,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import {
   ArrowDown,
-  Search,
-  User,
-  Briefcase,
-  Document,
-  DataAnalysis,
-  Setting,
-  OfficeBuilding,
-  Collection,
-  ChatLineRound
+  Search
 } from '@element-plus/icons-vue';
 import MobileMenu from './MobileMenu.vue';
 import NotificationCenter from './NotificationCenter.vue';
@@ -118,8 +107,7 @@ const logoUrl = ref(''); // Optional: Provide URL for logo image
 const defaultAvatar = ref('https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'); // Default avatar
 const searchQuery = ref('');
 
-// Computed property for active menu item based on current route
-const activeIndex = computed(() => route.path);
+// 不需要计算属性，直接使用route.path
 
 // 根据用户角色获取职位列表路径
 const getJobsPath = () => {
@@ -202,7 +190,7 @@ const handleUserCommand = async (command: string | number | object) => {
       router.push('/notifications');
       break;
     case 'settings':
-      router.push('/notification-settings');
+      router.push('/account-settings');
       break;
     case 'logout':
       try {
@@ -313,74 +301,141 @@ const handleUserCommand = async (command: string | number | object) => {
   background-color: var(--el-color-primary);
 }
 
-/* 搜索框样式 */
+/* 搜索框容器样式 */
 .search-container {
-  margin-left: auto;
-  margin-right: 20px;
-  width: 260px;
-  transition: width 0.3s ease;
+  width: 350px;
+  margin: 0 20px;
+  flex-shrink: 0;
+  position: relative;
 }
 
-.search-container:hover {
-  width: 300px;
+@media (max-width: 768px) {
+  .search-container {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 10px;
+  }
 }
 
-.search-input {
-  width: 100%;
+/* 搜索框样式 */
+.search-input :deep(.el-input__wrapper) {
+  border-radius: 20px !important;
+  padding: 0 8px;
+  background: rgba(35, 35, 50, 0.8);
+  border: 1px solid rgba(100, 100, 255, 0.3);
+  box-shadow: 0 0 10px rgba(80, 80, 255, 0.1);
+  transition: all 0.3s ease;
+  height: 40px;
+  padding-right: 45px; /* 为搜索按钮预留空间 */
 }
 
-:deep(.el-input__wrapper) {
-  border-radius: 20px;
-  padding-left: 15px;
-  transition: all 0.3s;
-  box-shadow: 0 0 0 1px var(--el-border-color) inset;
-  background-color: #f5f7fa;
+.search-input :deep(.el-input__wrapper:hover),
+.search-input :deep(.el-input__wrapper:focus-within) {
+  border-color: rgba(120, 120, 255, 0.8);
+  box-shadow: 0 0 15px rgba(100, 100, 255, 0.3);
 }
 
-:deep(.el-input__wrapper:hover) {
-  box-shadow: 0 0 0 1px var(--el-color-primary) inset;
-  background-color: #fff;
-}
-
-:deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px var(--el-color-primary) inset;
-  background-color: #fff;
-}
-
-.search-icon {
-  color: #909399;
-  font-size: 16px;
-}
-
-:deep(.el-input__inner) {
+/* 输入框样式 */
+.search-input :deep(.el-input__inner) {
+  height: 40px;
+  color: #eaeaea;
+  background: transparent;
   font-size: 14px;
 }
 
-:deep(.el-input__inner::placeholder) {
-  color: #909399;
+.search-input :deep(.el-input__inner::placeholder) {
+  color: rgba(180, 180, 200, 0.6);
 }
 
-.search-suggestion-item {
+/* 前缀图标样式 */
+.search-input :deep(.el-input__prefix) {
+  padding-right: 8px;
+}
+
+.search-icon {
+  color: rgba(150, 150, 255, 0.8);
+  font-size: 16px;
+}
+
+/* 搜索按钮容器样式 */
+.search-button-container {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  justify-content: center;
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 32px;
+  width: 32px;
+  z-index: 2;
 }
 
-.search-suggestion-item:hover {
-  background-color: #f5f7fa;
-}
-
-.search-suggestion-item .el-icon {
-  margin-right: 10px;
+/* 搜索按钮样式 */
+.navbar-search-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6e8efb, #a777e3);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 16px;
-  color: var(--el-color-primary);
 }
 
-:deep(.search-suggestions-popper) {
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.navbar-search-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 8px rgba(150, 150, 255, 0.6);
+}
+
+/* 删除按钮样式 */
+.search-input :deep(.el-input__clear) {
+  color: rgba(180, 180, 200, 0.8);
+  background: rgba(80, 80, 100, 0.3);
+  border-radius: 50%;
+  font-size: 14px;
+  margin-right: 8px;
+  transition: all 0.3s ease;
+  height: 20px;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  right: 0;
+  z-index: 3;
+}
+
+/* 添加呼吸光效果 */
+@keyframes glow {
+  0% { box-shadow: 0 0 5px rgba(100, 100, 255, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(120, 120, 255, 0.5); }
+  100% { box-shadow: 0 0 5px rgba(100, 100, 255, 0.3); }
+}
+
+.search-input :deep(.el-input__wrapper:focus-within) {
+  animation: glow 2s infinite;
+}
+
+/* 适配浅色主题 */
+:root[data-theme="light"] .search-input :deep(.el-input__wrapper) {
+  background: rgba(245, 245, 250, 0.9);
+  border: 1px solid rgba(100, 100, 255, 0.2);
+}
+
+:root[data-theme="light"] .search-input :deep(.el-input__inner) {
+  color: #333;
+}
+
+:root[data-theme="light"] .search-input :deep(.el-input__inner::placeholder) {
+  color: rgba(100, 100, 120, 0.6);
+}
+
+:root[data-theme="light"] .search-icon {
+  color: rgba(100, 100, 255, 0.7);
 }
 
 .spacer {

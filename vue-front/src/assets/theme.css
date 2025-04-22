@@ -762,9 +762,11 @@ body.dark-theme .el-button:not(.el-button--primary):not(.el-button--success):not
 
 /* 搜索框样式优化 */
 .search-container .el-input__wrapper {
-  padding-right: 4px !important;
+  padding-right: 0 !important;
   border-radius: 20px !important;
   transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 .search-container .el-input__wrapper:hover {
@@ -778,13 +780,26 @@ body.dark-theme .el-button:not(.el-button--primary):not(.el-button--success):not
 }
 
 /* 调整搜索框内部元素的间距 */
-:deep(.el-input__suffix) {
-  padding-left: 0 !important;
+.el-input__suffix {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 14px !important;
+  height: 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
 }
 
-:deep(.el-input__suffix-inner) {
-  display: flex !important;
+.el-input__suffix-inner {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 14px !important;
+  height: 14px !important;
+  display: inline-flex !important;
   align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
 }
 
 /* 添加新的搜索框样式 - 更现代的设计 */
@@ -815,26 +830,46 @@ body.dark-theme .el-button:not(.el-button--primary):not(.el-button--success):not
 
 /* 导航栏搜索按钮特殊样式 */
 .navbar-search-button {
-  width: 18px !important;
-  height: 18px !important;
-  padding: 1px !important;
-  font-size: 10px !important;
+  width: 14px !important;
+  height: 14px !important;
+  padding: 0 !important;
+  font-size: 14px !important;
   background: transparent !important;
   border: none !important;
-  color: #409EFF !important;
+  color: #909399 !important;
   box-shadow: none !important;
-  margin-right: 4px !important;
+  margin: 0 !important;
   transition: all 0.3s ease !important;
   min-height: unset !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
+  position: static !important;
+  transform: none !important;
+  cursor: pointer !important;
+  outline: none !important;
+  flex: 0 0 auto !important;
 }
 
 .navbar-search-button:hover {
-  background-color: rgba(64, 158, 255, 0.1) !important;
-  transform: scale(1.1) !important;
+  color: #409EFF !important;
+  background-color: transparent !important;
+  transform: none !important;
 }
 
 .navbar-search-button .el-icon {
-  font-size: 10px !important;
+  font-size: 14px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  width: 14px !important;
+  height: 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 /* 学生页面背景 */

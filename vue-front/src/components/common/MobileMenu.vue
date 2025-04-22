@@ -30,10 +30,16 @@
             v-model="searchKeyword"
             placeholder="搜索..."
             clearable
+            class="mobile-search-input"
             @keyup.enter="handleSearch"
           >
             <template #prefix>
-              <el-icon><Search /></el-icon>
+              <el-icon class="search-icon"><Search /></el-icon>
+            </template>
+            <template #suffix>
+              <div class="search-button-container">
+                <el-icon class="search-button mobile-search-button" @click="handleSearch"><Search /></el-icon>
+              </div>
             </template>
           </el-input>
         </div>
@@ -326,8 +332,135 @@ const getUserTypeText = (userType: string | undefined) => {
 }
 
 .mobile-search {
-  padding: 10px 16px;
-  margin-bottom: 10px;
+  margin: 15px 0;
+  padding: 0 15px;
+  position: relative;
+}
+
+.mobile-search-input :deep(.el-input__wrapper) {
+  border-radius: 20px !important;
+  padding: 0 8px;
+  background: rgba(35, 35, 50, 0.8);
+  border: 1px solid rgba(100, 100, 255, 0.3);
+  box-shadow: 0 0 10px rgba(80, 80, 255, 0.1);
+  transition: all 0.3s ease;
+  height: 40px;
+  padding-right: 45px; /* 为搜索按钮预留空间 */
+}
+
+.mobile-search-input :deep(.el-input__wrapper:hover),
+.mobile-search-input :deep(.el-input__wrapper:focus-within) {
+  border-color: rgba(120, 120, 255, 0.8);
+  box-shadow: 0 0 15px rgba(100, 100, 255, 0.3);
+}
+
+/* 输入框样式 */
+.mobile-search-input :deep(.el-input__inner) {
+  height: 40px;
+  color: #eaeaea;
+  background: transparent;
+  font-size: 14px;
+}
+
+.mobile-search-input :deep(.el-input__inner::placeholder) {
+  color: rgba(180, 180, 200, 0.6);
+}
+
+/* 前缀图标样式 */
+.mobile-search-input :deep(.el-input__prefix) {
+  padding-right: 8px;
+}
+
+.search-icon {
+  color: rgba(150, 150, 255, 0.8);
+  font-size: 16px;
+}
+
+/* 搜索按钮容器样式 */
+.search-button-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 32px;
+  width: 32px;
+  z-index: 2;
+}
+
+/* 搜索按钮样式 */
+.mobile-search-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6e8efb, #a777e3);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.mobile-search-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 8px rgba(150, 150, 255, 0.6);
+}
+
+/* 删除按钮样式 */
+.mobile-search-input :deep(.el-input__clear) {
+  color: rgba(180, 180, 200, 0.8);
+  background: rgba(80, 80, 100, 0.3);
+  border-radius: 50%;
+  font-size: 14px;
+  margin-right: 8px;
+  transition: all 0.3s ease;
+  height: 20px;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  right: 0;
+  z-index: 3;
+}
+
+.mobile-search-input :deep(.el-input__clear:hover) {
+  color: white;
+  background: rgba(255, 100, 100, 0.5);
+  transform: scale(1.1);
+}
+
+/* 添加呼吸光效果 */
+@keyframes glow {
+  0% { box-shadow: 0 0 5px rgba(100, 100, 255, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(120, 120, 255, 0.5); }
+  100% { box-shadow: 0 0 5px rgba(100, 100, 255, 0.3); }
+}
+
+.mobile-search-input :deep(.el-input__wrapper:focus-within) {
+  animation: glow 2s infinite;
+}
+
+/* 适配浅色主题 */
+:root[data-theme="light"] .mobile-search-input :deep(.el-input__wrapper) {
+  background: rgba(245, 245, 250, 0.9);
+  border: 1px solid rgba(100, 100, 255, 0.2);
+}
+
+:root[data-theme="light"] .mobile-search-input :deep(.el-input__inner) {
+  color: #333;
+}
+
+:root[data-theme="light"] .mobile-search-input :deep(.el-input__inner::placeholder) {
+  color: rgba(100, 100, 120, 0.6);
+}
+
+:root[data-theme="light"] .search-icon {
+  color: rgba(100, 100, 255, 0.7);
 }
 
 .mobile-footer {

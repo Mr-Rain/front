@@ -1,5 +1,8 @@
 <template>
   <div class="register-container">
+    <div class="theme-switch-container">
+      <ThemeSwitcher />
+    </div>
     <el-card class="register-card">
       <template #header>
         <div class="card-header">
@@ -39,6 +42,7 @@ import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
+import ThemeSwitcher from '@/components/common/ThemeSwitcher.vue';
 import { useUserStore } from '@/stores/user'; // Assuming register logic is in userStore
 import type { UserType } from '@/types/user'; // Import UserType
 
@@ -56,7 +60,7 @@ const registerForm = reactive({
 });
 
 // Custom validator for password confirmation
-const validatePassConfirm = (rule: any, value: any, callback: any) => {
+const validatePassConfirm = (_rule: any, value: any, callback: any) => {
   if (value === '') {
     callback(new Error('请再次输入密码'));
   } else if (value !== registerForm.password) {
@@ -126,15 +130,56 @@ const goToLogin = () => {
   align-items: center;
   min-height: 100vh; /* Use min-height for potentially longer forms */
   padding: 20px 0; /* Add padding for scroll */
-  background-color: #f0f2f5;
+  background-color: var(--el-bg-color-page, #f0f2f5);
+  color: var(--el-text-color-primary);
+  position: relative;
+}
+
+.theme-switch-container {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
 }
 
 .register-card {
   width: 500px; /* Slightly wider for more fields */
+  background-color: var(--el-bg-color, #ffffff);
+  border-color: var(--el-border-color-light);
 }
 
 .card-header {
   text-align: center;
   font-size: 1.2em;
+  color: var(--el-text-color-primary);
+}
+
+/* 添加深色主题下的样式 */
+:deep(.dark-theme .el-card) {
+  background-color: var(--theme-card-bg-dark, #252525) !important;
+  border-color: var(--theme-border-color, #333333) !important;
+  color: var(--theme-text-color, #e6e6e6) !important;
+}
+
+:deep(.dark-theme .el-card__header) {
+  border-bottom-color: var(--theme-border-color, #333333) !important;
+}
+
+:deep(.dark-theme .el-input__wrapper) {
+  background-color: var(--theme-input-bg, #2c2c2c) !important;
+  box-shadow: 0 0 0 1px var(--theme-input-border, #444444) inset !important;
+}
+
+:deep(.dark-theme .el-input__inner) {
+  color: var(--theme-input-text, #cccccc) !important;
+  background-color: transparent !important;
+}
+
+:deep(.dark-theme .el-form-item__label) {
+  color: var(--theme-text-color-light, #cccccc) !important;
+}
+
+:deep(.dark-theme .el-radio__label) {
+  color: var(--theme-text-color-light, #cccccc) !important;
 }
 </style>
