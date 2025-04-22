@@ -39,6 +39,7 @@ export function getStudentApplicationList(params?: any): Promise<{ data: { list:
         id: 'app3', job_id: 'job3', student_id: '1', resume_id: 'resume2',
         status: 'rejected', apply_time: '2024-01-16T15:00:00Z', update_time: '2024-01-17T11:00:00Z',
         feedback: '抱歉，您的经历与岗位要求不太匹配。',
+        rating: 2,
         job_info: { id: 'job3', title: '产品经理', company_name: '另一家公司', location: '深圳', salary_range: '18k-28k' }
       }
   ];
@@ -143,6 +144,7 @@ export function getStudentApplicationDetail(id: string | number): Promise<{ data
         apply_time: '2024-01-18T14:00:00Z',
         update_time: '2024-01-19T10:30:00Z',
         feedback: '感谢您的申请，我们对您的简历很感兴趣。请按照面试安排准时参加面试。',
+        rating: 4,
         job_title: '前端开发工程师',
         company_name: '示例科技',
         resume_title: '前端开发简历',

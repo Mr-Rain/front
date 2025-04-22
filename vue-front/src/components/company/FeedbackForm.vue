@@ -104,7 +104,7 @@ const rateColors = ['#F56C6C', '#E6A23C', '#909399', '#67C23A', '#409EFF'];
 const rateTexts = ['不合适', '一般', '合格', '良好', '优秀'];
 
 // 是否显示评分
-const showRating = computed(() => props.type === 'interview');
+const showRating = computed(() => true); // 所有类型的反馈都显示评分
 
 // 是否显示结果
 const showResult = computed(() => props.type === 'interview');
@@ -140,7 +140,7 @@ const placeholder = computed(() => {
 // 处理提交
 const handleSubmit = async () => {
   if (!formRef.value) return;
-  
+
   await formRef.value.validate(async (valid) => {
     if (valid) {
       // 构建提交数据
@@ -150,7 +150,7 @@ const handleSubmit = async () => {
         result: formData.result,
         type: props.type
       };
-      
+
       // 发送提交事件
       emit('submit', submitData);
     } else {

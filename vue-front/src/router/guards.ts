@@ -60,7 +60,30 @@ export function createRouterGuards(router: Router) {
               await permissionStore.fetchUserPermissions();
             }
 
-            // TODO: 这里可以添加基于 roles/permissions 的动态路由添加逻辑 (如果需要)
+            // 基于角色添加动态路由
+            const roles = permissionStore.roles;
+
+            // 使用 hasRoutePermission 方法检查路由权限
+            if (!permissionStore.hasRoutePermission(to)) {
+              // 没有权限访问该路由
+              next({ path: '/unauthorized' });
+              return;
+            }
+
+            // 根据角色设置重定向路由
+            if (to.path === '/' || to.path === '/home') {
+              // 根据角色重定向到不同的首页
+              if (roles.includes('admin')) {
+                next({ path: '/admin/dashboard' });
+                return;
+              } else if (roles.includes('company')) {
+                next({ path: '/company/dashboard' });
+                return;
+              } else if (roles.includes('student')) {
+                next({ path: '/student/dashboard' });
+                return;
+              }
+            }
 
             // === START: Remove root path redirect AFTER fetching ===
             // 获取信息后再次检查目标路径

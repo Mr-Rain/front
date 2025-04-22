@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200px" height="200px" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Empty Search</title>
+    <defs>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#F5F7FA" offset="0%"></stop>
+            <stop stop-color="#E4E7EB" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-2">
+            <stop stop-color="#409EFF" offset="0%"></stop>
+            <stop stop-color="#1890FF" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Empty-Search" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle id="Background" fill="url(#linearGradient-1)" cx="100" cy="100" r="80"></circle>
+        <g id="Search-Icon" transform="translate(60.000000, 60.000000)">
+            <circle id="Search-Circle" stroke="url(#linearGradient-2)" stroke-width="6" cx="30" cy="30" r="25"></circle>
+            <line x1="48" y1="48" x2="70" y2="70" id="Search-Handle" stroke="url(#linearGradient-2)" stroke-width="6" stroke-linecap="round"></line>
+            <path d="M30,20 L30,40" id="Line-1" stroke="#C0C4CC" stroke-width="2" stroke-linecap="round"></path>
+            <path d="M20,30 L40,30" id="Line-2" stroke="#C0C4CC" stroke-width="2" stroke-linecap="round"></path>
+            <circle id="Center-Dot" fill="#C0C4CC" cx="30" cy="30" r="3"></circle>
+        </g>
+        <text id="No-Results" font-family="Arial, sans-serif" font-size="14" font-weight="normal" fill="#606266" text-anchor="middle" x="100" y="160">
+            No Results Found
+        </text>
+    </g>
+</svg>

@@ -43,7 +43,7 @@ const router = createRouter({
       path: '/student',
       component: StudentLayout,
       redirect: '/student/dashboard', // Redirect /student to dashboard
-      meta: { requiresAuth: true, roles: ['student'] }, // Add role meta
+      meta: { requiresAuth: true, roles: ['student'], permissions: ['job:view', 'application:apply', 'resume:edit'] }, // Add role and permissions meta
       children: [
         {
           path: 'dashboard',
@@ -127,7 +127,7 @@ const router = createRouter({
       path: '/company',
       component: CompanyLayout,
       redirect: '/company/dashboard',
-      meta: { requiresAuth: true, roles: ['company'] },
+      meta: { requiresAuth: true, roles: ['company'], permissions: ['job:view', 'job:create', 'job:edit'] },
       children: [
         {
           path: 'dashboard',
@@ -173,7 +173,7 @@ const router = createRouter({
       path: '/admin',
       component: AdminLayout,
       redirect: '/admin/dashboard',
-      meta: { requiresAuth: true, roles: ['admin'] },
+      meta: { requiresAuth: true, roles: ['admin'], permissions: ['user:view'] },
       children: [
         {
           path: 'dashboard',
@@ -185,13 +185,13 @@ const router = createRouter({
           path: 'users',
           name: 'admin-user-manage',
           component: () => import('@/views/admin/UserManage.vue'),
-          meta: { title: '用户管理' }
+          meta: { title: '用户管理', permissions: ['user:view', 'user:edit', 'user:status'] }
         },
         {
           path: 'companies',
           name: 'admin-company-audit',
           component: () => import('@/views/admin/CompanyAudit.vue'),
-          meta: { title: '企业审核' }
+          meta: { title: '企业审核', permissions: ['company:view', 'company:audit'] }
         },
         {
           path: 'jobs',
@@ -274,6 +274,34 @@ const router = createRouter({
           name: 'notification-settings',
           component: () => import('@/views/common/NotificationSettings.vue'),
           meta: { title: '通知设置' }
+        }
+      ]
+    },
+
+    // --- 搜索结果页面 ---
+    {
+      path: '/search',
+      component: DefaultLayout,
+      children: [
+        {
+          path: '',
+          name: 'search-results',
+          component: () => import('@/views/common/SearchResults.vue'),
+          meta: { title: '搜索结果' }
+        }
+      ]
+    },
+
+    // --- 组件演示页面 ---
+    {
+      path: '/demo',
+      component: DefaultLayout,
+      children: [
+        {
+          path: '',
+          name: 'component-demo',
+          component: () => import('@/views/common/ComponentDemo.vue'),
+          meta: { title: '组件演示' }
         }
       ]
     },

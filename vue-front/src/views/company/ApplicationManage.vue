@@ -209,6 +209,16 @@
 
              <h4>反馈记录</h4>
              <div v-if="applicationStore.currentApplicationDetail.feedback" class="feedback-content">
+               <div v-if="applicationStore.currentApplicationDetail.rating" class="feedback-rating">
+                 <span class="rating-label">评分：</span>
+                 <el-rate
+                   v-model="applicationStore.currentApplicationDetail.rating"
+                   disabled
+                   :colors="['#F56C6C', '#E6A23C', '#67C23A']"
+                   :texts="['不合适', '一般', '合格', '良好', '优秀']"
+                   show-text
+                 />
+               </div>
                <div class="feedback-text">
                  {{ applicationStore.currentApplicationDetail.feedback }}
                </div>
@@ -531,7 +541,8 @@ const handleBatchInterviewSubmit = async (data: any) => {
             interview_location: data.interview_location,
             interview_contact: data.interview_contact,
             interview_contact_info: data.interview_contact_info,
-            feedback: data.feedback
+            feedback: data.feedback,
+            rating: data.rating
         });
         ElMessage.success(`成功为 ${data.applicationIds.length} 名候选人安排面试`);
         batchInterviewDialogVisible.value = false;
@@ -570,7 +581,8 @@ const handleFeedbackSubmit = async (data: any) => {
 
         await applicationStore.updateApplicationStatus(selectedApplication.value.id, {
             status: status || selectedApplication.value.status,
-            feedback: data.content
+            feedback: data.content,
+            rating: data.rating
         });
 
         ElMessage.success('反馈提交成功');
@@ -659,6 +671,17 @@ const handleFeedbackSubmit = async (data: any) => {
   margin-bottom: 10px;
 }
 
+.feedback-rating {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.rating-label {
+  margin-right: 10px;
+  font-weight: 500;
+}
+
 .feedback-text {
   white-space: pre-line;
   line-height: 1.5;
@@ -700,6 +723,15 @@ const handleFeedbackSubmit = async (data: any) => {
 
   .action-buttons {
     flex-wrap: wrap;
+  }
+
+  .feedback-rating {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rating-label {
+    margin-bottom: 5px;
   }
 }
 </style>

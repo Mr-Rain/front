@@ -26,6 +26,7 @@ export interface ApplicationInfo {
   apply_time: string; // 申请时间 (ISO 8601)
   update_time?: string; // 状态更新时间 (ISO 8601)
   feedback?: string; // 企业反馈/面试安排等 (可选, Markdown)
+  rating?: number; // 候选人评分 (1-5)
 
   // 面试相关信息
   interview_time?: string; // 面试时间 (ISO 8601)
@@ -60,6 +61,7 @@ export interface ApplyJobPayload {
 export interface UpdateApplicationStatusPayload {
   status: ApplicationStatus;
   feedback?: string;
+  rating?: number; // 候选人评分 (1-5)
 
   // 面试相关信息
   interview_time?: string;

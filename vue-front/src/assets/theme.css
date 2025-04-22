@@ -1,0 +1,434 @@
+/* 主题变量 */
+:root {
+  /* 浅色主题变量 */
+  --theme-bg-color: #ffffff;
+  --theme-bg-color-light: #f5f7fa;
+  --theme-bg-color-lighter: #ecf5ff;
+  --theme-text-color: #303133;
+  --theme-text-color-light: #606266;
+  --theme-text-color-lighter: #909399;
+  --theme-border-color: #dcdfe6;
+  --theme-border-color-light: #e4e7ed;
+  --theme-border-color-lighter: #ebeef5;
+  --theme-shadow-color: rgba(0, 0, 0, 0.1);
+  --theme-card-bg: #ffffff;
+  --theme-header-bg: #ffffff;
+  --theme-sidebar-bg: #ffffff;
+  --theme-hover-bg: #f5f7fa;
+  --theme-active-bg: #ecf5ff;
+  --theme-disabled-bg: #f5f7fa;
+  --theme-disabled-text: #c0c4cc;
+  --theme-success-color: #67c23a;
+  --theme-warning-color: #e6a23c;
+  --theme-danger-color: #f56c6c;
+  --theme-info-color: #909399;
+}
+
+/* 深色主题变量 */
+.dark-theme {
+  --theme-bg-color: #1a1a1a;
+  --theme-bg-color-light: #2c2c2c;
+  --theme-bg-color-lighter: #3c3c3c;
+  --theme-text-color: #e5eaf3;
+  --theme-text-color-light: #cfd3dc;
+  --theme-text-color-lighter: #a3a6ad;
+  --theme-border-color: #4c4d4f;
+  --theme-border-color-light: #414243;
+  --theme-border-color-lighter: #363637;
+  --theme-shadow-color: rgba(0, 0, 0, 0.3);
+  --theme-card-bg: #252525;
+  --theme-header-bg: #252525;
+  --theme-sidebar-bg: #252525;
+  --theme-hover-bg: #363636;
+  --theme-active-bg: #2d3035;
+  --theme-disabled-bg: #2c2c2c;
+  --theme-disabled-text: #686868;
+  --theme-success-color: #85ce61;
+  --theme-warning-color: #ebb563;
+  --theme-danger-color: #f78989;
+  --theme-info-color: #a6a9ad;
+}
+
+/* 浅色主题覆盖 Element Plus 变量 */
+.light-theme {
+  --el-color-white: #ffffff;
+  --el-color-black: #000000;
+  --el-color-primary: #409eff;
+  --el-color-primary-light-3: #79bbff;
+  --el-color-primary-light-5: #a0cfff;
+  --el-color-primary-light-7: #c6e2ff;
+  --el-color-primary-light-8: #d9ecff;
+  --el-color-primary-light-9: #ecf5ff;
+  --el-color-primary-dark-2: #337ecc;
+  --el-color-success: #67c23a;
+  --el-color-success-light-3: #95d475;
+  --el-color-success-light-5: #b3e19d;
+  --el-color-success-light-7: #d1edc4;
+  --el-color-success-light-8: #e1f3d8;
+  --el-color-success-light-9: #f0f9eb;
+  --el-color-success-dark-2: #529b2e;
+  --el-color-warning: #e6a23c;
+  --el-color-warning-light-3: #eebe77;
+  --el-color-warning-light-5: #f3d19e;
+  --el-color-warning-light-7: #f8e3c5;
+  --el-color-warning-light-8: #faecd8;
+  --el-color-warning-light-9: #fdf6ec;
+  --el-color-warning-dark-2: #b88230;
+  --el-color-danger: #f56c6c;
+  --el-color-danger-light-3: #f89898;
+  --el-color-danger-light-5: #fab6b6;
+  --el-color-danger-light-7: #fcd3d3;
+  --el-color-danger-light-8: #fde2e2;
+  --el-color-danger-light-9: #fef0f0;
+  --el-color-danger-dark-2: #c45656;
+  --el-color-error: #f56c6c;
+  --el-color-error-light-3: #f89898;
+  --el-color-error-light-5: #fab6b6;
+  --el-color-error-light-7: #fcd3d3;
+  --el-color-error-light-8: #fde2e2;
+  --el-color-error-light-9: #fef0f0;
+  --el-color-error-dark-2: #c45656;
+  --el-color-info: #909399;
+  --el-color-info-light-3: #b1b3b8;
+  --el-color-info-light-5: #c8c9cc;
+  --el-color-info-light-7: #dedfe0;
+  --el-color-info-light-8: #e9e9eb;
+  --el-color-info-light-9: #f4f4f5;
+  --el-color-info-dark-2: #73767a;
+  
+  /* 背景颜色 */
+  --el-bg-color: var(--theme-bg-color);
+  --el-bg-color-page: #f2f3f5;
+  --el-bg-color-overlay: var(--theme-bg-color);
+  
+  /* 文本颜色 */
+  --el-text-color-primary: var(--theme-text-color);
+  --el-text-color-regular: var(--theme-text-color-light);
+  --el-text-color-secondary: var(--theme-text-color-lighter);
+  --el-text-color-placeholder: #a8abb2;
+  --el-text-color-disabled: #c0c4cc;
+  
+  /* 边框颜色 */
+  --el-border-color: var(--theme-border-color);
+  --el-border-color-light: var(--theme-border-color-light);
+  --el-border-color-lighter: var(--theme-border-color-lighter);
+  --el-border-color-extra-light: #f2f6fc;
+  --el-border-color-dark: #d4d7de;
+  --el-border-color-darker: #cdd0d6;
+  
+  /* 填充颜色 */
+  --el-fill-color: #f0f2f5;
+  --el-fill-color-light: #f5f7fa;
+  --el-fill-color-lighter: #fafafa;
+  --el-fill-color-extra-light: #fafcff;
+  --el-fill-color-dark: #ebedf0;
+  --el-fill-color-darker: #e6e8eb;
+  --el-fill-color-blank: var(--theme-bg-color);
+  
+  /* 盒子阴影 */
+  --el-box-shadow: 0px 12px 32px 4px rgba(0, 0, 0, 0.04), 0px 8px 20px rgba(0, 0, 0, 0.08);
+  --el-box-shadow-light: 0px 0px 12px rgba(0, 0, 0, 0.12);
+  --el-box-shadow-lighter: 0px 0px 6px rgba(0, 0, 0, 0.12);
+  --el-box-shadow-dark: 0px 16px 48px 16px rgba(0, 0, 0, 0.08), 0px 12px 32px rgba(0, 0, 0, 0.12), 0px 8px 16px -8px rgba(0, 0, 0, 0.16);
+  
+  /* 禁用状态 */
+  --el-disabled-bg-color: var(--theme-disabled-bg);
+  --el-disabled-text-color: var(--theme-disabled-text);
+  --el-disabled-border-color: var(--theme-border-color-lighter);
+}
+
+/* 深色主题覆盖 Element Plus 变量 */
+.dark-theme {
+  --el-color-white: #ffffff;
+  --el-color-black: #000000;
+  --el-color-primary: #409eff;
+  --el-color-primary-light-3: #3375b9;
+  --el-color-primary-light-5: #2a598a;
+  --el-color-primary-light-7: #213d5b;
+  --el-color-primary-light-8: #1b2f44;
+  --el-color-primary-light-9: #18222c;
+  --el-color-primary-dark-2: #66b1ff;
+  --el-color-success: #67c23a;
+  --el-color-success-light-3: #4e9230;
+  --el-color-success-light-5: #3e7125;
+  --el-color-success-light-7: #2d511c;
+  --el-color-success-light-8: #274019;
+  --el-color-success-light-9: #203015;
+  --el-color-success-dark-2: #85ce61;
+  --el-color-warning: #e6a23c;
+  --el-color-warning-light-3: #a77730;
+  --el-color-warning-light-5: #805b25;
+  --el-color-warning-light-7: #593f1b;
+  --el-color-warning-light-8: #483418;
+  --el-color-warning-light-9: #362813;
+  --el-color-warning-dark-2: #ebb563;
+  --el-color-danger: #f56c6c;
+  --el-color-danger-light-3: #b25252;
+  --el-color-danger-light-5: #854040;
+  --el-color-danger-light-7: #582d2d;
+  --el-color-danger-light-8: #492626;
+  --el-color-danger-light-9: #3a1e1e;
+  --el-color-danger-dark-2: #f78989;
+  --el-color-error: #f56c6c;
+  --el-color-error-light-3: #b25252;
+  --el-color-error-light-5: #854040;
+  --el-color-error-light-7: #582d2d;
+  --el-color-error-light-8: #492626;
+  --el-color-error-light-9: #3a1e1e;
+  --el-color-error-dark-2: #f78989;
+  --el-color-info: #909399;
+  --el-color-info-light-3: #6b6d71;
+  --el-color-info-light-5: #525457;
+  --el-color-info-light-7: #393a3c;
+  --el-color-info-light-8: #303030;
+  --el-color-info-light-9: #252525;
+  --el-color-info-dark-2: #a6a9ad;
+  
+  /* 背景颜色 */
+  --el-bg-color: var(--theme-bg-color);
+  --el-bg-color-page: #0a0a0a;
+  --el-bg-color-overlay: var(--theme-bg-color);
+  
+  /* 文本颜色 */
+  --el-text-color-primary: var(--theme-text-color);
+  --el-text-color-regular: var(--theme-text-color-light);
+  --el-text-color-secondary: var(--theme-text-color-lighter);
+  --el-text-color-placeholder: #8d9095;
+  --el-text-color-disabled: #686868;
+  
+  /* 边框颜色 */
+  --el-border-color: var(--theme-border-color);
+  --el-border-color-light: var(--theme-border-color-light);
+  --el-border-color-lighter: var(--theme-border-color-lighter);
+  --el-border-color-extra-light: #2c2c2c;
+  --el-border-color-dark: #5c5c5c;
+  --el-border-color-darker: #686868;
+  
+  /* 填充颜色 */
+  --el-fill-color: #303030;
+  --el-fill-color-light: #262727;
+  --el-fill-color-lighter: #1d1d1d;
+  --el-fill-color-extra-light: #191919;
+  --el-fill-color-dark: #39393a;
+  --el-fill-color-darker: #424243;
+  --el-fill-color-blank: var(--theme-bg-color);
+  
+  /* 盒子阴影 */
+  --el-box-shadow: 0px 12px 32px 4px rgba(0, 0, 0, 0.36), 0px 8px 20px rgba(0, 0, 0, 0.72);
+  --el-box-shadow-light: 0px 0px 12px rgba(0, 0, 0, 0.72);
+  --el-box-shadow-lighter: 0px 0px 6px rgba(0, 0, 0, 0.72);
+  --el-box-shadow-dark: 0px 16px 48px 16px rgba(0, 0, 0, 0.72), 0px 12px 32px rgba(0, 0, 0, 0.72), 0px 8px 16px -8px rgba(0, 0, 0, 0.72);
+  
+  /* 禁用状态 */
+  --el-disabled-bg-color: var(--theme-disabled-bg);
+  --el-disabled-text-color: var(--theme-disabled-text);
+  --el-disabled-border-color: var(--theme-border-color-lighter);
+}
+
+/* 自定义组件主题样式 */
+
+/* 卡片 */
+.el-card {
+  background-color: var(--theme-card-bg);
+  border-color: var(--theme-border-color-lighter);
+  color: var(--theme-text-color);
+  transition: all 0.3s;
+}
+
+.dark-theme .el-card {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* 表格 */
+.dark-theme .el-table {
+  background-color: var(--theme-bg-color);
+  color: var(--theme-text-color);
+}
+
+.dark-theme .el-table tr {
+  background-color: var(--theme-bg-color);
+}
+
+.dark-theme .el-table th.el-table__cell {
+  background-color: var(--theme-bg-color-light);
+}
+
+.dark-theme .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+  background-color: var(--theme-bg-color-lighter);
+}
+
+.dark-theme .el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell {
+  background-color: var(--theme-hover-bg);
+}
+
+/* 表单 */
+.dark-theme .el-input__wrapper,
+.dark-theme .el-textarea__wrapper {
+  background-color: var(--theme-bg-color-light);
+}
+
+.dark-theme .el-input__inner,
+.dark-theme .el-textarea__inner {
+  color: var(--theme-text-color);
+}
+
+.dark-theme .el-input-group__append,
+.dark-theme .el-input-group__prepend {
+  background-color: var(--theme-bg-color-lighter);
+  border-color: var(--theme-border-color);
+}
+
+/* 下拉菜单 */
+.dark-theme .el-dropdown-menu {
+  background-color: var(--theme-bg-color);
+  border-color: var(--theme-border-color);
+}
+
+.dark-theme .el-dropdown-menu__item:hover {
+  background-color: var(--theme-hover-bg);
+}
+
+.dark-theme .el-dropdown-menu__item--divided:before {
+  background-color: var(--theme-border-color);
+}
+
+/* 弹出框 */
+.dark-theme .el-dialog,
+.dark-theme .el-message-box {
+  background-color: var(--theme-bg-color);
+  border-color: var(--theme-border-color);
+}
+
+.dark-theme .el-dialog__header,
+.dark-theme .el-message-box__header {
+  color: var(--theme-text-color);
+}
+
+.dark-theme .el-dialog__title,
+.dark-theme .el-message-box__title {
+  color: var(--theme-text-color);
+}
+
+/* 抽屉 */
+.dark-theme .el-drawer {
+  background-color: var(--theme-bg-color);
+  border-color: var(--theme-border-color);
+}
+
+.dark-theme .el-drawer__header {
+  color: var(--theme-text-color);
+}
+
+/* 标签页 */
+.dark-theme .el-tabs__item {
+  color: var(--theme-text-color-light);
+}
+
+.dark-theme .el-tabs__item.is-active {
+  color: var(--el-color-primary);
+}
+
+.dark-theme .el-tabs__nav-wrap::after {
+  background-color: var(--theme-border-color);
+}
+
+/* 分页 */
+.dark-theme .el-pagination {
+  color: var(--theme-text-color);
+}
+
+.dark-theme .el-pagination button:disabled {
+  background-color: var(--theme-disabled-bg);
+  color: var(--theme-disabled-text);
+}
+
+.dark-theme .el-pagination .el-input__wrapper {
+  background-color: var(--theme-bg-color-light);
+}
+
+/* 日期选择器 */
+.dark-theme .el-date-picker {
+  background-color: var(--theme-bg-color);
+  color: var(--theme-text-color);
+}
+
+.dark-theme .el-date-table th {
+  color: var(--theme-text-color-light);
+}
+
+.dark-theme .el-date-table td.available:hover {
+  color: var(--el-color-primary);
+}
+
+/* 选择器 */
+.dark-theme .el-select-dropdown {
+  background-color: var(--theme-bg-color);
+  border-color: var(--theme-border-color);
+}
+
+.dark-theme .el-select-dropdown__item {
+  color: var(--theme-text-color);
+}
+
+.dark-theme .el-select-dropdown__item.hover,
+.dark-theme .el-select-dropdown__item:hover {
+  background-color: var(--theme-hover-bg);
+}
+
+/* 消息提示 */
+.dark-theme .el-message {
+  background-color: var(--theme-bg-color);
+  border-color: var(--theme-border-color);
+}
+
+.dark-theme .el-message__content {
+  color: var(--theme-text-color);
+}
+
+/* 通知 */
+.dark-theme .el-notification {
+  background-color: var(--theme-bg-color);
+  border-color: var(--theme-border-color);
+}
+
+.dark-theme .el-notification__title {
+  color: var(--theme-text-color);
+}
+
+.dark-theme .el-notification__content {
+  color: var(--theme-text-color-light);
+}
+
+/* 加载中 */
+.dark-theme .el-loading-mask {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* 骨架屏 */
+.dark-theme .el-skeleton__item {
+  background-color: var(--theme-bg-color-light);
+}
+
+/* 滚动条样式 */
+.dark-theme ::-webkit-scrollbar-track {
+  background-color: var(--theme-bg-color);
+}
+
+.dark-theme ::-webkit-scrollbar-thumb {
+  background-color: var(--theme-bg-color-lighter);
+}
+
+.dark-theme ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--theme-text-color-lighter);
+}
+
+/* 过渡动画 */
+.theme-fade-enter-active,
+.theme-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.theme-fade-enter-from,
+.theme-fade-leave-to {
+  opacity: 0;
+}

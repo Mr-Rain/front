@@ -1,5 +1,6 @@
 @import './base.css';
 @import './responsive.css';
+@import './theme.css';
 
 #app {
   /* Remove width restrictions and padding */

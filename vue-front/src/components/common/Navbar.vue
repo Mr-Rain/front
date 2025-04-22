@@ -29,26 +29,26 @@
 
     <!-- 搜索框 -->
     <div class="search-container hide-on-mobile">
-      <el-autocomplete
+      <el-input
         v-model="searchQuery"
-        :fetch-suggestions="querySearch"
-        placeholder="搜索功能、页面或内容..."
-        @select="handleSelect"
+        placeholder="搜索职位、企业或关键词..."
         class="search-input"
-        :trigger-on-focus="false"
-        :highlight-first-item="true"
-        popper-class="search-suggestions-popper"
+        @keyup.enter="handleSearch"
+        clearable
       >
         <template #prefix>
           <el-icon class="search-icon"><Search /></el-icon>
         </template>
-        <template #default="{ item }">
-          <div class="search-suggestion-item">
-            <el-icon v-if="item.icon"><component :is="item.icon" /></el-icon>
-            <span>{{ item.value }}</span>
-          </div>
+        <template #suffix>
+          <el-button
+            class="search-button"
+            type="primary"
+            :icon="Search"
+            circle
+            @click="handleSearch"
+          />
         </template>
-      </el-autocomplete>
+      </el-input>
     </div>
 
       <div class="spacer"></div>
@@ -56,6 +56,11 @@
       <!-- 通知中心 -->
       <div v-if="userStore.token && userStore.userInfo" class="notification-center-container hide-on-mobile">
         <notification-center />
+      </div>
+
+      <!-- 主题切换器 -->
+      <div class="theme-switcher-container hide-on-mobile">
+        <theme-switcher />
       </div>
 
       <div class="user-area hide-on-mobile">
@@ -103,6 +108,7 @@ import {
 } from '@element-plus/icons-vue';
 import MobileMenu from './MobileMenu.vue';
 import NotificationCenter from './NotificationCenter.vue';
+import ThemeSwitcher from './ThemeSwitcher.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -157,73 +163,18 @@ const isCompaniesActive = () => {
          path === '/admin/company-list';
 };
 
-// 搜索建议数据
-interface SearchSuggestion {
-  value: string;
-  path: string;
-  icon?: any;
-  description?: string;
-}
+// 处理搜索
+const handleSearch = () => {
+  if (!searchQuery.value.trim()) return;
 
-// 定义搜索建议列表
-const getSearchSuggestions = (): SearchSuggestion[] => {
-  const commonSuggestions: SearchSuggestion[] = [
-    { value: '首页', path: '/', icon: DataAnalysis },
-    { value: '职位列表', path: '/jobs', icon: Briefcase },
-  ];
+  // 导航到搜索结果页面
+  router.push({
+    path: '/search',
+    query: { q: searchQuery.value }
+  });
 
-  // 根据用户角色添加不同的搜索建议
-  const userType = userStore.userInfo?.user_type;
-
-  if (userType === 'student') {
-    return [
-      ...commonSuggestions,
-      { value: '个人工作台', path: '/student/dashboard', icon: DataAnalysis },
-      { value: '个人信息', path: '/student/profile', icon: User },
-      { value: '我的简历', path: '/student/resume', icon: Document },
-      { value: '我的申请', path: '/student/applications', icon: Collection },
-      { value: '推荐职位', path: '/student/recommendations', icon: Briefcase },
-      { value: '消息通知', path: '/notifications', icon: ChatLineRound },
-    ];
-  } else if (userType === 'company') {
-    return [
-      ...commonSuggestions,
-      { value: '企业工作台', path: '/company/dashboard', icon: DataAnalysis },
-      { value: '企业信息', path: '/company/profile', icon: OfficeBuilding },
-      { value: '职位管理', path: '/company/jobs', icon: Briefcase },
-      { value: '申请管理', path: '/company/applications', icon: ChatLineRound },
-      { value: '消息通知', path: '/notifications', icon: ChatLineRound },
-    ];
-  } else if (userType === 'admin') {
-    return [
-      ...commonSuggestions,
-      { value: '管理工作台', path: '/admin/dashboard', icon: DataAnalysis },
-      { value: '用户管理', path: '/admin/users', icon: User },
-      { value: '企业审核', path: '/admin/companies', icon: OfficeBuilding },
-      { value: '消息通知', path: '/notifications', icon: ChatLineRound },
-    ];
-  }
-
-  return userStore.token ? commonSuggestions : [
-    ...commonSuggestions,
-    { value: '登录', path: '/login', icon: User },
-    { value: '注册', path: '/register', icon: User },
-  ];
-};
-
-// 搜索建议过滤函数
-const querySearch = (queryString: string, cb: (arg: SearchSuggestion[]) => void) => {
-  const suggestions = getSearchSuggestions();
-  const results = queryString
-    ? suggestions.filter(item => item.value.toLowerCase().includes(queryString.toLowerCase()))
-    : suggestions;
-  cb(results);
-};
-
-// 处理搜索选择
-const handleSelect = (item: SearchSuggestion) => {
-  router.push(item.path);
-  searchQuery.value = ''; // 清空搜索框
+  // 清空搜索框
+  searchQuery.value = '';
 };
 
 const goToLogin = () => {
@@ -436,7 +387,8 @@ const handleUserCommand = async (command: string | number | object) => {
   flex-grow: 1; /* Pushes user area to the right */
 }
 
-.notification-center-container {
+.notification-center-container,
+.theme-switcher-container {
   margin-right: 15px;
 }
 

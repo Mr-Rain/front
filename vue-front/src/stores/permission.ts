@@ -77,6 +77,28 @@ export const usePermissionStore = defineStore('permission', {
         return checkList.some(r => this.roles.includes(r));
     },
 
+    // 检查是否有访问路由的权限
+    hasRoutePermission(route: any): boolean {
+      // 如果路由不需要认证，直接返回 true
+      if (!route.meta || !route.meta.requiresAuth) {
+        return true;
+      }
+
+      // 检查角色权限
+      if (route.meta.roles) {
+        const hasRole = this.hasRole(route.meta.roles);
+        if (!hasRole) return false;
+      }
+
+      // 检查特定权限
+      if (route.meta.permissions) {
+        const hasPermission = this.hasPermission(route.meta.permissions);
+        if (!hasPermission) return false;
+      }
+
+      return true;
+    },
+
     // 清除权限信息
     clearPermissions() {
       this.roles = [];

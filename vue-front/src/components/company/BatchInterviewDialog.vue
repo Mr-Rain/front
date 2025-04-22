@@ -54,8 +54,8 @@
         </el-form-item>
 
         <el-form-item label="面试地点" prop="interview_location" :required="formData.interview_type === 'onsite'">
-          <el-input 
-            v-model="formData.interview_location" 
+          <el-input
+            v-model="formData.interview_location"
             placeholder="请输入面试地点"
             :disabled="formData.interview_type !== 'onsite'"
           />
@@ -67,6 +67,15 @@
 
         <el-form-item label="联系方式" prop="interview_contact_info" required>
           <el-input v-model="formData.interview_contact_info" placeholder="请输入联系方式（电话/邮箱）" />
+        </el-form-item>
+
+        <el-form-item label="候选人评分" prop="rating">
+          <el-rate
+            v-model="formData.rating"
+            :colors="['#F56C6C', '#E6A23C', '#67C23A']"
+            :texts="['不合适', '一般', '合格', '良好', '优秀']"
+            show-text
+          />
         </el-form-item>
 
         <el-form-item label="面试说明" prop="feedback">
@@ -131,7 +140,8 @@ const formData = reactive({
   interview_location: '',
   interview_contact: '',
   interview_contact_info: '',
-  feedback: ''
+  feedback: '',
+  rating: 3
 });
 
 // 表单验证规则
@@ -143,9 +153,9 @@ const formRules = reactive<FormRules>({
     { required: true, message: '请选择面试方式', trigger: 'change' }
   ],
   interview_location: [
-    { 
-      required: true, 
-      message: '请输入面试地点', 
+    {
+      required: true,
+      message: '请输入面试地点',
       trigger: 'blur',
       validator: (rule, value, callback) => {
         if (formData.interview_type === 'onsite' && !value) {
@@ -174,13 +184,14 @@ const initForm = () => {
   // 设置默认值
   const now = new Date();
   now.setHours(now.getHours() + 24); // 默认设置为明天此时
-  
+
   formData.interview_time = now.toISOString().slice(0, 16).replace('T', ' ');
   formData.interview_type = 'onsite';
   formData.interview_location = '';
   formData.interview_contact = '';
   formData.interview_contact_info = '';
   formData.feedback = '';
+  formData.rating = 3;
 };
 
 // 处理关闭对话框
@@ -192,11 +203,11 @@ const handleClose = () => {
 // 处理提交
 const handleSubmit = async () => {
   if (!formRef.value) return;
-  
+
   await formRef.value.validate(async (valid) => {
     if (valid) {
       loading.value = true;
-      
+
       try {
         // 构建提交数据
         const submitData = {
@@ -207,12 +218,13 @@ const handleSubmit = async () => {
           interview_contact: formData.interview_contact,
           interview_contact_info: formData.interview_contact_info,
           feedback: formData.feedback,
+          rating: formData.rating,
           applicationIds: props.applications.map(app => app.id)
         };
-        
+
         // 发送提交事件
         emit('submit', submitData);
-        
+
         // 关闭对话框
         dialogVisible.value = false;
       } catch (error) {
