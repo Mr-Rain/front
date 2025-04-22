@@ -9,7 +9,7 @@ import {
   ElLink,
   ElSpace,
   ElDivider,
-  
+
   // 表单组件
   ElForm,
   ElFormItem,
@@ -32,7 +32,7 @@ import {
   ElTransfer,
   ElCascader,
   ElUpload,
-  
+
   // 数据展示组件
   ElTable,
   ElTableColumn,
@@ -49,11 +49,11 @@ import {
   ElDescriptionsItem,
   ElResult,
   ElStatistic,
-  
+
   // 导航组件
   ElMenu,
   ElMenuItem,
-  ElSubMenu,
+  // ElSubMenu, // 在新版本中已不再作为独立组件导出
   ElMenuItemGroup,
   ElTabs,
   ElTabPane,
@@ -65,7 +65,7 @@ import {
   ElDropdownMenu,
   ElSteps,
   ElStep,
-  
+
   // 反馈组件
   ElAlert,
   ElDialog,
@@ -77,7 +77,7 @@ import {
   ElCollapseItem,
   ElTimeline,
   ElTimelineItem,
-  
+
   // 布局组件
   ElRow,
   ElCol,
@@ -88,7 +88,7 @@ import {
   ElAside,
   ElCard,
   ElDivider as ElDivider2, // 避免重复导入
-  
+
   // 其他组件
   ElAffix,
   ElConfigProvider,
@@ -147,7 +147,7 @@ import 'element-plus/es/components/result/style/css'
 import 'element-plus/es/components/statistic/style/css'
 import 'element-plus/es/components/menu/style/css'
 import 'element-plus/es/components/menu-item/style/css'
-import 'element-plus/es/components/sub-menu/style/css'
+// import 'element-plus/es/components/sub-menu/style/css' // 在新版本中已不再作为独立组件
 import 'element-plus/es/components/menu-item-group/style/css'
 import 'element-plus/es/components/tabs/style/css'
 import 'element-plus/es/components/tab-pane/style/css'
@@ -195,7 +195,7 @@ const components = [
   ElLink,
   ElSpace,
   ElDivider,
-  
+
   // 表单组件
   ElForm,
   ElFormItem,
@@ -218,7 +218,7 @@ const components = [
   ElTransfer,
   ElCascader,
   ElUpload,
-  
+
   // 数据展示组件
   ElTable,
   ElTableColumn,
@@ -235,11 +235,11 @@ const components = [
   ElDescriptionsItem,
   ElResult,
   ElStatistic,
-  
+
   // 导航组件
   ElMenu,
   ElMenuItem,
-  ElSubMenu,
+  // ElSubMenu, // 在新版本中已不再作为独立组件导出
   ElMenuItemGroup,
   ElTabs,
   ElTabPane,
@@ -251,7 +251,7 @@ const components = [
   ElDropdownMenu,
   ElSteps,
   ElStep,
-  
+
   // 反馈组件
   ElAlert,
   ElDialog,
@@ -263,7 +263,7 @@ const components = [
   ElCollapseItem,
   ElTimeline,
   ElTimelineItem,
-  
+
   // 布局组件
   ElRow,
   ElCol,
@@ -273,7 +273,7 @@ const components = [
   ElMain,
   ElAside,
   ElCard,
-  
+
   // 其他组件
   ElAffix,
   ElConfigProvider,
@@ -295,7 +295,7 @@ export default {
         app.component(component.name, component)
       }
     })
-    
+
     // 注册所有图标
     for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
       app.component(key, component)

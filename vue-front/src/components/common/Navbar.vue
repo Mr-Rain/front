@@ -41,7 +41,7 @@
         </template>
         <template #suffix>
           <el-button
-            class="search-button"
+            class="search-button navbar-search-button"
             type="primary"
             :icon="Search"
             circle

@@ -17,7 +17,7 @@
         <template #prefix>
           <el-icon class="search-icon"><Search /></el-icon>
         </template>
-        
+
         <template #default="{ item }">
           <div class="suggestion-item">
             <template v-if="item.type === 'suggestion'">
@@ -31,7 +31,7 @@
             </template>
           </div>
         </template>
-        
+
         <template #suffix>
           <el-button
             v-if="searchQuery"
@@ -43,7 +43,7 @@
             @click.stop="clearSearch"
           />
           <el-button
-            class="search-button"
+            class="search-button modern-search-button"
             type="primary"
             :icon="Search"
             circle
@@ -52,7 +52,7 @@
         </template>
       </el-autocomplete>
     </div>
-    
+
     <!-- 搜索历史 -->
     <div v-if="showHistory && searchStore.searchHistory.length > 0" class="search-history">
       <div class="history-header">
@@ -78,7 +78,7 @@
         </el-tag>
       </div>
     </div>
-    
+
     <!-- 高级搜索表单 -->
     <el-collapse-transition>
       <div v-if="showAdvancedSearch" class="advanced-search-form">
@@ -93,7 +93,7 @@
                 </el-radio-group>
               </el-form-item>
             </el-col>
-            
+
             <template v-if="searchType === 'all' || searchType === 'job'">
               <el-col :span="8">
                 <el-form-item label="工作地点">
@@ -113,7 +113,7 @@
                   </el-select>
                 </el-form-item>
               </el-col>
-              
+
               <el-col :span="8">
                 <el-form-item label="薪资范围">
                   <el-select
@@ -130,7 +130,7 @@
                   </el-select>
                 </el-form-item>
               </el-col>
-              
+
               <el-col :span="8">
                 <el-form-item label="工作经验">
                   <el-select
@@ -147,7 +147,7 @@
                   </el-select>
                 </el-form-item>
               </el-col>
-              
+
               <el-col :span="8">
                 <el-form-item label="学历要求">
                   <el-select
@@ -165,7 +165,7 @@
                 </el-form-item>
               </el-col>
             </template>
-            
+
             <template v-if="searchType === 'all' || searchType === 'company'">
               <el-col :span="8">
                 <el-form-item label="企业行业">
@@ -185,7 +185,7 @@
                   </el-select>
                 </el-form-item>
               </el-col>
-              
+
               <el-col :span="8">
                 <el-form-item label="企业规模">
                   <el-select
@@ -204,7 +204,7 @@
               </el-col>
             </template>
           </el-row>
-          
+
           <div class="form-actions">
             <el-button @click="resetAdvancedFilters">重置</el-button>
             <el-button type="primary" @click="applyAdvancedFilters">应用筛选</el-button>
@@ -212,7 +212,7 @@
         </el-form>
       </div>
     </el-collapse-transition>
-    
+
     <!-- 高级搜索切换按钮 -->
     <div class="advanced-search-toggle">
       <el-button
@@ -345,19 +345,19 @@ const querySearchAsync = async (queryString: string, cb: (arg: any[]) => void) =
     cb([]);
     return;
   }
-  
+
   // 获取搜索建议
   await searchStore.fetchSearchSuggestions(queryString);
-  
+
   // 获取搜索历史
   await searchStore.fetchSearchHistory();
-  
+
   // 构建建议列表
   const suggestions = searchStore.searchSuggestions.map(item => ({
     value: item,
     type: 'suggestion'
   }));
-  
+
   // 添加历史记录（最多5条）
   const historyItems = searchStore.searchHistory
     .filter(item => item.keyword.toLowerCase().includes(queryString.toLowerCase()))
@@ -367,43 +367,43 @@ const querySearchAsync = async (queryString: string, cb: (arg: any[]) => void) =
       type: 'history',
       searchType: item.type
     }));
-  
+
   // 合并建议和历史记录
   const results = [...historyItems, ...suggestions];
-  
+
   cb(results);
 };
 
 // 处理选择搜索建议
 const handleSelect = (item: any) => {
   searchQuery.value = item.value;
-  
+
   // 如果是历史记录，则设置搜索类型
   if (item.type === 'history' && item.searchType) {
     searchType.value = item.searchType;
   }
-  
+
   handleSearch();
 };
 
 // 执行搜索
 const handleSearch = () => {
   if (!searchQuery.value.trim()) return;
-  
+
   // 隐藏高级搜索和历史记录
   showAdvancedSearch.value = false;
   showHistory.value = false;
-  
+
   // 构建搜索参数
   const searchParams = {
     keyword: searchQuery.value,
     type: searchType.value,
     filters: { ...advancedFilters }
   };
-  
+
   // 执行搜索
   searchStore.performSearch(searchParams);
-  
+
   // 导航到搜索结果页面
   router.push({
     path: '/search',
@@ -415,7 +415,7 @@ const handleSearch = () => {
       )
     }
   });
-  
+
   // 触发搜索事件
   emit('search', searchParams);
 };
@@ -434,7 +434,7 @@ const clearHistory = async () => {
       cancelButtonText: '取消',
       type: 'warning'
     });
-    
+
     await searchStore.clearHistory();
   } catch (error) {
     // 用户取消操作
@@ -451,7 +451,7 @@ const useHistoryItem = (item: SearchHistory) => {
 // 切换高级搜索
 const toggleAdvancedSearch = () => {
   showAdvancedSearch.value = !showAdvancedSearch.value;
-  
+
   // 如果打开高级搜索，则关闭历史记录
   if (showAdvancedSearch.value) {
     showHistory.value = false;
@@ -483,7 +483,7 @@ const formatSearchType = (type: SearchType): string => {
     company: '企业',
     student: '学生'
   };
-  
+
   return typeMap[type] || '全部';
 };
 
@@ -514,7 +514,7 @@ onMounted(async () => {
 }
 
 :deep(.el-input__wrapper) {
-  padding-right: 90px; /* 为按钮留出空间 */
+  padding-right: 60px; /* 为按钮留出空间，减少空间 */
   border-radius: 24px;
   height: 48px;
   box-shadow: 0 0 0 1px var(--el-border-color) inset;
@@ -539,21 +539,46 @@ onMounted(async () => {
 
 .clear-button {
   position: absolute;
-  right: 50px;
+  right: 35px; /* 调整位置，使其更靠近搜索按钮 */
   top: 50%;
   transform: translateY(-50%);
   z-index: 2;
   color: var(--el-text-color-secondary);
   border: none;
-  padding: 4px;
+  padding: 2px; /* 减小内边距 */
+  width: 16px !important; /* 设置固定宽度 */
+  height: 16px !important; /* 设置固定高度 */
+  min-height: unset !important;
 }
 
 .search-button {
   position: absolute;
-  right: 5px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 2;
+}
+
+.modern-search-button {
+  width: 28px !important;
+  height: 28px !important;
+  padding: 4px !important;
+  font-size: 12px !important;
+  background: transparent !important;
+  border: none !important;
+  color: #409EFF !important;
+  box-shadow: none !important;
+  margin-right: 4px !important;
+  transition: all 0.3s ease !important;
+}
+
+.modern-search-button:hover {
+  background-color: rgba(64, 158, 255, 0.1) !important;
+  transform: translateY(-50%) scale(1.1) !important;
+}
+
+.modern-search-button .el-icon {
+  font-size: 14px !important;
 }
 
 .suggestion-item {
@@ -650,20 +675,20 @@ onMounted(async () => {
   .global-search-container {
     padding: 15px;
   }
-  
+
   :deep(.el-input__wrapper) {
     height: 40px;
   }
-  
+
   :deep(.el-input__inner) {
     font-size: 14px;
     height: 40px;
   }
-  
+
   .search-icon {
     font-size: 16px;
   }
-  
+
   .el-col {
     width: 100%;
   }
