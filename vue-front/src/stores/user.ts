@@ -80,7 +80,7 @@ export const useUserStore = defineStore('user', {
         // 登录成功后获取用户信息和权限
         await this.getUserInfo();
         const permissionStore = usePermissionStore();
-        await permissionStore.fetchPermissions();
+        await permissionStore.fetchUserPermissions();
 
         return Promise.resolve(); // 返回成功状态
       } catch (error: any) {

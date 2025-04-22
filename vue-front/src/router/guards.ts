@@ -57,7 +57,7 @@ export function createRouterGuards(router: Router) {
             }
             // 异步获取权限信息 (角色和权限点)
             if (!hasPermissions) {
-              await permissionStore.fetchPermissions();
+              await permissionStore.fetchUserPermissions();
             }
 
             // TODO: 这里可以添加基于 roles/permissions 的动态路由添加逻辑 (如果需要)

@@ -42,8 +42,8 @@ export const usePermissionStore = defineStore('permission', {
   }),
 
   actions: {
-    // 获取用户权限
-    async fetchPermissions() {
+    // 获取当前用户权限
+    async fetchUserPermissions() {
       // 可以在 userStore 中获取用户信息后再调用此方法
       this.loading = true;
       try {
