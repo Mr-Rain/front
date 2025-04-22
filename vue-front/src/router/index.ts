@@ -1,10 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
-// Remove default HomeView/AboutView imports if not needed
-// import HomeView from '../views/HomeView.vue'
-import StudentLayout from '@/layouts/StudentLayout.vue'; // Import student layout
-import CompanyLayout from '@/layouts/CompanyLayout.vue'; // Import company layout
-import AdminLayout from '@/layouts/AdminLayout.vue'; // Import admin layout
-import DefaultLayout from '@/layouts/DefaultLayout.vue'; // Import default layout for public pages
+import { createLazyComponent } from './lazyLoad'
+
+// 布局组件
+import StudentLayout from '@/layouts/StudentLayout.vue'
+import CompanyLayout from '@/layouts/CompanyLayout.vue'
+import AdminLayout from '@/layouts/AdminLayout.vue'
+import DefaultLayout from '@/layouts/DefaultLayout.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -13,7 +14,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('@/views/common/HomePage.vue'), // Point to the new home page
+      component: createLazyComponent('common/HomePage'),
       meta: { title: '首页' } // Public page, no requiresAuth needed
     },
     // === END: Add Home Route ===
@@ -22,19 +23,19 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: () => import('@/views/auth/Login.vue'),
-      meta: { title: '登录' }, // Example meta field
+      component: createLazyComponent('auth/Login'),
+      meta: { title: '登录' },
     },
     {
       path: '/register',
       name: 'register',
-      component: () => import('@/views/auth/Register.vue'),
+      component: createLazyComponent('auth/Register'),
       meta: { title: '注册' },
     },
     {
       path: '/forgot-password',
       name: 'forgot-password',
-      component: () => import('@/views/auth/ForgotPassword.vue'),
+      component: createLazyComponent('auth/ForgotPassword'),
       meta: { title: '忘记密码' },
     },
 
@@ -48,75 +49,73 @@ const router = createRouter({
         {
           path: 'dashboard',
           name: 'student-dashboard',
-          component: () => import('@/views/student/Dashboard.vue'),
+          component: createLazyComponent('student/Dashboard'),
           meta: { title: '学生仪表盘' },
         },
         {
           path: 'profile',
           name: 'student-profile',
-          component: () => import('@/views/student/ProfileNew.vue'),
+          component: createLazyComponent('student/ProfileNew'),
           meta: { title: '个人信息' }
         },
         {
           path: 'jobs',
-          name: 'student-job-list', // Use specific name
-          component: () => import('@/views/student/JobList.vue'),
+          name: 'student-job-list',
+          component: createLazyComponent('student/JobList'),
           meta: { title: '职位列表' }
         },
          {
-          // Note: JobDetail might be shared, consider placing under a general layout later
-          // For now, keep it under student for simplicity
-          path: '/jobs/:id', // Using /jobs/:id for consistency for now
+          path: '/jobs/:id',
           name: 'student-job-detail',
-          component: () => import('@/views/student/JobDetail.vue'),
+          component: createLazyComponent('student/JobDetail'),
           meta: { title: '职位详情' }
         },
         {
           path: 'resume',
           name: 'student-resume',
-          component: () => import('@/views/student/Resume.vue'),
+          component: createLazyComponent('student/Resume'),
           meta: { title: '我的简历' }
         },
         {
           path: 'resume/:id/preview',
           name: 'student-resume-preview',
-          component: () => import('@/views/student/ResumePreview.vue'),
+          component: createLazyComponent('student/ResumePreview'),
           meta: { title: '简历预览' }
         },
         {
           path: 'resume/:id/edit',
           name: 'student-resume-edit',
-          component: () => import('@/views/student/ResumeEdit.vue'),
+          component: createLazyComponent('student/ResumeEdit'),
           meta: { title: '编辑简历' }
         },
          {
           path: 'applications',
           name: 'student-applications',
-          component: () => import('@/views/student/Application.vue'),
+          component: createLazyComponent('student/Application'),
           meta: { title: '我的申请' }
         },
         {
           path: 'applications/:id',
           name: 'student-application-detail',
-          component: () => import('@/views/student/ApplicationDetail.vue'),
+          component: createLazyComponent('student/ApplicationDetail'),
           meta: { title: '申请详情' }
         },
         {
           path: 'recommendations',
           name: 'student-recommendations',
-          component: () => import('@/views/student/Recommendation.vue'),
+          component: createLazyComponent('student/Recommendation'),
           meta: { title: '智能推荐' }
         },
         {
           path: 'recommendations/settings',
           name: 'student-recommendation-settings',
-          component: () => import('@/views/student/RecommendationSettings.vue'),
+          component: createLazyComponent('student/RecommendationSettings'),
           meta: { title: '推荐设置' }
         },
         {
           path: 'companies',
           name: 'student-company-list',
-          component: () => import('@/views/common/CompanyList.vue'),
+          component: createLazyComponent('common/CompanyList'),
           meta: { title: '企业列表' }
         }
       ]
@@ -132,37 +131,37 @@ const router = createRouter({
         {
           path: 'dashboard',
           name: 'company-dashboard',
-          component: () => import('@/views/company/Dashboard.vue'),
+          component: createLazyComponent('company/Dashboard'),
           meta: { title: '企业工作台' },
         },
         {
           path: 'profile',
           name: 'company-profile',
-          component: () => import('@/views/company/Profile.vue'),
+          component: createLazyComponent('company/Profile'),
           meta: { title: '公司信息' }
         },
         {
           path: 'jobs',
           name: 'company-job-manage',
-          component: () => import('@/views/company/JobManage.vue'),
+          component: createLazyComponent('company/JobManage'),
           meta: { title: '职位管理' }
         },
         {
           path: 'jobs/edit/:id?', // Optional ID for editing, none for creation
           name: 'company-job-edit',
-          component: () => import('@/views/company/JobEdit.vue'),
+          component: createLazyComponent('company/JobEdit'),
           meta: { title: '编辑职位' } // Title can be dynamic based on route param
         },
          {
           path: 'applications',
           name: 'company-application-manage',
-          component: () => import('@/views/company/ApplicationManage.vue'),
+          component: createLazyComponent('company/ApplicationManage'),
           meta: { title: '收到的申请' }
         },
         {
           path: 'companies',
           name: 'company-company-list',
-          component: () => import('@/views/common/CompanyList.vue'),
+          component: createLazyComponent('common/CompanyList'),
           meta: { title: '企业列表' }
         },
       ]
@@ -178,31 +177,31 @@ const router = createRouter({
         {
           path: 'dashboard',
           name: 'admin-dashboard',
-          component: () => import('@/views/admin/Dashboard.vue'),
+          component: createLazyComponent('admin/Dashboard'),
           meta: { title: '管理工作台' },
         },
         {
           path: 'users',
           name: 'admin-user-manage',
-          component: () => import('@/views/admin/UserManage.vue'),
+          component: createLazyComponent('admin/UserManage'),
           meta: { title: '用户管理', permissions: ['user:view', 'user:edit', 'user:status'] }
         },
         {
           path: 'companies',
           name: 'admin-company-audit',
-          component: () => import('@/views/admin/CompanyAudit.vue'),
+          component: createLazyComponent('admin/CompanyAudit'),
           meta: { title: '企业审核', permissions: ['company:view', 'company:audit'] }
         },
         {
           path: 'jobs',
           name: 'admin-job-list',
-          component: () => import('@/views/student/JobList.vue'),
+          component: createLazyComponent('student/JobList'),
           meta: { title: '职位列表' }
         },
         {
           path: 'company-list',
           name: 'admin-company-list',
-          component: () => import('@/views/common/CompanyList.vue'),
+          component: createLazyComponent('common/CompanyList'),
           meta: { title: '企业列表' }
         }
         // Add more admin routes here
@@ -217,13 +216,13 @@ const router = createRouter({
             {
                 path: '',
                 name: 'job-list',
-                component: () => import('@/views/student/JobList.vue'),
+                component: createLazyComponent('student/JobList'),
                 meta: { title: '职位列表' }
             },
             {
                 path: ':id',
                 name: 'job-detail',
-                component: () => import('@/views/student/JobDetail.vue'),
+                component: createLazyComponent('student/JobDetail'),
                 meta: { title: '职位详情' }
             }
         ]
@@ -235,7 +234,7 @@ const router = createRouter({
             {
                 path: '',
                 name: 'company-list',
-                component: () => import('@/views/common/CompanyList.vue'),
+                component: createLazyComponent('common/CompanyList'),
                 meta: { title: '企业列表' }
             }
             // 未来可以添加企业详情页
@@ -266,13 +265,13 @@ const router = createRouter({
         {
           path: '',
           name: 'notifications',
-          component: () => import('@/views/common/Notifications.vue'),
+          component: createLazyComponent('common/Notifications'),
           meta: { title: '消息通知' }
         },
         {
           path: 'settings',
           name: 'notification-settings',
-          component: () => import('@/views/common/NotificationSettings.vue'),
+          component: createLazyComponent('common/NotificationSettings'),
           meta: { title: '通知设置' }
         }
       ]
@@ -286,7 +285,7 @@ const router = createRouter({
         {
           path: '',
           name: 'search-results',
-          component: () => import('@/views/common/SearchResults.vue'),
+          component: createLazyComponent('common/SearchResults'),
           meta: { title: '搜索结果' }
         }
       ]
@@ -300,7 +299,7 @@ const router = createRouter({
         {
           path: '',
           name: 'component-demo',
-          component: () => import('@/views/common/ComponentDemo.vue'),
+          component: createLazyComponent('common/ComponentDemo'),
           meta: { title: '组件演示' }
         }
       ]
@@ -310,13 +309,13 @@ const router = createRouter({
     {
       path: '/404',
       name: 'not-found',
-      component: () => import('@/views/common/NotFound.vue'),
+      component: createLazyComponent('common/NotFound'),
       meta: { title: '页面未找到' },
     },
     {
       path: '/401',
       name: 'unauthorized',
-      component: () => import('@/views/common/Unauthorized.vue'),
+      component: createLazyComponent('common/Unauthorized'),
       meta: { title: '无权限' },
     },
     // Catch-all route must be last
