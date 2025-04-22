@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, defineEmits } from 'vue';
+import { ref } from 'vue';
 import { UserFilled, Camera } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 
@@ -53,23 +53,23 @@ const triggerUpload = () => {
 const handleFileChange = (event: Event) => {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
-  
+
   if (!file) return;
-  
+
   // 验证文件类型
   if (!['image/jpeg', 'image/png'].includes(file.type)) {
     ElMessage.error('只支持JPG和PNG格式的图片');
     resetFileInput();
     return;
   }
-  
+
   // 验证文件大小（2MB）
   if (file.size > 2 * 1024 * 1024) {
     ElMessage.error('图片大小不能超过2MB');
     resetFileInput();
     return;
   }
-  
+
   // 创建预览URL
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -78,7 +78,7 @@ const handleFileChange = (event: Event) => {
     emit('upload', file); // 触发上传事件，传递文件对象
   };
   reader.readAsDataURL(file);
-  
+
   // 重置文件输入，以便可以再次选择同一文件
   resetFileInput();
 };

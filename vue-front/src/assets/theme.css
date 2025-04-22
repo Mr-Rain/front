@@ -356,6 +356,15 @@ body.dark-theme {
   color: #ffffff !important;
 }
 
+
+
+/* 消息徽章垂直居中 */
+.el-badge.filter-badge .el-badge__content {
+  transform: translateY(0) !important;
+  top: 50% !important;
+  margin-top: -10px !important;
+}
+
 /* 确保所有容器和布局元素都应用深色背景 */
 body.dark-theme #app,
 body.dark-theme .app-container,

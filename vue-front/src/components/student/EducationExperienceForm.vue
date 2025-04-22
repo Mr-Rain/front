@@ -15,11 +15,11 @@
     <div v-for="(edu, index) in modelValue" :key="index" class="experience-item">
       <div class="experience-header">
         <h4>{{ edu.school || '新教育经历' }} {{ edu.degree ? `(${edu.degree})` : '' }}</h4>
-        <el-button 
-          v-if="editable" 
-          type="danger" 
-          plain 
-          size="small" 
+        <el-button
+          v-if="editable"
+          type="danger"
+          plain
+          size="small"
           @click="removeEducation(index)"
         >
           <el-icon><Delete /></el-icon>
@@ -84,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, defineProps, defineEmits } from 'vue';
+import { ref, watch } from 'vue';
 import type { EducationExperience } from '@/types/student';
 import { Plus, Delete } from '@element-plus/icons-vue';
 
@@ -119,10 +119,10 @@ const addEducation = () => {
     end_date: '',
     description: ''
   };
-  
+
   const updatedValue = [...props.modelValue, newEducation];
   emit('update:modelValue', updatedValue);
-  
+
   // 为新添加的教育经历初始化日期范围
   dateRange.value.push(['', ''] as [string, string]);
 };
@@ -132,7 +132,7 @@ const removeEducation = (index: number) => {
   const updatedValue = [...props.modelValue];
   updatedValue.splice(index, 1);
   emit('update:modelValue', updatedValue);
-  
+
   // 同时移除对应的日期范围
   dateRange.value.splice(index, 1);
 };
@@ -201,7 +201,7 @@ const updateDateRange = (index: number) => {
   .hide-on-mobile {
     display: none;
   }
-  
+
   .experience-item {
     padding: 10px;
   }

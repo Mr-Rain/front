@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, defineEmits } from 'vue';
+import { ref } from 'vue';
 import { Plus } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 
@@ -97,13 +97,13 @@ const suggestedSkills = ref([
 const addSkill = () => {
   const skill = newSkill.value.trim();
   if (!skill) return;
-  
+
   // 检查是否已存在
   if (props.modelValue.includes(skill)) {
     ElMessage.warning(`技能 "${skill}" 已存在`);
     return;
   }
-  
+
   const updatedValue = [...props.modelValue, skill];
   emit('update:modelValue', updatedValue);
   newSkill.value = '';
@@ -123,7 +123,7 @@ const addSuggestedSkill = (skill: string) => {
     ElMessage.warning(`技能 "${skill}" 已存在`);
     return;
   }
-  
+
   const updatedValue = [...props.modelValue, skill];
   emit('update:modelValue', updatedValue);
 };

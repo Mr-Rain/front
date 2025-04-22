@@ -184,10 +184,10 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotificationStore } from '@/stores/notification';
 import type { NotificationInfo, NotificationType } from '@/types/notification';
-import { 
-  Message, 
-  InfoFilled, 
-  Promotion, 
+import {
+  Message,
+  InfoFilled,
+  Promotion,
   ChatDotRound,
   Search,
   List,
@@ -240,7 +240,7 @@ const fetchNotifications = async () => {
       limit: pageSize.value,
       keyword: searchKeyword.value || undefined
     });
-    
+
     if (response) {
       notifications.value = response.list;
       total.value = response.total;
@@ -260,7 +260,7 @@ const handleTypeSelect = (index: string) => {
   } else {
     currentType.value = index as NotificationType;
   }
-  
+
   currentPage.value = 1;
   notificationStore.setCurrentType(currentType.value as NotificationType | null);
   fetchNotifications();
@@ -330,7 +330,7 @@ const handleNotificationClick = async (notification: NotificationInfo) => {
   if (notification.status === 'unread') {
     await notificationStore.markAsRead(notification.id);
   }
-  
+
   // 如果有链接，跳转到对应页面
   if (notification.link) {
     navigateTo(notification.link);
@@ -426,7 +426,12 @@ const formatTime = (timeStr: string): string => {
 
 .filter-badge {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
+
+
 
 /* 右侧通知列表 */
 .notifications-list-container {
@@ -548,26 +553,26 @@ const formatTime = (timeStr: string): string => {
   .notifications-content {
     flex-direction: column;
   }
-  
+
   .filter-sidebar {
     width: 100%;
     margin-bottom: 20px;
   }
-  
+
   .notification-header {
     flex-direction: column;
   }
-  
+
   .notification-meta {
-    margin-top: 5px;
+    margin-top: -5px;
   }
-  
+
   .notification-footer {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
   }
-  
+
   .notification-actions {
     width: 100%;
     justify-content: flex-end;
