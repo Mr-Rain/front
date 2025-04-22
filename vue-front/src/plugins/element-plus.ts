@@ -53,7 +53,7 @@ import {
   // 导航组件
   ElMenu,
   ElMenuItem,
-  ElSubmenu,
+  ElSubMenu,
   ElMenuItemGroup,
   ElTabs,
   ElTabPane,
@@ -239,7 +239,7 @@ const components = [
   // 导航组件
   ElMenu,
   ElMenuItem,
-  ElSubmenu,
+  ElSubMenu,
   ElMenuItemGroup,
   ElTabs,
   ElTabPane,
@@ -291,7 +291,9 @@ export default {
   install(app: App) {
     // 注册所有组件
     components.forEach(component => {
-      app.component(component.name, component)
+      if (component.name) {
+        app.component(component.name, component)
+      }
     })
     
     // 注册所有图标
