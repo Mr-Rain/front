@@ -131,7 +131,7 @@ import { useApplicationStore } from '@/stores/application';
 import type { ApplicationStatus } from '@/types/application';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { ArrowLeft, Calendar } from '@element-plus/icons-vue';
-import marked from 'marked'; // 需要安装: pnpm add marked
+import { marked } from 'marked'; // 需要安装: pnpm add marked
 
 const router = useRouter();
 const route = useRoute();
