@@ -131,14 +131,15 @@ import { useApplicationStore } from '@/stores/application';
 import type { ApplicationStatus } from '@/types/application';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { ArrowLeft, Calendar } from '@element-plus/icons-vue';
-import marked from 'marked'; // 需要安装: pnpm add marked
+import { marked } from 'marked'; // 需要安装: pnpm add marked
 
 const router = useRouter();
 const route = useRoute();
 const applicationStore = useApplicationStore();
 
 // 获取申请ID
-const applicationId = route.params.id;
+const applicationIdRaw = route.params.id;
+const applicationId = Array.isArray(applicationIdRaw) ? applicationIdRaw[0] : applicationIdRaw;
 
 // 面试反馈表单
 const feedbackFormRef = ref();
@@ -294,7 +295,12 @@ const goToJobDetail = (jobId: string | number | undefined) => {
 const formatMarkdown = (content: string | undefined): string => {
   if (!content) return '';
   try {
-    return marked(content);
+    const result = marked(content);
+    if (typeof result === 'string') {
+      return result;
+    }
+    // 如果 marked 返回 Promise，则返回空字符串或提示
+    return '';
   } catch (e) {
     return content;
   }
