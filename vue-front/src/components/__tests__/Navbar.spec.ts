@@ -9,9 +9,9 @@ import { ElMenu, ElButton } from 'element-plus'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', name: 'home' },
-    { path: '/login', name: 'login' },
-    { path: '/register', name: 'register' }
+    { path: '/', name: 'home', component: {} as any },
+    { path: '/login', name: 'login', component: {} as any },
+    { path: '/register', name: 'register', component: {} as any }
   ]
 })
 

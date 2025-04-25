@@ -2,7 +2,8 @@
  * Service Worker 注册工具
  * 用于注册和管理Service Worker，实现静态资源缓存
  */
-import { registerSW } from 'virtual:pwa-register';
+// 暂时注释掉PWA相关导入，需要时可以安装依赖：pnpm add -D vite-plugin-pwa
+// import { registerSW } from 'virtual:pwa-register';
 
 // 定义更新提示类型
 interface UpdatePromptOptions {
@@ -44,14 +45,15 @@ export const swUpdateState = {
 export function setupServiceWorker(options: UpdatePromptOptions = {}) {
   // 合并选项
   const mergedOptions = { ...defaultOptions, ...options };
-  
-  // 注册Service Worker
-  const updateSW = registerSW({
+
+  // 注册Service Worker - 暂时注释掉
+  // 使用mock函数代替
+  const updateSW = (() => {}) as any; /* registerSW({
     // 当新的Service Worker可用时
     onNeedRefresh() {
       swUpdateState.needRefresh = true;
       mergedOptions.onNeedRefresh?.();
-      
+
       // 如果设置了自动更新，则自动更新
       if (mergedOptions.autoUpdate) {
         updateSW(true);
@@ -66,7 +68,7 @@ export function setupServiceWorker(options: UpdatePromptOptions = {}) {
     onRegistered(registration) {
       swUpdateState.registration = registration;
       mergedOptions.onRegistered?.(registration);
-      
+
       // 如果设置了更新间隔，则定期检查更新
       if (registration && mergedOptions.updateInterval) {
         setInterval(() => {
@@ -79,8 +81,8 @@ export function setupServiceWorker(options: UpdatePromptOptions = {}) {
       console.error('Service Worker注册失败:', error);
       mergedOptions.onRegisterError?.(error);
     }
-  });
-  
+  }); */
+
   // 返回更新函数
   return updateSW;
 }
@@ -102,12 +104,12 @@ export async function clearAllCaches(): Promise<boolean> {
   try {
     // 获取所有缓存名称
     const cacheNames = await caches.keys();
-    
+
     // 删除所有缓存
     await Promise.all(
       cacheNames.map(cacheName => caches.delete(cacheName))
     );
-    
+
     return true;
   } catch (error) {
     console.error('清除缓存失败:', error);
@@ -124,12 +126,12 @@ export async function getCacheStats(): Promise<{cacheNames: string[], totalSize:
     // 获取所有缓存名称
     const cacheNames = await caches.keys();
     let totalSize = 0;
-    
+
     // 计算缓存大小
     for (const cacheName of cacheNames) {
       const cache = await caches.open(cacheName);
       const requests = await cache.keys();
-      
+
       for (const request of requests) {
         const response = await cache.match(request);
         if (response) {
@@ -138,7 +140,7 @@ export async function getCacheStats(): Promise<{cacheNames: string[], totalSize:
         }
       }
     }
-    
+
     return {
       cacheNames,
       totalSize
@@ -162,12 +164,12 @@ export async function precacheResources(urls: string[], cacheName: string = 'pre
   try {
     // 打开缓存
     const cache = await caches.open(cacheName);
-    
+
     // 缓存所有URL
     await Promise.all(
       urls.map(url => fetch(url).then(response => cache.put(url, response)))
     );
-    
+
     return true;
   } catch (error) {
     console.error('预缓存资源失败:', error);
@@ -184,16 +186,16 @@ export async function isResourceCached(url: string): Promise<boolean> {
   try {
     // 检查所有缓存
     const cacheNames = await caches.keys();
-    
+
     for (const cacheName of cacheNames) {
       const cache = await caches.open(cacheName);
       const response = await cache.match(url);
-      
+
       if (response) {
         return true;
       }
     }
-    
+
     return false;
   } catch (error) {
     console.error('检查资源缓存状态失败:', error);

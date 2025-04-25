@@ -104,10 +104,10 @@
                 <el-rate v-model="feedbackForm.rating" :max="5" show-score></el-rate>
               </el-form-item>
               <el-form-item label="面试感受">
-                <el-input 
-                  v-model="feedbackForm.content" 
-                  type="textarea" 
-                  :rows="4" 
+                <el-input
+                  v-model="feedbackForm.content"
+                  type="textarea"
+                  :rows="4"
                   placeholder="请分享您的面试体验和感受..."
                 ></el-input>
               </el-form-item>
@@ -159,8 +159,8 @@ const showFeedbackForm = computed(() => {
 const hasInterviewInfo = computed(() => {
   const application = applicationStore.currentApplicationDetail;
   return application && (
-    application.interview_time || 
-    application.interview_location || 
+    application.interview_time ||
+    application.interview_location ||
     application.interview_type
   );
 });
@@ -295,13 +295,10 @@ const goToJobDetail = (jobId: string | number | undefined) => {
 const formatMarkdown = (content: string | undefined): string => {
   if (!content) return '';
   try {
-    const result = marked(content);
-    if (typeof result === 'string') {
-      return result;
-    }
-    // 如果 marked 返回 Promise，则返回空字符串或提示
-    return '';
+    // 使用marked.parse的同步模式
+    return marked.parse(content, { async: false }) as string;
   } catch (e) {
+    console.error('Failed to parse markdown:', e);
     return content;
   }
 };
@@ -317,10 +314,10 @@ const submitFeedback = async () => {
   try {
     // 调用API提交面试反馈
     // await applicationStore.submitInterviewFeedback(applicationId, feedbackForm.value);
-    
+
     // 模拟提交成功
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     ElMessage.success('反馈提交成功，感谢您的分享！');
     feedbackForm.value.rating = 0;
     feedbackForm.value.content = '';

@@ -1,5 +1,5 @@
 import request from '@/utils/request';
-import { PaginatedResponse, PaginationParams } from './company';
+import type { PaginatedResponse, PaginationParams } from './company';
 
 /**
  * 消息类型

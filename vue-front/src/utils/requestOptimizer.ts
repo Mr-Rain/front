@@ -1,4 +1,5 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
+import axios from 'axios'
+import type { AxiosRequestConfig, AxiosResponse } from 'axios'
 
 // 请求缓存
 interface CacheItem {
@@ -31,7 +32,7 @@ function generateCacheKey(config: AxiosRequestConfig): string {
 function isCacheValid(key: string): boolean {
   const item = cache.get(key)
   if (!item) return false
-  
+
   const now = Date.now()
   return now < item.timestamp + item.expiry
 }
@@ -69,7 +70,7 @@ export function clearCache(pattern?: string): void {
     cache.clear()
     return
   }
-  
+
   const regex = new RegExp(pattern)
   for (const key of cache.keys()) {
     if (regex.test(key)) {
@@ -101,41 +102,41 @@ export async function optimizedRequest<T = any>(
     retries = 0,
     retryDelay = 1000
   } = options
-  
+
   const cacheKey = generateCacheKey(config)
-  
+
   // 如果启用缓存并且缓存有效，直接返回缓存数据
   if (useCache && isCacheValid(cacheKey)) {
     return getCacheData(cacheKey)
   }
-  
+
   // 如果启用防抖并且有相同的请求正在进行中，返回该请求的Promise
   if (debounce && pendingRequests.has(cacheKey)) {
     return pendingRequests.get(cacheKey) as Promise<T>
   }
-  
+
   // 创建请求Promise
   const requestPromise = makeRequest(config, retries, retryDelay)
-  
+
   // 如果启用防抖，将请求Promise存储起来
   if (debounce) {
     pendingRequests.set(cacheKey, requestPromise)
-    
+
     // 请求完成后删除
     requestPromise.finally(() => {
       pendingRequests.delete(cacheKey)
     })
   }
-  
+
   // 执行请求
   try {
     const response = await requestPromise
-    
+
     // 如果启用缓存，将结果缓存起来
     if (useCache) {
       setCacheData(cacheKey, response, cacheTime)
     }
-    
+
     return response
   } catch (error) {
     throw error
@@ -166,11 +167,11 @@ async function makeRequest<T = any>(
     ) {
       // 等待一段时间后重试
       await new Promise(resolve => setTimeout(resolve, retryDelay))
-      
+
       // 递归调用，减少重试次数
       return makeRequest(config, retries - 1, retryDelay)
     }
-    
+
     throw error
   }
 }
@@ -189,40 +190,40 @@ export async function batchRequests<T = any[]>(
   } = {}
 ): Promise<T[]> {
   const { concurrency = 5, allSettled = false } = options
-  
+
   // 如果请求数量小于并发数，直接全部发送
   if (requests.length <= concurrency) {
     if (allSettled) {
       const results = await Promise.allSettled(
         requests.map(config => axios(config).then(res => res.data))
       )
-      
-      return results.map(result => 
+
+      return results.map(result =>
         result.status === 'fulfilled' ? result.value : null
       ) as T[]
     } else {
       const responses = await Promise.all(
         requests.map(config => axios(config).then(res => res.data))
       )
-      
+
       return responses as T[]
     }
   }
-  
+
   // 分批发送请求
   const results: T[] = []
-  
+
   // 将请求分成多个批次
   for (let i = 0; i < requests.length; i += concurrency) {
     const batch = requests.slice(i, i + concurrency)
-    
+
     if (allSettled) {
       const batchResults = await Promise.allSettled(
         batch.map(config => axios(config).then(res => res.data))
       )
-      
+
       results.push(
-        ...batchResults.map(result => 
+        ...batchResults.map(result =>
           result.status === 'fulfilled' ? result.value : null
         ) as T[]
       )
@@ -230,11 +231,11 @@ export async function batchRequests<T = any[]>(
       const batchResponses = await Promise.all(
         batch.map(config => axios(config).then(res => res.data))
       )
-      
+
       results.push(...batchResponses as T[])
     }
   }
-  
+
   return results
 }
 
@@ -248,10 +249,10 @@ export function preloadRequest(
   cacheTime: number = 60000
 ): void {
   const cacheKey = generateCacheKey(config)
-  
+
   // 如果缓存已存在且有效，不需要预加载
   if (isCacheValid(cacheKey)) return
-  
+
   // 在后台发送请求并缓存结果
   axios(config)
     .then(response => {

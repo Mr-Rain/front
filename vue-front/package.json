@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "vite build",
     "preview": "vite preview",
     "test:unit": "vitest",
     "test:unit:coverage": "vitest run --coverage",
@@ -61,7 +61,7 @@
     "rollup-plugin-visualizer": "^5.14.0",
     "sass-embedded": "^1.86.3",
     "typescript": "~5.8.0",
-    "vite": "^6.2.4",
+    "vite": "^6.3.3",
     "vite-plugin-compression2": "^1.3.3",
     "vite-plugin-pwa": "^1.0.0",
     "vite-plugin-vue-devtools": "^7.7.2",

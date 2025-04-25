@@ -25,7 +25,7 @@
       <template #trigger>
         <slot name="trigger"></slot>
       </template>
-      
+
       <!-- 默认插槽 -->
       <template #default>
         <slot>
@@ -42,12 +42,12 @@
           <el-button v-else type="primary">点击上传</el-button>
         </slot>
       </template>
-      
+
       <!-- 文件列表插槽 -->
       <template #file="{ file }">
         <slot name="file" :file="file"></slot>
       </template>
-      
+
       <!-- 提示插槽 -->
       <template #tip>
         <slot name="tip">
@@ -57,7 +57,7 @@
         </slot>
       </template>
     </el-upload>
-    
+
     <!-- 图片预览对话框 -->
     <el-dialog v-model="previewVisible" title="图片预览" width="50%">
       <img v-if="previewUrl" :src="previewUrl" class="preview-image" />
@@ -71,7 +71,14 @@ import { ElMessage } from 'element-plus';
 import { UploadFilled, Loading } from '@element-plus/icons-vue';
 import { compressImage } from '@/utils/imageUtils';
 import { convertToWebP, isWebPSupported } from '@/utils/webpConverter';
-import type { UploadFile, UploadUserFile, UploadRequestOptions } from 'element-plus';
+import type { UploadFile, UploadUserFile, UploadRequestOptions, UploadProgressEvent } from 'element-plus';
+
+// 自定义 UploadAjaxError 类型
+interface UploadAjaxError extends Error {
+  status: number;
+  method: string;
+  url: string;
+}
 
 // 定义组件属性
 const props = defineProps({
@@ -188,31 +195,36 @@ const checkWebPSupport = async () => {
 
 // 上传前处理
 const beforeUpload = async (file: UploadUserFile) => {
+  // 将 UploadUserFile 转换为 File 类型
+  const fileObj = file as unknown as File;
+
   // 检查文件类型
-  if (!file.type.startsWith('image/') && props.accept === 'image/*') {
+  if (fileObj.type && !fileObj.type.startsWith('image/') && props.accept === 'image/*') {
     ElMessage.error('只能上传图片文件!');
     return false;
   }
-  
+
   // 检查文件大小
-  const isLessThanLimit = file.size / 1024 / 1024 < props.maxSize;
-  if (!isLessThanLimit) {
-    ElMessage.error(`文件大小不能超过 ${props.maxSize}MB!`);
-    return false;
+  if (fileObj.size !== undefined) {
+    const isLessThanLimit = fileObj.size / 1024 / 1024 < props.maxSize;
+    if (!isLessThanLimit) {
+      ElMessage.error(`文件大小不能超过 ${props.maxSize}MB!`);
+      return false;
+    }
   }
-  
+
   // 如果不需要优化，直接返回
   if (!props.enableCompression && !props.enableWebP) {
     return true;
   }
-  
+
   try {
     optimizing.value = true;
-    
+
     let processedFile: File = file as File;
-    
+
     // 压缩图片
-    if (props.enableCompression && file.type.startsWith('image/') && file.type !== 'image/svg+xml') {
+    if (props.enableCompression && fileObj.type && fileObj.type.startsWith('image/') && fileObj.type !== 'image/svg+xml') {
       processedFile = await compressImage(
         processedFile,
         props.maxWidth,
@@ -220,14 +232,14 @@ const beforeUpload = async (file: UploadUserFile) => {
         props.quality
       ) as File;
     }
-    
+
     // 转换为WebP
-    if (props.enableWebP && webpSupported.value && file.type.startsWith('image/') && file.type !== 'image/webp' && file.type !== 'image/svg+xml') {
+    if (props.enableWebP && webpSupported.value && fileObj.type && fileObj.type.startsWith('image/') && fileObj.type !== 'image/webp' && fileObj.type !== 'image/svg+xml') {
       processedFile = await convertToWebP(processedFile, props.quality);
     }
-    
+
     optimizing.value = false;
-    
+
     // 返回处理后的文件
     return processedFile;
   } catch (error) {
@@ -241,7 +253,7 @@ const beforeUpload = async (file: UploadUserFile) => {
 // 自定义上传
 const customUpload = async (options: UploadRequestOptions) => {
   const { file, onProgress, onSuccess, onError } = options;
-  
+
   // 如果没有设置action，则不进行实际上传
   if (!props.action) {
     // 模拟上传成功
@@ -250,24 +262,27 @@ const customUpload = async (options: UploadRequestOptions) => {
     }, 300);
     return;
   }
-  
+
   try {
     // 创建FormData
     const formData = new FormData();
     formData.append('file', file);
-    
+
     // 创建XHR
     const xhr = new XMLHttpRequest();
     xhr.open('POST', props.action, true);
-    
+
     // 上传进度
     xhr.upload.addEventListener('progress', (e) => {
       if (e.lengthComputable) {
         const percent = Math.round((e.loaded * 100) / e.total);
-        onProgress?.({ percent });
+        // 创建一个符合 UploadProgressEvent 接口的对象
+        const progressEvent = e as UploadProgressEvent;
+        progressEvent.percent = percent;
+        onProgress?.(progressEvent);
       }
     });
-    
+
     // 上传完成
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
@@ -278,19 +293,37 @@ const customUpload = async (options: UploadRequestOptions) => {
           onSuccess?.({ url: URL.createObjectURL(file) });
         }
       } else {
-        onError?.({ status: xhr.status, message: xhr.statusText });
+        // 创建一个符合 UploadAjaxError 接口的对象
+        const error = new Error(xhr.statusText) as UploadAjaxError;
+        error.name = 'UploadError';
+        error.status = xhr.status;
+        error.method = 'POST';
+        error.url = props.action || '';
+        onError?.(error);
       }
     };
-    
+
     // 上传错误
     xhr.onerror = () => {
-      onError?.({ status: xhr.status, message: '上传失败' });
+      // 创建一个符合 UploadAjaxError 接口的对象
+      const error = new Error('上传失败') as UploadAjaxError;
+      error.name = 'UploadError';
+      error.status = xhr.status;
+      error.method = 'POST';
+      error.url = props.action || '';
+      onError?.(error);
     };
-    
+
     // 发送请求
     xhr.send(formData);
-  } catch (error) {
-    onError?.({ status: 0, message: '上传失败' });
+  } catch (err) {
+    // 创建一个符合 UploadAjaxError 接口的对象
+    const uploadError = new Error('上传失败') as any;
+    uploadError.name = 'UploadError';
+    uploadError.status = 0;
+    uploadError.method = 'POST';
+    uploadError.url = props.action || '';
+    onError?.(uploadError);
   }
 };
 

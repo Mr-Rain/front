@@ -24,7 +24,8 @@ export function getNotifications(params: NotificationQueryParams): Promise<{ dat
       type: 'system',
       status: 'unread',
       create_time: new Date().toISOString(),
-      read_time: null
+      read_time: undefined,
+      recipient_id: '1' // 添加必需的 recipient_id 字段
     },
     {
       id: '2',
@@ -33,7 +34,8 @@ export function getNotifications(params: NotificationQueryParams): Promise<{ dat
       type: 'application',
       status: 'read',
       create_time: new Date(Date.now() - 86400000).toISOString(), // 1天前
-      read_time: new Date(Date.now() - 43200000).toISOString() // 12小时前
+      read_time: new Date(Date.now() - 43200000).toISOString(), // 12小时前
+      recipient_id: '1' // 添加必需的 recipient_id 字段
     }
   ];
 

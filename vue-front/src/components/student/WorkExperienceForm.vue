@@ -79,7 +79,7 @@
 import { ref, watch } from 'vue';
 import type { WorkExperience } from '@/types/student';
 import { Plus, Delete } from '@element-plus/icons-vue';
-import * as marked from 'marked'; // 需要安装: pnpm add marked
+import { marked } from 'marked'; // 需要安装: pnpm add marked
 
 const props = defineProps({
   modelValue: {
@@ -146,7 +146,9 @@ const updateDateRange = (index: number) => {
 const renderMarkdown = (content: string): string => {
   if (!content) return '';
   try {
-    return marked(content);
+    // 使用marked.parse而不是直接调用marked，并处理异步结果
+    // 由于Vue模板不支持直接使用异步函数，这里使用同步方式
+    return marked.parse(content, { async: false }) as string;
   } catch (e) {
     console.error('Failed to render markdown:', e);
     return content;

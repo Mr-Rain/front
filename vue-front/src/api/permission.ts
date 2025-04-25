@@ -1,4 +1,5 @@
 import request from '@/utils/request';
+import type { RoleInfo, PermissionInfo, PermissionCode } from '@/types/permission';
 import type { UserPermissionInfo } from '@/types/permission';
 
 // 获取当前用户的角色和权限信息

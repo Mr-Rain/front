@@ -1,5 +1,5 @@
 import request from '@/utils/request';
-import { PaginatedResponse, PaginationParams } from './company';
+import type { PaginatedResponse, PaginationParams } from './company';
 
 /**
  * 反馈信息类型
@@ -39,13 +39,13 @@ export function submitFeedback(data: {
   formData.append('type', data.type);
   formData.append('title', data.title);
   formData.append('content', data.content);
-  
+
   if (data.attachments && data.attachments.length > 0) {
     data.attachments.forEach((file, index) => {
       formData.append(`attachments[${index}]`, file);
     });
   }
-  
+
   return request({
     url: '/api/feedback',
     method: 'post',

@@ -77,7 +77,7 @@
         <el-table-column prop="phone" label="手机号" width="150"></el-table-column>
         <el-table-column prop="user_type" label="用户类型" width="100" align="center">
             <template #default="scope">
-                <el-tag :type="getUserTypeTagType(scope.row.user_type)">{{ formatUserType(scope.row.user_type) }}</el-tag>
+                <el-tag :type="getUserTypeTagType(scope.row.user_type) as 'success' | 'warning' | 'info' | 'primary' | 'danger'">{{ formatUserType(scope.row.user_type) }}</el-tag>
             </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100" align="center">
@@ -173,7 +173,7 @@
                 <div class="user-info">
                   <div class="username">{{ user.username }}</div>
                   <div class="user-type">
-                    <el-tag size="small" :type="getUserTypeTagType(user.user_type)">{{ formatUserType(user.user_type) }}</el-tag>
+                    <el-tag size="small" :type="getUserTypeTagType(user.user_type) as 'success' | 'warning' | 'info' | 'primary' | 'danger'">{{ formatUserType(user.user_type) }}</el-tag>
                   </div>
                 </div>
                 <div class="user-status">

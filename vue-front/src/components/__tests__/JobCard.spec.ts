@@ -7,7 +7,12 @@ import JobCard from '../common/JobCard.vue'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/jobs/:id', name: 'job-detail' }
+    {
+      path: '/jobs/:id',
+      name: 'job-detail',
+      component: {} as any,
+      redirect: ''
+    }
   ]
 })
 
@@ -67,7 +72,14 @@ describe('JobCard', () => {
       salary_range: '15k-25k',
       location: '北京',
       experience_required: '3-5年',
-      education_required: '本科及以上'
+      education_required: '本科及以上',
+      company_name: '测试公司',
+      company_logo: '',
+      job_type: '全职',
+      status: 'open',
+      description: '职位描述',
+      requirements: '职位要求',
+      company_id: 'company1'
     }
 
     const wrapper = mount(JobCard, {

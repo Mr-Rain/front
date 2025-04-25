@@ -62,7 +62,7 @@ export const useResumeStore = defineStore('resume', {
     // 创建在线简历
     async createResume(data: Partial<ResumeInfo>) {
       try {
-        await createResume(data);
+        await createResume(data as unknown as CreateResumePayload);
         await this.fetchResumeList(); // Refresh list
         ElMessage.success('创建成功');
       } catch (error) {
@@ -143,4 +143,4 @@ export const useResumeStore = defineStore('resume', {
         this.currentResume = null;
     }
   },
-}); 
+});

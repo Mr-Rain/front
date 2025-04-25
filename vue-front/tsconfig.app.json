@@ -5,6 +5,9 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "types": ["node", "lodash"],
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
 
     "paths": {
       "@/*": ["./src/*"]

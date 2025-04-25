@@ -32,7 +32,7 @@
       <template v-if="userDetail.user_type === 'student' && studentProfile">
         <h3 class="section-title">学生信息</h3>
         <el-descriptions :column="1" border size="medium">
-          <el-descriptions-item label="姓名">{{ studentProfile.name || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="姓名">{{ (studentProfile as any).name || studentProfile.username || '-' }}</el-descriptions-item>
           <el-descriptions-item label="学校">{{ studentProfile.school || '-' }}</el-descriptions-item>
           <el-descriptions-item label="专业">{{ studentProfile.major || '-' }}</el-descriptions-item>
           <el-descriptions-item label="学历">{{ studentProfile.education || '-' }}</el-descriptions-item>
@@ -58,14 +58,14 @@
 
       <!-- 操作按钮 -->
       <div class="action-buttons">
-        <el-button 
-          :type="userDetail.status === 'active' ? 'danger' : 'success'" 
+        <el-button
+          :type="userDetail.status === 'active' ? 'danger' : 'success'"
           @click="handleStatusChange"
           :loading="submitting"
         >
           {{ userDetail.status === 'active' ? '禁用账号' : '启用账号' }}
         </el-button>
-        
+
         <el-button v-if="userDetail.user_type === 'company'" type="primary" @click="handleViewCompanyDetail">
           查看企业详情
         </el-button>
@@ -196,10 +196,10 @@ const handleClose = () => {
 // 处理状态变更
 const handleStatusChange = async () => {
   if (!props.userDetail) return;
-  
+
   const newStatus: UserStatus = props.userDetail.status === 'active' ? 'inactive' : 'active';
   const actionText = newStatus === 'active' ? '启用' : '禁用';
-  
+
   try {
     await ElMessageBox.confirm(
       `确定要${actionText}用户 "${props.userDetail.username}" 的账号吗？`,
@@ -210,7 +210,7 @@ const handleStatusChange = async () => {
         type: 'warning'
       }
     );
-    
+
     emit('status-change', props.userDetail.id, newStatus);
   } catch {
     // 用户取消操作

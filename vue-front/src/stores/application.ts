@@ -60,7 +60,7 @@ export const useApplicationStore = defineStore('application', {
       this.loadingStudentList = true;
       try {
         const response = await getStudentApplicationList(params);
-        this.studentApplications = response.data.list;
+        this.studentApplications = response.data.list || response.data.records || [];
         this.studentApplicationsTotal = response.data.total;
       } catch (error) {
         console.error('Failed to fetch student applications:', error);
@@ -110,7 +110,7 @@ export const useApplicationStore = defineStore('application', {
       this.loadingCompanyList = true;
       try {
         const response = await getCompanyApplicationList(params);
-        this.companyApplications = response.data.list;
+        this.companyApplications = response.data.list || response.data.records || [];
         this.companyApplicationsTotal = response.data.total;
       } catch (error) {
         console.error('Failed to fetch company applications:', error);

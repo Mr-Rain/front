@@ -95,8 +95,8 @@ const goBack = () => {
 // Sanitize markdown content
 const sanitizeHtml = (content: string | undefined | null): string => {
     if (!content) return '';
-    // Type assertion needed if marked returns a Promise
-    const rawHtml = marked(content) as string;
+    // 使用marked.parse的同步模式
+    const rawHtml = marked.parse(content, { async: false }) as string;
     return DOMPurify.sanitize(rawHtml);
 };
 

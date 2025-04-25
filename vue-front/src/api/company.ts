@@ -16,10 +16,14 @@ export interface PaginationParams {
  */
 export interface PaginatedResponse<T> {
   total: number;
-  pages: number;
-  current: number;
-  size: number;
-  records: T[];
+  pages?: number;
+  current?: number;
+  size?: number;
+  records?: T[];
+  list?: T[];
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
 }
 
 /**
@@ -125,6 +129,24 @@ export function getCompanyList(params: PaginationParams): Promise<{ data: Pagina
 }
 
 /**
+ * 获取待审核企业列表
+ * @param params 查询参数
+ * @returns 待审核企业列表
+ */
+export function getPendingCompanies(params: PaginationParams): Promise<{ data: PaginatedResponse<CompanyProfile> }> {
+  try {
+    return request({
+      url: '/api/admin/companies',
+      method: 'get',
+      params: { ...params, auditStatus: 'pending' },
+    });
+  } catch (error) {
+    console.error('获取待审核企业列表失败:', error);
+    throw error; // 保持错误冒泡，便于上层处理
+  }
+}
+
+/**
  * 审核企业
  * @param companyId 企业ID
  * @param auditStatus 审核状态
@@ -144,4 +166,28 @@ export function auditCompany(
       auditMessage
     },
   });
+}
+
+/**
+ * 审核通过企业
+ * @param companyId 企业ID
+ * @param approved 是否通过
+ * @param message 审核意见
+ * @returns 审核结果
+ */
+export function approveCompany(
+  companyId: string | number,
+  approved: boolean,
+  message?: string
+) {
+  try {
+    return auditCompany(
+      companyId,
+      approved ? 'approved' : 'rejected',
+      message
+    );
+  } catch (error) {
+    console.error(`企业审核操作失败(ID: ${companyId}):`, error);
+    throw error; // 保持错误冒泡，便于上层处理
+  }
 }

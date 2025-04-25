@@ -24,7 +24,7 @@
       <div v-if="resumeStore.currentResume" class="resume-content">
         <!-- 简历标题 -->
         <h1 class="resume-title">{{ resumeStore.currentResume.title || '我的简历' }}</h1>
-        
+
         <!-- 基本信息 -->
         <div class="resume-section basic-info">
           <div class="info-row">
@@ -132,7 +132,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useResumeStore } from '@/stores/resume';
 import { ElMessage } from 'element-plus';
 import { ArrowLeft, Printer, Edit, Phone, Message } from '@element-plus/icons-vue';
-import marked from 'marked'; // 需要安装: pnpm add marked
+import { marked } from 'marked'; // 需要安装: pnpm add marked
 
 const router = useRouter();
 const route = useRoute();
@@ -179,8 +179,10 @@ const formatTime = (timeStr: string | undefined): string => {
 const formatMarkdown = (content: string | undefined): string => {
   if (!content) return '';
   try {
-    return marked(content);
+    // 使用marked.parse的同步模式
+    return marked.parse(content, { async: false }) as string;
   } catch (e) {
+    console.error('Failed to parse markdown:', e);
     return content;
   }
 };

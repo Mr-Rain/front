@@ -21,7 +21,7 @@ interface JobState {
   loadingDetail: boolean;
 
   // Common submitting state for mutations
-  submitting: boolean; 
+  submitting: boolean;
 }
 
 export const useJobStore = defineStore('job', {
@@ -46,7 +46,7 @@ export const useJobStore = defineStore('job', {
       this.loadingList = true;
       try {
         const response = await getJobList(params);
-        this.jobList = response.data.list;
+        this.jobList = response.data.list || response.data.records || [];
         this.jobTotal = response.data.total;
       } catch (error) {
         console.error('Failed to fetch job list:', error);
@@ -87,7 +87,7 @@ export const useJobStore = defineStore('job', {
         this.loadingCompanyList = true;
         try {
             const response = await getCompanyJobList(params);
-            this.companyJobList = response.data.list;
+            this.companyJobList = response.data.list || response.data.records || [];
             this.companyJobTotal = response.data.total;
         } catch (error) {
             console.error('Failed to fetch company job list:', error);
@@ -102,7 +102,7 @@ export const useJobStore = defineStore('job', {
     async createJob(data: Partial<JobInfo>) {
         this.submitting = true;
         try {
-            const response = await createJob(data);
+            const response = await createJob(data as unknown as CreateJobPayload);
             ElMessage.success('职位发布成功');
             await this.fetchCompanyJobList(); // Refresh list
             return response.data; // Return created job info if needed
@@ -182,4 +182,4 @@ export const useJobStore = defineStore('job', {
     },
 
   },
-}); 
+});

@@ -7,12 +7,12 @@
         <h3>{{ title }}</h3>
         <slot name="title-extra"></slot>
       </div>
-      
+
       <!-- 表格内容 -->
       <div v-if="data && data.length > 0" class="mobile-table-content">
-        <div 
-          v-for="(item, index) in data" 
-          :key="index" 
+        <div
+          v-for="(item, index) in data"
+          :key="index"
           class="mobile-table-card"
           @click="handleCardClick(item)"
         >
@@ -22,11 +22,11 @@
               <div v-if="getSubTitle(item)" class="mobile-card-subtitle">{{ getSubTitle(item) }}</div>
             </slot>
           </div>
-          
+
           <div class="mobile-card-body">
-            <div 
-              v-for="column in visibleColumns" 
-              :key="column.prop" 
+            <div
+              v-for="column in visibleColumns"
+              :key="column.prop"
               class="mobile-card-item"
             >
               <div class="mobile-card-label">{{ column.label }}</div>
@@ -37,26 +37,26 @@
               </div>
             </div>
           </div>
-          
+
           <div class="mobile-card-footer" v-if="$slots.actions">
             <slot name="actions" :row="item"></slot>
           </div>
         </div>
       </div>
-      
+
       <!-- 空数据状态 -->
       <div v-else class="mobile-table-empty">
         <slot name="empty">
           <el-empty :description="emptyText" />
         </slot>
       </div>
-      
+
       <!-- 分页 -->
       <div v-if="showPagination && total > 0" class="mobile-table-pagination">
         <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
-          :page-sizes="pageSizes"
+          :page-sizes="pageSizes as number[]"
           :total="total"
           layout="prev, pager, next, sizes, total"
           @size-change="handleSizeChange"
@@ -64,7 +64,7 @@
         />
       </div>
     </div>
-    
+
     <!-- 桌面端表格视图 -->
     <el-table
       v-else
@@ -73,20 +73,20 @@
       @row-click="handleRowClick"
     >
       <slot></slot>
-      
+
       <template #empty>
         <slot name="empty">
           <el-empty :description="emptyText" />
         </slot>
       </template>
     </el-table>
-    
+
     <!-- 桌面端分页 -->
     <div v-if="!isMobile && showPagination && total > 0" class="desktop-pagination">
       <el-pagination
         v-model:current-page="currentPage"
         v-model:page-size="pageSize"
-        :page-sizes="pageSizes"
+        :page-sizes="pageSizes as number[]"
         :total="total"
         layout="total, sizes, prev, pager, next, jumper"
         @size-change="handleSizeChange"
@@ -191,7 +191,7 @@ const isMobile = computed(() => {
 
 // 计算可见列
 const visibleColumns = computed(() => {
-  return props.columns.filter(col => !col.hideInMobile);
+  return props.columns.filter((col: any) => !col.hideInMobile);
 });
 
 // 获取主标题
@@ -210,7 +210,7 @@ const getColumnValue = (row: any, column: any) => {
   if (column.formatter && typeof column.formatter === 'function') {
     return column.formatter(row, column);
   }
-  
+
   // 处理嵌套属性，如 'user.name'
   if (column.prop.includes('.')) {
     const props = column.prop.split('.');
@@ -221,7 +221,7 @@ const getColumnValue = (row: any, column: any) => {
     }
     return value !== undefined ? value : '';
   }
-  
+
   return row[column.prop] !== undefined ? row[column.prop] : '';
 };
 
@@ -363,17 +363,17 @@ const handleCurrentChange = (val: number) => {
     flex-direction: column;
     margin-bottom: 12px;
   }
-  
+
   .mobile-card-label {
     flex: none;
     margin-bottom: 4px;
   }
-  
+
   .mobile-card-value {
     flex: none;
     text-align: left;
   }
-  
+
   .mobile-table-pagination :deep(.el-pagination) {
     flex-wrap: wrap;
     justify-content: center;

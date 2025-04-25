@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import type { JobInfo, JobListParams, JobStatus } from '@/types/job';
-import { PaginatedResponse, PaginationParams } from './company';
+import type { PaginatedResponse, PaginationParams } from './company';
 
 /**
  * 创建职位请求参数类型

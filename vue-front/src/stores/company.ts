@@ -85,7 +85,7 @@ export const useCompanyStore = defineStore('company', {
       this.loadingJobs = true;
       try {
         const response = await getCompanyJobList(params);
-        this.jobList = response.data.list;
+        this.jobList = response.data.list || response.data.records || [];
         this.jobTotal = response.data.total;
       } catch (error) {
         console.error('Failed to fetch company job list:', error);
@@ -100,7 +100,7 @@ export const useCompanyStore = defineStore('company', {
       this.loadingApplications = true;
       try {
         const response = await getCompanyApplicationList(params);
-        this.applicationList = response.data.list;
+        this.applicationList = response.data.list || response.data.records || [];
         this.applicationTotal = response.data.total;
       } catch (error) {
         console.error('Failed to fetch company application list:', error);
@@ -115,7 +115,7 @@ export const useCompanyStore = defineStore('company', {
       this.loadingAuditList = true;
       try {
         const response = await getPendingCompanies(params);
-        this.auditList = response.data.list || [];
+        this.auditList = response.data.list || response.data.records || [];
         this.auditTotal = response.data.total || 0;
       } catch (error) {
         console.error('Failed to fetch company audit list:', error);

@@ -5,7 +5,7 @@
       <el-icon><Download /></el-icon>
       导出简历
     </el-button>
-    
+
     <!-- 简历预览（用于导出，默认隐藏） -->
     <div id="resume-export-container" ref="resumeContainer" class="resume-container" :style="{ display: 'none' }">
       <div class="resume-header">
@@ -16,7 +16,7 @@
           <p v-if="resumeData.location"><i class="el-icon"><Location /></i> {{ resumeData.location }}</p>
         </div>
       </div>
-      
+
       <div class="resume-section">
         <h2 class="section-title">个人信息</h2>
         <div class="section-content">
@@ -26,14 +26,14 @@
           <p v-if="resumeData.grade"><strong>年级：</strong>{{ resumeData.grade }}</p>
         </div>
       </div>
-      
+
       <div v-if="resumeData.bio" class="resume-section">
         <h2 class="section-title">个人简介</h2>
         <div class="section-content">
           <p>{{ resumeData.bio }}</p>
         </div>
       </div>
-      
+
       <div v-if="resumeData.skills && resumeData.skills.length > 0" class="resume-section">
         <h2 class="section-title">技能标签</h2>
         <div class="section-content skills-container">
@@ -42,7 +42,7 @@
           </span>
         </div>
       </div>
-      
+
       <div v-if="resumeData.education_experiences && resumeData.education_experiences.length > 0" class="resume-section">
         <h2 class="section-title">教育经历</h2>
         <div class="section-content">
@@ -56,7 +56,7 @@
           </div>
         </div>
       </div>
-      
+
       <div v-if="resumeData.work_experiences && resumeData.work_experiences.length > 0" class="resume-section">
         <h2 class="section-title">工作经历</h2>
         <div class="section-content">
@@ -70,7 +70,7 @@
           </div>
         </div>
       </div>
-      
+
       <div v-if="resumeData.expected_salary || resumeData.expected_location" class="resume-section">
         <h2 class="section-title">求职意向</h2>
         <div class="section-content">
@@ -78,7 +78,7 @@
           <p v-if="resumeData.expected_location"><strong>期望地点：</strong>{{ resumeData.expected_location }}</p>
         </div>
       </div>
-      
+
       <div class="resume-footer">
         <p>简历生成时间：{{ formatDate(new Date()) }}</p>
       </div>
@@ -151,10 +151,10 @@ onMounted(() => {
 // 格式化日期范围
 const formatDateRange = (startDate: string, endDate: string | null): string => {
   if (!startDate) return '';
-  
+
   const start = formatDate(new Date(startDate));
   const end = endDate ? formatDate(new Date(endDate)) : '至今';
-  
+
   return `${start} - ${end}`;
 };
 
@@ -162,16 +162,22 @@ const formatDateRange = (startDate: string, endDate: string | null): string => {
 const formatDate = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
-  
+
   return `${year}-${month}`;
 };
 
 // 净化HTML内容
 const sanitizeHTML = (html: string): string => {
-  // 将Markdown转换为HTML
-  const rawHTML = marked(html);
-  // 净化HTML以防止XSS攻击
-  return DOMPurify.sanitize(rawHTML);
+  if (!html) return '';
+  try {
+    // 将Markdown转换为HTML，使用同步模式
+    const rawHTML = marked.parse(html, { async: false }) as string;
+    // 净化HTML以防止XSS攻击
+    return DOMPurify.sanitize(rawHTML);
+  } catch (e) {
+    console.error('Failed to sanitize HTML:', e);
+    return DOMPurify.sanitize(html);
+  }
 };
 
 // 导出简历
@@ -180,22 +186,22 @@ const exportResume = async () => {
     ElMessage.error('简历容器不存在');
     return;
   }
-  
+
   try {
     exporting.value = true;
-    
+
     // 临时显示简历容器以便导出
     resumeContainer.value.style.display = 'block';
-    
+
     // 生成文件名
     const fileName = props.fileName || `${mergedResumeData.value.name || 'resume'}_简历`;
-    
+
     // 导出为PDF
     await exportResumeToPDF(resumeContainer.value, fileName, {
       name: mergedResumeData.value.name,
       id: studentStore.profile?.id
     });
-    
+
     ElMessage.success('简历导出成功');
   } catch (error) {
     console.error('简历导出失败:', error);

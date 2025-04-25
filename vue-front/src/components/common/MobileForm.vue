@@ -5,21 +5,21 @@
       <h3>{{ title }}</h3>
       <slot name="title-extra"></slot>
     </div>
-    
+
     <!-- 表单内容 -->
     <el-form
       ref="formRef"
       :model="model"
       :rules="rules"
-      :label-position="isMobile ? 'top' : labelPosition"
+      :label-position="(isMobile ? 'top' : labelPosition) as 'top' | 'left' | 'right'"
       :label-width="isMobile ? 'auto' : labelWidth"
-      :size="isMobile ? 'default' : size"
+      :size="(isMobile ? 'default' : size) as '' | 'small' | 'default' | 'large'"
       :disabled="disabled"
       :class="{ 'mobile-form': isMobile }"
       v-bind="$attrs"
     >
       <slot></slot>
-      
+
       <!-- 表单操作按钮 -->
       <div v-if="showButtons" :class="['form-buttons', { 'mobile-form-buttons': isMobile }]">
         <slot name="buttons">
@@ -123,7 +123,7 @@ const isMobile = computed(() => {
 // 处理表单提交
 const handleSubmit = async () => {
   if (!formRef.value) return;
-  
+
   try {
     await formRef.value.validate();
     emit('submit', props.model);
@@ -226,12 +226,12 @@ defineExpose({
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .form-buttons :deep(.el-button) {
     width: 100%;
     margin-left: 0;
   }
-  
+
   .mobile-form-title {
     flex-direction: column;
     align-items: flex-start;

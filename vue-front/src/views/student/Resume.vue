@@ -281,10 +281,10 @@ const handleExport = async (resume: ResumeInfo) => {
             major: studentStore.profile.major || '',
             education: studentStore.profile.education || '',
             grade: studentStore.profile.grade || '',
-            bio: resumeStore.currentResume.bio || studentStore.profile.bio || '',
+            bio: resumeStore.currentResume.bio || (studentStore.profile as any).bio || '',
             skills: resumeStore.currentResume.skills || studentStore.profile.skills || [],
-            education_experiences: resumeStore.currentResume.education_experiences || studentStore.profile.education_experiences || [],
-            work_experiences: resumeStore.currentResume.work_experiences || studentStore.profile.work_experiences || [],
+            education_experiences: resumeStore.currentResume.education_experiences || (studentStore.profile as any).education_experiences || [],
+            work_experiences: resumeStore.currentResume.work_experiences || (studentStore.profile as any).work_experiences || [],
             expected_salary: resumeStore.currentResume.expected_salary || studentStore.profile.expected_salary || '',
             expected_location: resumeStore.currentResume.expected_location || studentStore.profile.expected_location || ''
           });

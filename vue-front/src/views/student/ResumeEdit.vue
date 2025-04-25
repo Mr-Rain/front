@@ -17,21 +17,21 @@
         </div>
       </template>
 
-      <el-form 
-        ref="resumeFormRef" 
-        :model="resumeForm" 
-        :rules="resumeRules" 
+      <el-form
+        ref="resumeFormRef"
+        :model="resumeForm"
+        :rules="resumeRules"
         label-position="top"
         class="resume-form"
       >
         <!-- 基本信息 -->
         <div class="form-section">
           <h2 class="section-title">基本信息</h2>
-          
+
           <el-form-item label="简历标题" prop="title">
             <el-input v-model="resumeForm.title" placeholder="例如：前端开发工程师简历"></el-input>
           </el-form-item>
-          
+
           <el-row :gutter="20">
             <el-col :xs="24" :sm="12">
               <el-form-item label="姓名" prop="name">
@@ -44,7 +44,7 @@
               </el-form-item>
             </el-col>
           </el-row>
-          
+
           <el-form-item label="邮箱" prop="email">
             <el-input v-model="resumeForm.email" placeholder="请输入邮箱地址"></el-input>
           </el-form-item>
@@ -59,7 +59,7 @@
               <span>添加</span>
             </el-button>
           </div>
-          
+
           <div v-for="(edu, index) in resumeForm.education_experiences" :key="index" class="experience-form-item">
             <div class="experience-header">
               <h3>教育经历 #{{ index + 1 }}</h3>
@@ -68,11 +68,11 @@
                 <span class="hide-on-mobile">删除</span>
               </el-button>
             </div>
-            
+
             <el-form-item :prop="`education_experiences.${index}.school`" :rules="{ required: true, message: '请输入学校名称', trigger: 'blur' }">
               <el-input v-model="edu.school" placeholder="学校名称"></el-input>
             </el-form-item>
-            
+
             <el-row :gutter="20">
               <el-col :xs="24" :sm="12">
                 <el-form-item :prop="`education_experiences.${index}.major`" :rules="{ required: true, message: '请输入专业', trigger: 'blur' }">
@@ -91,13 +91,13 @@
                 </el-form-item>
               </el-col>
             </el-row>
-            
+
             <el-row :gutter="20">
               <el-col :xs="24" :sm="12">
                 <el-form-item :prop="`education_experiences.${index}.start_date`" :rules="{ required: true, message: '请选择开始日期', trigger: 'blur' }">
-                  <el-date-picker 
-                    v-model="edu.start_date" 
-                    type="month" 
+                  <el-date-picker
+                    v-model="edu.start_date"
+                    type="month"
                     placeholder="开始日期"
                     format="YYYY-MM"
                     value-format="YYYY-MM"
@@ -107,9 +107,9 @@
               </el-col>
               <el-col :xs="24" :sm="12">
                 <el-form-item :prop="`education_experiences.${index}.end_date`" :rules="{ required: true, message: '请选择结束日期', trigger: 'blur' }">
-                  <el-date-picker 
-                    v-model="edu.end_date" 
-                    type="month" 
+                  <el-date-picker
+                    v-model="edu.end_date"
+                    type="month"
                     placeholder="结束日期"
                     format="YYYY-MM"
                     value-format="YYYY-MM"
@@ -118,18 +118,18 @@
                 </el-form-item>
               </el-col>
             </el-row>
-            
+
             <el-form-item :prop="`education_experiences.${index}.description`">
-              <el-input 
-                v-model="edu.description" 
-                type="textarea" 
-                :rows="3" 
+              <el-input
+                v-model="edu.description"
+                type="textarea"
+                :rows="3"
                 placeholder="在校经历描述（可选）"
               ></el-input>
             </el-form-item>
           </div>
-          
-          <el-empty v-if="!resumeForm.education_experiences.length" description="暂无教育经历，请点击添加"></el-empty>
+
+          <el-empty v-if="!resumeForm.education_experiences?.length" description="暂无教育经历，请点击添加"></el-empty>
         </div>
 
         <!-- 工作经历 -->
@@ -141,7 +141,7 @@
               <span>添加</span>
             </el-button>
           </div>
-          
+
           <div v-for="(work, index) in resumeForm.work_experiences" :key="index" class="experience-form-item">
             <div class="experience-header">
               <h3>工作经历 #{{ index + 1 }}</h3>
@@ -150,21 +150,21 @@
                 <span class="hide-on-mobile">删除</span>
               </el-button>
             </div>
-            
+
             <el-form-item :prop="`work_experiences.${index}.company_name`" :rules="{ required: true, message: '请输入公司名称', trigger: 'blur' }">
               <el-input v-model="work.company_name" placeholder="公司名称"></el-input>
             </el-form-item>
-            
+
             <el-form-item :prop="`work_experiences.${index}.position`" :rules="{ required: true, message: '请输入职位', trigger: 'blur' }">
               <el-input v-model="work.position" placeholder="职位"></el-input>
             </el-form-item>
-            
+
             <el-row :gutter="20">
               <el-col :xs="24" :sm="12">
                 <el-form-item :prop="`work_experiences.${index}.start_date`" :rules="{ required: true, message: '请选择开始日期', trigger: 'blur' }">
-                  <el-date-picker 
-                    v-model="work.start_date" 
-                    type="month" 
+                  <el-date-picker
+                    v-model="work.start_date"
+                    type="month"
                     placeholder="开始日期"
                     format="YYYY-MM"
                     value-format="YYYY-MM"
@@ -174,9 +174,9 @@
               </el-col>
               <el-col :xs="24" :sm="12">
                 <el-form-item :prop="`work_experiences.${index}.end_date`" :rules="{ required: true, message: '请选择结束日期', trigger: 'blur' }">
-                  <el-date-picker 
-                    v-model="work.end_date" 
-                    type="month" 
+                  <el-date-picker
+                    v-model="work.end_date"
+                    type="month"
                     placeholder="结束日期"
                     format="YYYY-MM"
                     value-format="YYYY-MM"
@@ -185,18 +185,18 @@
                 </el-form-item>
               </el-col>
             </el-row>
-            
+
             <el-form-item :prop="`work_experiences.${index}.description`" :rules="{ required: true, message: '请输入工作内容描述', trigger: 'blur' }">
-              <el-input 
-                v-model="work.description" 
-                type="textarea" 
-                :rows="4" 
+              <el-input
+                v-model="work.description"
+                type="textarea"
+                :rows="4"
                 placeholder="工作内容描述（支持Markdown格式）"
               ></el-input>
             </el-form-item>
           </div>
-          
-          <el-empty v-if="!resumeForm.work_experiences.length" description="暂无工作经历，请点击添加"></el-empty>
+
+          <el-empty v-if="!resumeForm.work_experiences?.length" description="暂无工作经历，请点击添加"></el-empty>
         </div>
 
         <!-- 项目经历 -->
@@ -208,7 +208,7 @@
               <span>添加</span>
             </el-button>
           </div>
-          
+
           <div v-for="(project, index) in resumeForm.project_experiences" :key="index" class="experience-form-item">
             <div class="experience-header">
               <h3>项目经历 #{{ index + 1 }}</h3>
@@ -217,21 +217,21 @@
                 <span class="hide-on-mobile">删除</span>
               </el-button>
             </div>
-            
+
             <el-form-item :prop="`project_experiences.${index}.project_name`" :rules="{ required: true, message: '请输入项目名称', trigger: 'blur' }">
               <el-input v-model="project.project_name" placeholder="项目名称"></el-input>
             </el-form-item>
-            
+
             <el-form-item :prop="`project_experiences.${index}.role`" :rules="{ required: true, message: '请输入担任角色', trigger: 'blur' }">
               <el-input v-model="project.role" placeholder="担任角色"></el-input>
             </el-form-item>
-            
+
             <el-row :gutter="20">
               <el-col :xs="24" :sm="12">
                 <el-form-item :prop="`project_experiences.${index}.start_date`" :rules="{ required: true, message: '请选择开始日期', trigger: 'blur' }">
-                  <el-date-picker 
-                    v-model="project.start_date" 
-                    type="month" 
+                  <el-date-picker
+                    v-model="project.start_date"
+                    type="month"
                     placeholder="开始日期"
                     format="YYYY-MM"
                     value-format="YYYY-MM"
@@ -241,9 +241,9 @@
               </el-col>
               <el-col :xs="24" :sm="12">
                 <el-form-item :prop="`project_experiences.${index}.end_date`" :rules="{ required: true, message: '请选择结束日期', trigger: 'blur' }">
-                  <el-date-picker 
-                    v-model="project.end_date" 
-                    type="month" 
+                  <el-date-picker
+                    v-model="project.end_date"
+                    type="month"
                     placeholder="结束日期"
                     format="YYYY-MM"
                     value-format="YYYY-MM"
@@ -252,32 +252,32 @@
                 </el-form-item>
               </el-col>
             </el-row>
-            
+
             <el-form-item :prop="`project_experiences.${index}.description`" :rules="{ required: true, message: '请输入项目描述', trigger: 'blur' }">
-              <el-input 
-                v-model="project.description" 
-                type="textarea" 
-                :rows="4" 
+              <el-input
+                v-model="project.description"
+                type="textarea"
+                :rows="4"
                 placeholder="项目描述（支持Markdown格式）"
               ></el-input>
             </el-form-item>
-            
+
             <el-form-item :prop="`project_experiences.${index}.project_link`">
               <el-input v-model="project.project_link" placeholder="项目链接（可选）"></el-input>
             </el-form-item>
           </div>
-          
-          <el-empty v-if="!resumeForm.project_experiences.length" description="暂无项目经历，请点击添加"></el-empty>
+
+          <el-empty v-if="!resumeForm.project_experiences?.length" description="暂无项目经历，请点击添加"></el-empty>
         </div>
 
         <!-- 技能描述 -->
         <div class="form-section">
           <h2 class="section-title">专业技能</h2>
           <el-form-item prop="skills_description">
-            <el-input 
-              v-model="resumeForm.skills_description" 
-              type="textarea" 
-              :rows="6" 
+            <el-input
+              v-model="resumeForm.skills_description"
+              type="textarea"
+              :rows="6"
               placeholder="请描述您的专业技能（支持Markdown格式）"
             ></el-input>
             <div class="form-tip">提示：可以使用Markdown格式，例如使用"-"或"*"创建列表</div>
@@ -288,10 +288,10 @@
         <div class="form-section">
           <h2 class="section-title">自我评价</h2>
           <el-form-item prop="self_evaluation">
-            <el-input 
-              v-model="resumeForm.self_evaluation" 
-              type="textarea" 
-              :rows="6" 
+            <el-input
+              v-model="resumeForm.self_evaluation"
+              type="textarea"
+              :rows="6"
               placeholder="请进行自我评价（支持Markdown格式）"
             ></el-input>
           </el-form-item>
@@ -376,7 +376,7 @@ onMounted(async () => {
       if (resumeStore.currentResume) {
         // 复制数据到表单
         Object.assign(resumeForm, resumeStore.currentResume);
-        
+
         // 确保数组属性存在
         if (!resumeForm.education_experiences) resumeForm.education_experiences = [];
         if (!resumeForm.work_experiences) resumeForm.work_experiences = [];
@@ -462,7 +462,7 @@ const removeProjectExperience = (index: number) => {
 // 保存简历
 const handleSave = () => {
   if (!resumeFormRef.value) return;
-  
+
   resumeFormRef.value.validate(async (valid) => {
     if (valid) {
       saving.value = true;
@@ -493,7 +493,7 @@ const handleSave = () => {
 // 返回上一页
 const goBack = () => {
   if (saving.value) return;
-  
+
   if (isFormDirty()) {
     ElMessageBox.confirm('您有未保存的更改，确定要离开吗？', '提示', {
       confirmButtonText: '确定',
@@ -512,11 +512,11 @@ const goBack = () => {
 // 检查表单是否有修改
 const isFormDirty = () => {
   // 简单实现，实际应该比较表单与原始数据
-  return resumeForm.title || 
-         resumeForm.education_experiences?.length || 
-         resumeForm.work_experiences?.length || 
-         resumeForm.project_experiences?.length || 
-         resumeForm.skills_description || 
+  return resumeForm.title ||
+         resumeForm.education_experiences?.length ||
+         resumeForm.work_experiences?.length ||
+         resumeForm.project_experiences?.length ||
+         resumeForm.skills_description ||
          resumeForm.self_evaluation;
 };
 </script>
