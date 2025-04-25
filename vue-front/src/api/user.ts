@@ -1,123 +1,188 @@
-import request from '@/utils/request'; // 假设封装了 axios 或 fetch
+import request from '@/utils/request';
 import type { UserInfo, UserStatus } from '@/types/user';
 
-// 登录接口
-// TODO: 定义登录请求参数类型 LoginPayload 和响应类型 LoginResponse
-export function login(data: any) {
+/**
+ * 登录请求参数类型
+ */
+export interface LoginPayload {
+  username: string;
+  password: string;
+}
+
+/**
+ * 登录响应类型
+ */
+export interface LoginResponse {
+  token: string;
+  id: number | string;
+  username: string;
+  email: string;
+  userType: string;
+  avatar: string | null;
+  status: string;
+  lastLoginTime: string;
+}
+
+/**
+ * 注册请求参数类型
+ */
+export interface RegisterPayload {
+  username: string;
+  password: string;
+  email: string;
+  userType: string;
+  phone?: string;
+}
+
+/**
+ * 忘记密码请求参数类型
+ */
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+/**
+ * 重置密码请求参数类型
+ */
+export interface ResetPasswordPayload {
+  token: string;
+  password: string;
+  confirmPassword: string;
+}
+
+/**
+ * 修改密码请求参数类型
+ */
+export interface ChangePasswordPayload {
+  oldPassword: string;
+  newPassword: string;
+}
+
+/**
+ * 用户登录
+ * @param data 登录信息
+ * @returns 登录结果
+ */
+export function login(data: LoginPayload) {
   return request({
-    url: '/api/auth/login', // 后端登录接口地址
+    url: '/api/auth/login',
     method: 'post',
     data,
   });
 }
 
-// 注册接口
-// TODO: 定义注册请求参数类型 RegisterPayload
-export function register(data: any) {
+/**
+ * 用户注册
+ * @param data 注册信息
+ * @returns 注册结果
+ */
+export function register(data: RegisterPayload) {
   return request({
-    url: '/api/auth/register', // 后端注册接口地址
+    url: '/api/auth/register',
     method: 'post',
     data,
   });
 }
 
-// 获取用户信息接口
-export function getUserInfo(): Promise<{ data: UserInfo }> { // 明确返回类型包含 UserInfo
-  // return request({
-  //   url: '/api/auth/me',
-  //   method: 'get',
-  // });
-  // ---- Mock Data Start ----
-  console.warn('API MOCK: getUserInfo is using mock data.');
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // 从localStorage获取当前模拟的用户角色
-      const mockUserType = localStorage.getItem('mockUserType') || 'student';
-
-      // 根据不同角色返回不同的模拟用户信息
-      let mockUserInfo: UserInfo;
-
-      if (mockUserType === 'admin') {
-        mockUserInfo = {
-          id: '1',
-          username: 'adminUser',
-          user_type: 'admin',
-          avatar: '',
-          email: 'admin@example.com',
-          status: 'active'
-        };
-      } else if (mockUserType === 'company') {
-        mockUserInfo = {
-          id: '2',
-          username: 'companyUser',
-          user_type: 'company',
-          avatar: '',
-          email: 'company@example.com',
-          status: 'active'
-        };
-      } else {
-        // 默认为学生用户
-        mockUserInfo = {
-          id: '3',
-          username: 'studentUser',
-          user_type: 'student',
-          avatar: '',
-          email: 'student@example.com',
-          status: 'active'
-        };
-      }
-
-      resolve({ data: mockUserInfo });
-    }, 200);
+/**
+ * 获取当前用户信息
+ * @returns 用户信息
+ */
+export function getUserInfo(): Promise<{ data: UserInfo }> {
+  return request({
+    url: '/api/users/me',
+    method: 'get',
   });
-  // ---- Mock Data End ----
 }
 
-// 登出接口
+/**
+ * 用户登出
+ * @returns 登出结果
+ */
 export function logout(): Promise<any> {
   return request({
-    url: '/api/auth/logout', // 后端登出接口地址
+    url: '/api/auth/logout',
     method: 'post',
   });
 }
 
-// 忘记密码接口
-// TODO: 定义忘记密码请求参数类型 ForgotPasswordPayload
-export function forgotPassword(data: any) {
+/**
+ * 忘记密码
+ * @param data 包含邮箱的请求数据
+ * @returns 发送结果
+ */
+export function forgotPassword(data: ForgotPasswordPayload) {
   return request({
-    url: '/api/auth/forgot-password', // 后端忘记密码接口地址
+    url: '/api/auth/forgot-password',
     method: 'post',
     data,
   });
 }
 
-// 可以在此文件中继续添加其他用户相关的接口，例如修改密码、更新个人信息等
+/**
+ * 重置密码
+ * @param data 重置密码数据
+ * @returns 重置结果
+ */
+export function resetPassword(data: ResetPasswordPayload) {
+  return request({
+    url: '/api/auth/reset-password',
+    method: 'post',
+    data,
+  });
+}
+
+/**
+ * 修改密码
+ * @param data 修改密码数据
+ * @returns 修改结果
+ */
+export function changePassword(data: ChangePasswordPayload) {
+  return request({
+    url: '/api/users/password',
+    method: 'put',
+    data,
+  });
+}
+
+/**
+ * 更新用户信息
+ * @param data 用户信息
+ * @returns 更新结果
+ */
+export function updateUserInfo(data: Partial<UserInfo>) {
+  return request({
+    url: '/api/users/me',
+    method: 'put',
+    data,
+  });
+}
 
 // --- Admin API --- (需要管理员权限)
 
-// 获取用户列表
+/**
+ * 获取用户列表
+ * @param params 查询参数
+ * @returns 用户列表
+ */
 export function getUserList(params: any): Promise<any> {
   return request({
-    url: '/admin/users',
+    url: '/api/admin/users',
     method: 'get',
     params,
   });
 }
 
-// 更新用户状态 (Placeholder)
-export function updateUserStatusApi(userId: string | number, status: UserStatus): Promise<any> {
-  console.warn(`API MOCK: updateUserStatusApi(${userId}, ${status}) called.`);
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ data: { success: true } }); // Mock success response
-    }, 300);
+/**
+ * 更新用户状态
+ * @param userId 用户ID
+ * @param status 状态
+ * @returns 更新结果
+ */
+export function updateUserStatus(userId: string | number, status: UserStatus): Promise<any> {
+  return request({
+    url: `/api/admin/users/${userId}/status`,
+    method: 'put',
+    data: { status },
   });
-  // Replace with actual API call:
-  // return request({
-  //   url: `/admin/users/${userId}/status`,
-  //   method: 'patch', // or 'put'
-  //   data: { status },
-  // });
 }
-
-// TODO: 添加其他管理员操作用户的 API, e.g., deleteUser, resetPassword

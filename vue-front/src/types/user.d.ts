@@ -20,11 +20,11 @@ export interface UserInfo {
   phone?: string; // 手机号，可选
   // 可以根据实际需要添加更多字段，例如：
   create_time?: string; // 注册时间
-  // last_login_time?: string;
+  last_login_time?: string; // 最后登录时间
   status: UserStatus; // 账号状态
   // ... 其他与用户账号相关的信息
 }
 
 // 可以根据需要添加其他与用户相关的类型定义，例如：
 // export interface LoginResponse { ... }
-// export interface RegisterPayload { ... } 
+// export interface RegisterPayload { ... }

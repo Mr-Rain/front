@@ -21,14 +21,7 @@
           <el-checkbox v-model="rememberMe">记住登录状态</el-checkbox>
         </el-form-item>
 
-        <!-- 模拟登录角色选择 -->
-        <el-form-item label="模拟角色">
-          <el-radio-group v-model="mockUserType">
-            <el-radio label="student">学生</el-radio>
-            <el-radio label="company">企业</el-radio>
-            <el-radio label="admin">管理员</el-radio>
-          </el-radio-group>
-        </el-form-item>
+
 
         <el-form-item>
           <el-button type="primary" @click="handleLogin" :loading="loading">登录</el-button>
@@ -56,9 +49,6 @@ const loginFormRef = ref<FormInstance>();
 const loading = ref(false);
 const rememberMe = ref(false);
 
-// 模拟用户角色选择
-const mockUserType = ref('student');
-
 const loginForm = reactive({
   username: '',
   password: '',
@@ -81,24 +71,28 @@ const handleLogin = () => {
     if (valid) {
       loading.value = true;
       try {
-        // 将选择的角色保存到localStorage
-        localStorage.setItem('mockUserType', mockUserType.value);
+        // 调用实际的登录API
+        await userStore.login({
+          username: loginForm.username,
+          password: loginForm.password
+        }, rememberMe.value);
 
-        // 设置模拟的token
-        userStore.setToken('mock_token_' + mockUserType.value, rememberMe.value);
+        ElMessage.success('登录成功');
 
-        // 获取用户信息
-        await userStore.getUserInfo();
+        // 根据用户类型跳转到相应页面
+        const userType = userStore.userInfo?.user_type?.toLowerCase();
+        console.log('User type:', userType);
 
-        ElMessage.success('登录成功 (模拟)');
-
-        // 根据角色跳转到相应页面
-        if (mockUserType.value === 'admin') {
+        if (userType === 'admin') {
           router.push('/admin/dashboard');
-        } else if (mockUserType.value === 'company') {
+        } else if (userType === 'company') {
           router.push('/company/dashboard');
-        } else {
+        } else if (userType === 'student') {
           router.push('/student/dashboard');
+        } else {
+          // 默认跳转到首页
+          router.push('/');
+          console.warn('Unknown user type:', userType);
         }
       } catch (error) {
         console.error('Login failed:', error);

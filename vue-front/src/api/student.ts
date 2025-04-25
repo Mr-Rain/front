@@ -1,68 +1,105 @@
 import request from '@/utils/request';
 import type { StudentProfile } from '@/types/student';
 
-// 获取当前登录学生的信息
+/**
+ * 获取当前登录学生的详细信息
+ * @returns 学生详细信息
+ */
 export function getStudentProfile(): Promise<{ data: StudentProfile }> {
-  // return request({
-  //   url: '/api/student/profile',
-  //   method: 'get',
-  // });
-  // ---- Mock Data Start ----
-  console.warn('API MOCK: getStudentProfile is using mock data.');
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const mockProfile: StudentProfile = {
-        id: '1', // 应该与 UserInfo id 一致
-        username: 'mockStudent',
-        user_type: 'student',
-        status: 'active',
-        email: 'student@example.com',
-        phone: '13800138000',
-        avatar: '',
-        student_id: '20230001',
-        major: '计算机科学与技术',
-        grade: '2023',
-        school: '示例大学',
-        education: '本科',
-        skills: ['Vue', 'TypeScript', 'Pinia', 'Node.js'],
-        experience: '曾在示例公司实习三个月，负责前端开发工作。',
-        expected_salary: '10k-15k',
-        expected_location: '上海',
-        bio: '我是一名热爱前端开发的大学生，对新技术充满热情，善于学习和应用新知识。',
-        education_experiences: [
-          {
-            id: 'edu1',
-            school: '示例大学',
-            major: '计算机科学与技术',
-            degree: '本科',
-            start_date: '2020-09',
-            end_date: '2024-07',
-            description: '主修课程：数据结构、算法、计算机网络、操作系统、数据库系统等'
-          }
-        ],
-        work_experiences: [
-          {
-            id: 'work1',
-            company_name: 'ABC科技有限公司',
-            position: '前端开发实习生',
-            start_date: '2023-07',
-            end_date: '2023-09',
-            description: '- 参与公司内部管理系统的前端开发\n- 使用Vue.js框架进行组件开发\n- 与后端团队协作，实现数据展示和交互功能'
-          }
-        ]
-      };
-      resolve({ data: mockProfile });
-    }, 300);
+  // 使用模拟数据，当后端API未实现时使用
+  console.log('API MOCK: getStudentProfile is using mock data.');
+
+  // 模拟学生数据
+  const mockStudentProfile: StudentProfile = {
+    id: 1,
+    username: '黄星豪',
+    user_type: 'student',
+    status: 'active',
+    phone: '13800138000',
+    email: '1051992437@qq.com',
+    student_id: '2020123456',
+    school: '重庆理工大学',
+    major: '计算机科学与技术',
+    grade: '大四',
+    education: '本科',
+    skills: ['JavaScript', 'TypeScript', 'Vue', 'React', 'Node.js'],
+    expected_salary: '10k-15k',
+    expected_location: '重庆',
+    bio: '热爱编程，对Web开发和人工智能有浓厚兴趣',
+    create_time: new Date().toISOString(),
+    last_login_time: new Date().toISOString()
+  };
+
+  // 返回模拟响应
+  return Promise.resolve({
+    data: mockStudentProfile
   });
-  // ---- Mock Data End ----
+
+  // 当后端API实现后，取消注释下面的代码
+  /*
+  return request({
+    url: '/api/students/me',
+    method: 'get',
+  });
+  */
 }
 
-// 更新学生信息
-// TODO: 参数类型可以更精确，例如 Omit<StudentProfile, 'id' | 'username' | 'user_type'>
+/**
+ * 更新学生详细信息
+ * @param data 学生信息
+ * @returns 更新结果
+ */
 export function updateStudentProfile(data: Partial<StudentProfile>) {
+  // 使用模拟数据，当后端API未实现时使用
+  console.log('API MOCK: updateStudentProfile is using mock data.');
+
+  // 返回模拟响应
+  return Promise.resolve({
+    data: {
+      success: true,
+      message: '更新成功'
+    }
+  });
+
+  // 当后端API实现后，取消注释下面的代码
+  /*
   return request({
-    url: '/api/student/profile',
+    url: '/api/students/me',
     method: 'put',
     data,
   });
+  */
+}
+
+/**
+ * 上传学生头像
+ * @param file 头像文件
+ * @returns 上传结果
+ */
+export function uploadStudentAvatar(file: File) {
+  // 使用模拟数据，当后端API未实现时使用
+  console.log('API MOCK: uploadStudentAvatar is using mock data.');
+
+  // 返回模拟响应
+  return Promise.resolve({
+    data: {
+      url: 'https://via.placeholder.com/150',
+      message: '上传成功'
+    }
+  });
+
+  // 当后端API实现后，取消注释下面的代码
+  /*
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return request({
+    url: '/api/files/upload',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  */
 }

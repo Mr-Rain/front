@@ -53,8 +53,12 @@ export function createRouterGuards(router: Router) {
           try {
             // 异步获取用户信息
             if (!hasUserInfo) {
-              await userStore.getUserInfo();
+              // 如果没有用户信息，直接跳转到登录页
+              userStore.resetAuth();
+              next(`/login?redirect=${to.path}`);
+              return;
             }
+
             // 异步获取权限信息 (角色和权限点)
             if (!hasPermissions) {
               await permissionStore.fetchUserPermissions();

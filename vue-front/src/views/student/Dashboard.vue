@@ -30,6 +30,65 @@
 
       <!-- 主要内容区域 -->
       <el-col :xs="24" :sm="24" :md="18" :lg="19">
+        <!-- 最近面试结果卡片 -->
+        <el-card class="box-card interview-results" shadow="hover" style="margin-bottom: 20px;">
+          <template #header>
+            <div class="card-header">
+              <span class="card-title">最近面试结果</span>
+              <el-button type="primary" class="more-button" @click="goToApplications">查看全部</el-button>
+            </div>
+          </template>
+          <div v-if="applicationStore.loadingStudentList" class="loading-placeholder">
+            <el-skeleton :rows="2" animated />
+          </div>
+          <div v-else-if="recentInterviews.length > 0" class="interview-container">
+            <el-row :gutter="20">
+              <el-col v-for="interview in recentInterviews" :key="interview.id" :xs="24" :sm="24" :md="12" :lg="8">
+                <el-card shadow="hover" class="interview-card" :class="{'success-card': interview.status === 'offer', 'pending-card': interview.status === 'interview', 'rejected-card': interview.status === 'rejected'}">
+                  <div class="interview-header">
+                    <el-avatar :size="40" :src="interview.company_logo || ''" class="company-logo">
+                      {{ interview.company_name?.substring(0, 1) || 'C' }}
+                    </el-avatar>
+                    <div class="interview-company">
+                      <h4>{{ interview.company_name || '未知企业' }}</h4>
+                      <p>{{ interview.job_info?.title || '未知职位' }}</p>
+                    </div>
+                    <el-tag :type="getStatusTagType(interview.status)" class="interview-status">
+                      {{ formatStatus(interview.status) }}
+                    </el-tag>
+                  </div>
+                  <div class="interview-content">
+                    <div class="interview-info">
+                      <p v-if="interview.interview_time">
+                        <el-icon><Calendar /></el-icon>
+                        面试时间: {{ formatTimestamp(interview.interview_time) }}
+                      </p>
+                      <p v-if="interview.interview_location">
+                        <el-icon><Location /></el-icon>
+                        面试地点: {{ interview.interview_location }}
+                      </p>
+                      <p v-if="interview.interviewer">
+                        <el-icon><User /></el-icon>
+                        面试官: {{ interview.interviewer }}
+                      </p>
+                    </div>
+                    <div v-if="interview.feedback" class="interview-feedback">
+                      <p class="feedback-title">面试反馈:</p>
+                      <p class="feedback-content">{{ interview.feedback }}</p>
+                    </div>
+                    <div class="interview-actions">
+                      <el-button type="primary" size="small" @click="goToApplicationDetail(interview.id)">
+                        查看详情
+                      </el-button>
+                    </div>
+                  </div>
+                </el-card>
+              </el-col>
+            </el-row>
+          </div>
+          <el-empty v-else description="暂无面试记录"></el-empty>
+        </el-card>
+
         <!-- 申请状态卡片 -->
         <el-card class="box-card application-status" shadow="hover">
           <template #header>
@@ -92,13 +151,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStudentStore } from '@/stores/student';
 import { useApplicationStore } from '@/stores/application';
 import UserAvatar from '@/components/common/UserAvatar.vue';
 import StudentStatistics from '@/components/student/StudentStatistics.vue';
-import { School, OfficeBuilding, Collection, InfoFilled } from '@element-plus/icons-vue';
+import { School, OfficeBuilding, Collection, InfoFilled, Calendar, Location, User } from '@element-plus/icons-vue';
 import type { ApplicationStatus } from '@/types/application';
 
 const router = useRouter();
@@ -108,12 +167,36 @@ const applicationStore = useApplicationStore();
 // Fetch data on component mount
 onMounted(() => {
   studentStore.fetchProfile();
-  applicationStore.fetchStudentApplications({ pageSize: 5, page: 1 }); // Fetch latest 5 applications
+  applicationStore.fetchStudentApplications({ pageSize: 10, page: 1 }); // Fetch latest 10 applications
 });
 
 const goToProfile = () => router.push('/student/profile');
 const goToApplications = () => router.push('/student/applications');
 const goToJobDetail = (jobId: string | number) => router.push(`/jobs/${jobId}`);
+const goToApplicationDetail = (applicationId: string | number) => router.push(`/student/applications/${applicationId}`);
+
+// 获取最近的面试结果
+const recentInterviews = computed(() => {
+  if (!applicationStore.studentApplications || applicationStore.studentApplications.length === 0) {
+    return [];
+  }
+
+  // 筛选出状态为面试中、已录用或未通过的申请
+  return applicationStore.studentApplications
+    .filter(app => ['interview', 'offer', 'rejected'].includes(app.status))
+    .map(app => ({
+      id: app.id,
+      status: app.status,
+      company_name: app.job_info?.company_name,
+      company_logo: 'https://via.placeholder.com/40', // 使用占位图
+      job_info: app.job_info,
+      interview_time: app.interview_time || app.update_time,
+      interview_location: app.interview_type === 'onsite' ? (app.interview_location || '公司总部') : '线上面试',
+      interviewer: app.interview_contact || '招聘负责人',
+      feedback: app.feedback
+    }))
+    .slice(0, 3); // 只显示最近的3条面试结果
+});
 
 // Helper to format timestamp (adapt as needed)
 const formatTimestamp = (isoString: string): string => {
@@ -191,6 +274,108 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
 .box-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--card-hover-shadow);
+}
+
+/* 面试结果卡片样式 */
+.interview-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.interview-card {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  transition: all 0.3s;
+  border-left: 4px solid #909399;
+}
+
+.interview-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.success-card {
+  border-left-color: #67C23A;
+}
+
+.pending-card {
+  border-left-color: #409EFF;
+}
+
+.rejected-card {
+  border-left-color: #F56C6C;
+}
+
+.interview-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.company-logo {
+  margin-right: 12px;
+}
+
+.interview-company {
+  flex: 1;
+}
+
+.interview-company h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.interview-company p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.interview-status {
+  margin-left: auto;
+}
+
+.interview-content {
+  margin-top: 12px;
+}
+
+.interview-info p {
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.interview-info p .el-icon {
+  margin-right: 8px;
+  color: var(--text-secondary);
+}
+
+.interview-feedback {
+  margin-top: 12px;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.feedback-title {
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  font-size: 14px;
+}
+
+.feedback-content {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.interview-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .card-header {

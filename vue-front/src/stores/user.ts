@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import type { UserInfo, UserType, UserStatus } from '@/types/user';
-import { login as loginApi, register as registerApi, getUserInfo as getUserInfoApi, logout as logoutApi, updateUserStatusApi } from '@/api/user';
+import { login as loginApi, register as registerApi, getUserInfo as getUserInfoApi, updateUserStatus as updateUserStatusApi, getUserList } from '@/api/user';
 // import { updateUserStatus as updateUserStatusApi } from '@/api/permission'; // <-- Temporarily commented out: Needs implementation in api/permission.ts
 import { usePermissionStore } from './permission'; // 引入 permission store
 import { ElMessage } from 'element-plus';
@@ -74,11 +74,32 @@ export const useUserStore = defineStore('user', {
     async login(payload: LoginPayload, remember: boolean = false) {
       try {
         const response = await loginApi(payload);
-        // TODO: 根据后端实际返回调整 token 的获取方式
-        const token = response?.data?.token || 'mock_token'; // 假设 token 在 response.data.token
+        // 从响应中获取token和用户信息
+        const data = response?.data || response;
+        const token = data?.token;
+
+        if (!token) {
+          throw new Error('登录失败：未获取到有效的令牌');
+        }
+
         this.setToken(token, remember);
-        // 登录成功后获取用户信息和权限
-        await this.getUserInfo();
+
+        // 直接使用登录接口返回的用户信息
+        const userInfo: UserInfo = {
+          id: data.id,
+          username: data.username,
+          email: data.email,
+          // 将后端返回的大写用户类型转换为小写，以匹配前端期望的格式
+          user_type: data.userType?.toLowerCase() || 'student',
+          avatar: data.avatar,
+          status: data.status,
+          create_time: data.createTime,
+          last_login_time: data.lastLoginTime
+        };
+
+        this.setUserInfo(userInfo);
+
+        // 获取权限
         const permissionStore = usePermissionStore();
         await permissionStore.fetchUserPermissions();
 
@@ -126,8 +147,8 @@ export const useUserStore = defineStore('user', {
     // 登出
     async logout() {
       try {
-        // 尝试调用后端登出接口 (即使失败，前端也应清除状态)
-        await logoutApi();
+        // 后端可能没有实现登出接口，暂时注释掉
+        // await logoutApi();
       } catch (error) {
         console.error('Logout API call failed:', error);
       } finally {
@@ -161,8 +182,8 @@ export const useUserStore = defineStore('user', {
         this.loadingList = true;
         try {
             // 从API获取用户列表数据
-            const response = await request.get('/admin/users', { params });
-            this.userList = response.data.list;
+            const response = await getUserList(params);
+            this.userList = response.data.records;
             this.userTotal = response.data.total;
         } catch (error) {
             console.error('获取用户列表失败:', error);
@@ -177,11 +198,8 @@ export const useUserStore = defineStore('user', {
     // 更新用户状态
     async updateUserStatus(id: string | number, status: UserStatus) {
         try {
-            // 实际API调用
-            // await updateUserStatusApi(id, status);
-
-            // 模拟API调用
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // 调用实际API
+            await updateUserStatusApi(id, status);
 
             // 更新本地数据
             const index = this.userList.findIndex(user => user.id === id);
@@ -201,24 +219,9 @@ export const useUserStore = defineStore('user', {
     // 获取用户详情
     async getUserDetail(id: string | number) {
         try {
-            // 实际API调用
-            // const response = await request.get(`/admin/users/${id}`);
-            // return response.data;
-
-            // 模拟API调用
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // 从列表中获取用户信息
-            const user = this.userList.find(user => user.id === id);
-            if (!user) {
-                throw new Error('用户不存在');
-            }
-
-            // 模拟返回更详细的用户信息
-            return {
-                ...user,
-                create_time: user.create_time || new Date().toISOString()
-            };
+            // 调用实际API
+            const response = await request.get(`/api/admin/users/${id}`);
+            return response.data;
         } catch (error) {
             console.error(`Failed to get user detail for id ${id}:`, error);
             ElMessage.error('获取用户详情失败');
@@ -229,11 +232,8 @@ export const useUserStore = defineStore('user', {
     // 批量更新用户状态
     async batchUpdateUserStatus(ids: (string | number)[], status: UserStatus) {
         try {
-            // 实际API调用
-            // await request.post('/admin/users/batch-update-status', { ids, status });
-
-            // 模拟API调用
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // 调用实际API
+            await request.post('/api/admin/users/batch-update-status', { ids, status });
 
             // 更新本地数据
             for (const id of ids) {

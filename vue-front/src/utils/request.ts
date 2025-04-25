@@ -2,12 +2,18 @@ import axios from 'axios';
 import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { useUserStore } from '@/stores/user'; // 用于获取 token
 import { ElMessage } from 'element-plus'; // 用于错误提示
+import errorHandler from '@/utils/errorHandler'; // 统一错误处理
+import { ApiErrorCode, ErrorType, createApiError } from '@/types/error'; // 错误类型定义
+import { setupCacheInterceptor } from '@/utils/cacheInterceptor'; // API缓存拦截器
 
 // 创建 axios 实例
 const service: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/', // API基础URL，从环境变量读取或默认为 '/'
   timeout: 10000, // 请求超时时间
 });
+
+// 设置缓存拦截器
+setupCacheInterceptor(service);
 
 // 请求拦截器
 service.interceptors.request.use(
@@ -17,14 +23,22 @@ service.interceptors.request.use(
 
     // 如果存在 token，则添加到请求头
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      // 确保token是一个有效的字符串
+      const tokenStr = String(token).trim();
+      if (tokenStr) {
+        config.headers.Authorization = `Bearer ${tokenStr}`;
+      }
     }
     return config;
   },
   (error) => {
-    // 处理请求错误
-    console.error('Request Error:', error); // for debug
-    return Promise.reject(error);
+    // 使用统一错误处理
+    const apiError = errorHandler.handleApiError(error, {
+      showNotification: true,
+      rethrow: false
+    });
+
+    return Promise.reject(apiError);
   }
 );
 
@@ -42,67 +56,48 @@ service.interceptors.response.use(
     }
 
     // 根据后端接口规范调整响应处理逻辑
-    if (res.code && res.code !== 200) {
-      ElMessage({
-        message: res.message || 'Error',
-        type: 'error',
-        duration: 5 * 1000,
+    if (res.code && res.code !== ApiErrorCode.SUCCESS) {
+      // 创建API错误对象
+      const errorType = res.code === ApiErrorCode.UNAUTHORIZED || res.code === ApiErrorCode.FORBIDDEN
+        ? ErrorType.AUTH
+        : res.code >= 1000 && res.code < 2000
+          ? ErrorType.BUSINESS
+          : ErrorType.SERVER;
+
+      const apiError = createApiError(
+        res.code,
+        res.message || 'Error',
+        errorType,
+        {
+          url: response.config.url,
+          method: response.config.method,
+          params: response.config.params,
+          data: response.config.data,
+          status: response.status,
+          response: res
+        }
+      );
+
+      // 使用统一错误处理
+      errorHandler.handleApiError(apiError, {
+        showNotification: true,
+        rethrow: false
       });
 
-      // 处理特定的错误码，如 token 失效
-      if (res.code === 401 || res.code === 403) {
-        // 处理 token 失效或无权限的情况
-        const userStore = useUserStore();
-        userStore.resetAuth();
-        // 将当前路径作为重定向参数，登录后可以跳回
-        window.location.href = `/login?redirect=${window.location.pathname}`;
-      }
-      return Promise.reject(new Error(res.message || 'Error'));
+      return Promise.reject(apiError);
     }
 
     // 如果响应正常，直接返回响应数据
     return res;
   },
   (error) => {
-    console.error('Response Error:', error); // for debug
+    // 使用统一错误处理
+    const apiError = errorHandler.handleApiError(error, {
+      showNotification: true,
+      rethrow: false
+    });
 
-    // 处理请求超时
-    if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
-      ElMessage({
-        message: '请求超时，请检查网络连接',
-        type: 'error',
-        duration: 5 * 1000,
-      });
-      return Promise.reject(error);
-    }
-
-    // 处理服务器错误
-    if (error.response) {
-      const { status } = error.response;
-
-      // 处理401和403错误（未授权或token失效）
-      if (status === 401 || status === 403) {
-        const userStore = useUserStore();
-        userStore.resetAuth();
-        window.location.href = `/login?redirect=${window.location.pathname}`;
-      }
-
-      // 显示错误消息
-      ElMessage({
-        message: error.response.data?.message || `请求失败，状态码: ${status}`,
-        type: 'error',
-        duration: 5 * 1000,
-      });
-    } else {
-      // 网络错误
-      ElMessage({
-        message: '网络错误，请检查您的网络连接',
-        type: 'error',
-        duration: 5 * 1000,
-      });
-    }
-
-    return Promise.reject(error);
+    return Promise.reject(apiError);
   }
 );
 

@@ -24,8 +24,8 @@
         </el-form-item>
         <el-form-item label="用户类型" prop="userType">
           <el-radio-group v-model="registerForm.userType">
-            <el-radio label="student">学生</el-radio>
-            <el-radio label="company">企业</el-radio>
+            <el-radio label="STUDENT">学生</el-radio>
+            <el-radio label="COMPANY">企业</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item>
@@ -56,7 +56,7 @@ const registerForm = reactive({
   email: '',
   password: '',
   confirmPassword: '',
-  userType: 'student' as UserType, // Default to student
+  userType: 'STUDENT' as UserType, // Default to student
 });
 
 // Custom validator for password confirmation

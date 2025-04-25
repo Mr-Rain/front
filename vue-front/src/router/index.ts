@@ -315,6 +315,30 @@ const router = createRouter({
           name: 'component-demo',
           component: createLazyComponent('common/ComponentDemo'),
           meta: { title: '组件演示' }
+        },
+        {
+          path: 'image-optimization',
+          name: 'image-optimization-demo',
+          component: createLazyComponent('common/ImageOptimizationDemo'),
+          meta: { title: '图片资源优化示例' }
+        },
+        {
+          path: 'error-handling',
+          name: 'error-handling-demo',
+          component: createLazyComponent('common/ErrorHandlingDemo'),
+          meta: { title: 'API错误处理示例' }
+        },
+        {
+          path: 'api-cache',
+          name: 'api-cache-demo',
+          component: createLazyComponent('common/ApiCacheDemo'),
+          meta: { title: 'API数据缓存示例' }
+        },
+        {
+          path: 'static-cache',
+          name: 'static-cache-demo',
+          component: createLazyComponent('common/StaticCacheDemo'),
+          meta: { title: '静态资源缓存示例' }
         }
       ]
     },
