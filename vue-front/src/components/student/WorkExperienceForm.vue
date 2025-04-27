@@ -14,7 +14,7 @@
 
     <div v-for="(work, index) in modelValue" :key="index" class="experience-item">
       <div class="experience-header">
-        <h4>{{ work.company_name || '新工作经历' }} {{ work.position ? `(${work.position})` : '' }}</h4>
+        <h4>{{ work.companyName || '新工作经历' }} {{ work.position ? `(${work.position})` : '' }}</h4>
         <el-button
           v-if="editable"
           type="danger"
@@ -31,7 +31,7 @@
         <el-row :gutter="20">
           <el-col :xs="24" :sm="12">
             <el-form-item label="公司名称">
-              <el-input v-model="work.company_name" placeholder="请输入公司名称"></el-input>
+              <el-input v-model="work.companyName" placeholder="请输入公司名称"></el-input>
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="12">
@@ -77,13 +77,13 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import type { WorkExperience } from '@/types/student';
+import type { WorkExperienceCamel } from '@/types/work-experience-camel';
 import { Plus, Delete } from '@element-plus/icons-vue';
 import { marked } from 'marked'; // 需要安装: pnpm add marked
 
 const props = defineProps({
   modelValue: {
-    type: Array as () => WorkExperience[],
+    type: Array as () => WorkExperienceCamel[],
     required: true
   },
   editable: {
@@ -99,16 +99,16 @@ const dateRange = ref<[string, string][]>([]);
 
 // 初始化日期范围
 watch(() => props.modelValue, (newValue) => {
-  dateRange.value = newValue.map(work => [work.start_date, work.end_date] as [string, string]);
+  dateRange.value = newValue.map(work => [work.startDate, work.endDate] as [string, string]);
 }, { immediate: true, deep: true });
 
 // 添加新的工作经历
 const addWorkExperience = () => {
-  const newWorkExperience: WorkExperience = {
-    company_name: '',
+  const newWorkExperience: WorkExperienceCamel = {
+    companyName: '',
     position: '',
-    start_date: '',
-    end_date: '',
+    startDate: '',
+    endDate: '',
     description: ''
   };
 
@@ -135,8 +135,8 @@ const updateDateRange = (index: number) => {
     const updatedValue = [...props.modelValue];
     updatedValue[index] = {
       ...updatedValue[index],
-      start_date: dateRange.value[index][0],
-      end_date: dateRange.value[index][1]
+      startDate: dateRange.value[index][0],
+      endDate: dateRange.value[index][1]
     };
     emit('update:modelValue', updatedValue);
   }

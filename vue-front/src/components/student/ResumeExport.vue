@@ -124,17 +124,17 @@ const mergedResumeData = computed(() => {
       name: studentStore.profile.username || '',
       phone: studentStore.profile.phone || '',
       email: studentStore.profile.email || '',
-      location: studentStore.profile.expected_location || '',
+      location: studentStore.profile.expectedLocation || '',
       school: studentStore.profile.school || '',
       major: studentStore.profile.major || '',
       education: studentStore.profile.education || '',
       grade: studentStore.profile.grade || '',
       bio: studentStore.profile.bio || '',
       skills: studentStore.profile.skills || [],
-      education_experiences: studentStore.profile.education_experiences || [],
-      work_experiences: studentStore.profile.work_experiences || [],
-      expected_salary: studentStore.profile.expected_salary || '',
-      expected_location: studentStore.profile.expected_location || ''
+      education_experiences: studentStore.profile.educationExperiences || [],
+      work_experiences: studentStore.profile.workExperiences || [],
+      expected_salary: studentStore.profile.expectedSalary || '',
+      expected_location: studentStore.profile.expectedLocation || ''
     };
   } else {
     return props.resumeData;

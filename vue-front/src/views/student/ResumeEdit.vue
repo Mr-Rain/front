@@ -372,7 +372,7 @@ onMounted(async () => {
   if (!isNewResume.value) {
     loading.value = true;
     try {
-      await resumeStore.fetchResumeDetail(resumeId);
+      await resumeStore.fetchResumeDetail(resumeId.toString());
       if (resumeStore.currentResume) {
         // 复制数据到表单
         Object.assign(resumeForm, resumeStore.currentResume);
@@ -473,7 +473,7 @@ const handleSave = () => {
           ElMessage.success('简历创建成功');
         } else {
           // 更新现有简历
-          await resumeStore.updateResume(resumeId, resumeForm);
+          await resumeStore.updateResume(resumeId.toString(), resumeForm);
           ElMessage.success('简历更新成功');
         }
         // 返回简历列表页

@@ -70,17 +70,94 @@ const handleFileChange = (event: Event) => {
     return;
   }
 
-  // 创建预览URL
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const result = e.target?.result as string;
-    emit('update:modelValue', result);
-    emit('upload', file); // 触发上传事件，传递文件对象
-  };
-  reader.readAsDataURL(file);
+  // 压缩图片
+  compressImage(file).then(compressedDataUrl => {
+    // 更新模型值
+    emit('update:modelValue', compressedDataUrl);
+
+    // 从DataURL创建Blob对象
+    const blob = dataURLtoBlob(compressedDataUrl);
+    const compressedFile = new File([blob], file.name, { type: file.type });
+
+    // 触发上传事件，传递压缩后的文件对象
+    emit('upload', compressedFile);
+  }).catch(error => {
+    console.error('图片压缩失败:', error);
+    ElMessage.error('图片处理失败，请重试');
+  });
 
   // 重置文件输入，以便可以再次选择同一文件
   resetFileInput();
+};
+
+// 压缩图片
+const compressImage = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        // 计算压缩后的尺寸，最大宽高为200px
+        let width = img.width;
+        let height = img.height;
+        const maxSize = 200;
+
+        if (width > height && width > maxSize) {
+          height = Math.round((height * maxSize) / width);
+          width = maxSize;
+        } else if (height > maxSize) {
+          width = Math.round((width * maxSize) / height);
+          height = maxSize;
+        }
+
+        // 创建Canvas并绘制压缩后的图片
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        if (!ctx) {
+          reject(new Error('无法创建Canvas上下文'));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // 转换为DataURL，使用较低的质量
+        const quality = 0.7; // 70%质量，可以根据需要调整
+        const dataUrl = canvas.toDataURL(file.type, quality);
+
+        resolve(dataUrl);
+      };
+
+      img.onerror = () => {
+        reject(new Error('图片加载失败'));
+      };
+
+      img.src = e.target?.result as string;
+    };
+
+    reader.onerror = () => {
+      reject(new Error('文件读取失败'));
+    };
+
+    reader.readAsDataURL(file);
+  });
+};
+
+// 将DataURL转换为Blob对象
+const dataURLtoBlob = (dataURL: string): Blob => {
+  const arr = dataURL.split(',');
+  const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/png';
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+
+  return new Blob([u8arr], { type: mime });
 };
 
 // 重置文件输入

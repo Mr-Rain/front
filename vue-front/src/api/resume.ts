@@ -1,20 +1,5 @@
 import request from '@/utils/request';
-import type { ResumeInfo } from '@/types/resume';
-
-/**
- * 创建简历请求参数类型
- */
-export interface CreateResumePayload {
-  title: string;
-  name?: string;
-  phone?: string;
-  email?: string;
-  education_experiences?: any[];
-  work_experiences?: any[];
-  project_experiences?: any[];
-  skills_description?: string;
-  self_evaluation?: string;
-}
+import type { ResumeInfo, CreateResumePayload } from '@/types/resume';
 
 /**
  * 获取学生的所有简历列表

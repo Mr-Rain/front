@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import type { ResumeInfo } from '@/types/resume';
+import type { ResumeInfo, CreateResumePayload } from '@/types/resume';
 import {
   getResumeList,
   getResumeDetail,
@@ -62,7 +62,20 @@ export const useResumeStore = defineStore('resume', {
     // 创建在线简历
     async createResume(data: Partial<ResumeInfo>) {
       try {
-        await createResume(data as unknown as CreateResumePayload);
+        // 直接使用CreateResumePayload类型，不需要类型转换
+        const payload: CreateResumePayload = {
+          title: data.title || '',
+          name: data.name,
+          phone: data.phone,
+          email: data.email,
+          // 支持驼峰命名和下划线命名
+          educationExperiences: data.educationExperiences || data.education_experiences,
+          workExperiences: data.workExperiences || data.work_experiences,
+          projectExperiences: data.projectExperiences || data.project_experiences,
+          skillsDescription: data.skillsDescription || data.skills_description,
+          selfEvaluation: data.selfEvaluation || data.self_evaluation
+        };
+        await createResume(payload);
         await this.fetchResumeList(); // Refresh list
         ElMessage.success('创建成功');
       } catch (error) {

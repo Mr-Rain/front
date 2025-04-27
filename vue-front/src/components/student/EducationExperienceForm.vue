@@ -85,12 +85,12 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import type { EducationExperience } from '@/types/student';
+import type { EducationExperienceCamel } from '@/types/education-experience-camel';
 import { Plus, Delete } from '@element-plus/icons-vue';
 
 const props = defineProps({
   modelValue: {
-    type: Array as () => EducationExperience[],
+    type: Array as () => EducationExperienceCamel[],
     required: true
   },
   editable: {
@@ -106,17 +106,17 @@ const dateRange = ref<[string, string][]>([]);
 
 // 初始化日期范围
 watch(() => props.modelValue, (newValue) => {
-  dateRange.value = newValue.map(edu => [edu.start_date, edu.end_date] as [string, string]);
+  dateRange.value = newValue.map(edu => [edu.startDate, edu.endDate] as [string, string]);
 }, { immediate: true, deep: true });
 
 // 添加新的教育经历
 const addEducation = () => {
-  const newEducation: EducationExperience = {
+  const newEducation: EducationExperienceCamel = {
     school: '',
     major: '',
     degree: '',
-    start_date: '',
-    end_date: '',
+    startDate: '',
+    endDate: '',
     description: ''
   };
 
@@ -143,8 +143,8 @@ const updateDateRange = (index: number) => {
     const updatedValue = [...props.modelValue];
     updatedValue[index] = {
       ...updatedValue[index],
-      start_date: dateRange.value[index][0],
-      end_date: dateRange.value[index][1]
+      startDate: dateRange.value[index][0],
+      endDate: dateRange.value[index][1]
     };
     emit('update:modelValue', updatedValue);
   }

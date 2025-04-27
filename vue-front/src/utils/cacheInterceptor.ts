@@ -2,7 +2,7 @@
  * Axios缓存拦截器
  * 为Axios请求添加缓存功能
  */
-import axios, { isCancel, type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import apiCache from './apiCache';
 import type { CacheOptions } from './apiCache';
 
@@ -64,67 +64,17 @@ const getCacheOptions = (config: AxiosRequestConfig): CacheOptions => {
 
 /**
  * 添加缓存拦截器
- * @param axios Axios实例
+ * @param axiosInstance Axios实例
  */
-export const setupCacheInterceptor = (axios: AxiosInstance): void => {
-  // 请求拦截器
-  axios.interceptors.request.use(
-    async (config) => {
-      // 如果请求不可缓存，直接发送请求
-      if (!isCacheable(config)) {
-        return config;
-      }
-
-      // 获取缓存选项
-      const cacheOptions = getCacheOptions(config);
-
-      // 如果强制刷新，直接发送请求
-      if (cacheOptions.forceRefresh) {
-        return config;
-      }
-
-      // 生成缓存键
-      const cacheKey = generateCacheKey(config);
-
-      // 尝试从缓存获取数据
-      const cachedData = apiCache['storage'].get(cacheKey);
-
-      // 如果缓存存在
-      if (cachedData !== undefined) {
-        // 如果需要在后台刷新缓存
-        if (cacheOptions.backgroundRefresh) {
-          // 标记为后台刷新，但仍然发送请求
-          config.headers = config.headers || {};
-          config.headers['X-Background-Refresh'] = 'true';
-          return config;
-        }
-
-        try {
-          // 创建一个取消令牌
-          const { CancelToken } = axios;
-          const source = CancelToken.source();
-
-          // 取消请求，使用缓存数据
-          config.cancelToken = source.token;
-          source.cancel(JSON.stringify({
-            type: 'CACHE_HIT',
-            cacheKey,
-            data: cachedData
-          }));
-        } catch (error) {
-          console.error('Error in cache interceptor:', error);
-          // 如果出错，继续发送请求
-          return config;
-        }
-      }
-
-      return config;
-    },
+export const setupCacheInterceptor = (axiosInstance: AxiosInstance): void => {
+  // 请求拦截器 - 不做任何处理，直接发送请求
+  axiosInstance.interceptors.request.use(
+    (config) => config,
     (error) => Promise.reject(error)
   );
 
   // 响应拦截器
-  axios.interceptors.response.use(
+  axiosInstance.interceptors.response.use(
     (response: AxiosResponse) => {
       // 如果请求不可缓存，直接返回响应
       if (!isCacheable(response.config)) {
@@ -137,11 +87,19 @@ export const setupCacheInterceptor = (axios: AxiosInstance): void => {
       // 生成缓存键
       const cacheKey = generateCacheKey(response.config);
 
-      // 如果是后台刷新
-      if (response.config.headers?.['X-Background-Refresh'] === 'true') {
-        // 更新缓存但不影响原始响应
-        apiCache['storage'].set(cacheKey, response.data, cacheOptions);
-        return response;
+      // 尝试从缓存获取数据
+      const cachedData = apiCache['storage'].get(cacheKey);
+
+      // 如果缓存存在且不是强制刷新
+      if (cachedData !== undefined && !cacheOptions.forceRefresh) {
+        console.log('Using cached data for:', response.config.url);
+        return {
+          ...response,
+          data: cachedData,
+          status: 200,
+          statusText: 'OK (cached)',
+          cached: true
+        };
       }
 
       // 缓存响应数据
@@ -150,27 +108,6 @@ export const setupCacheInterceptor = (axios: AxiosInstance): void => {
       return response;
     },
     (error) => {
-      // 如果是缓存命中导致的取消
-      if (isCancel(error) && error.message) {
-        try {
-          const { type, data } = JSON.parse(error.message);
-
-          if (type === 'CACHE_HIT') {
-            // 返回缓存数据
-            return Promise.resolve({
-              status: 200,
-              statusText: 'OK (cached)',
-              headers: {},
-              config: error.config,
-              data,
-              cached: true
-            });
-          }
-        } catch (e) {
-          // 解析错误，继续抛出原始错误
-        }
-      }
-
       return Promise.reject(error);
     }
   );

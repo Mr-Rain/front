@@ -144,7 +144,7 @@ const resumeId = route.params.id;
 onMounted(async () => {
   if (resumeId) {
     try {
-      await resumeStore.fetchResumeDetail(resumeId);
+      await resumeStore.fetchResumeDetail(resumeId.toString());
       if (!resumeStore.currentResume) {
         ElMessage.error('找不到该简历');
         goBack();

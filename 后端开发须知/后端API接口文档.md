@@ -652,21 +652,21 @@
       "phone": "13800138000",
       "email": "zhangsan@example.com",
       "avatar": "url_to_avatar",
-      "skillsDescription": "熟练掌握 Java, Spring Boot, ...",
-      "selfEvaluation": "个人评价...",
-      "fileUrl": "url_to_resume_file",
-      "fileName": "张三的简历.pdf",
-      "uploadTime": "2023-12-21T09:00:00Z",
-      "createTime": "2023-12-21T10:00:00Z",
-      "updateTime": "2023-12-22T15:30:00Z",
-      "education": [
-        { "id": 1, "resumeId": 1, "school": "...", ... }
+      "skillsDescription": "熟练掌握 Java, Spring Boot, ...", // 驼峰
+      "selfEvaluation": "个人评价...", // 驼峰
+      "fileUrl": "url_to_resume_file", // 驼峰
+      "fileName": "张三的简历.pdf", // 驼峰
+      "uploadTime": "2023-12-21T09:00:00Z", // 驼峰
+      "createTime": "2023-12-21T10:00:00Z", // 驼峰
+      "updateTime": "2023-12-22T15:30:00Z", // 驼峰
+      "educationList": [ // 驼峰
+        { "id": 1, "resumeId": 1, "school": "...", "major": "...", "degree": "...", "startDate": "YYYY-MM", "endDate": "YYYY-MM", "description": "..." } // 内部属性也驼峰
       ],
-      "work": [
-        { "id": 1, "resumeId": 1, "companyName": "...", ... }
+      "workList": [ // 驼峰
+        { "id": 1, "resumeId": 1, "companyName": "...", "position": "...", "startDate": "YYYY-MM", "endDate": "YYYY-MM", "description": "..." } // 内部属性也驼峰
       ],
-      "project": [
-        { "id": 1, "resumeId": 1, "projectName": "...", ... }
+      "projectList": [ // 驼峰
+        { "id": 1, "resumeId": 1, "projectName": "...", "role": "...", "startDate": "YYYY-MM", "endDate": "YYYY-MM", "description": "...", "projectLink": "..." } // 内部属性也驼峰
       ]
     }
   }
@@ -682,7 +682,28 @@
 - **Method**: `POST` / `PUT`
 - **描述**: 创建或更新在线填写的简历信息。
 - **认证**: 需要 Token，且用户类型为学生
-- **请求体 (Request Body)**: (包含简历所有字段，教育、工作、项目经历为数组)
+- **请求体 (Request Body)**: (包含简历所有字段，教育、工作、项目经历为数组，使用驼峰命名)
+  ```json
+  {
+    "title": "string (必填)",
+    "name": "string (可选)",
+    "phone": "string (可选)",
+    "email": "string (可选)",
+    "avatar": "string (可选)",
+    "skillsDescription": "string (可选)", // 驼峰
+    "selfEvaluation": "string (可选)", // 驼峰
+    "isDefault": "boolean (可选)", // 驼峰
+    "educationList": [ // 驼峰
+      { "school": "...", "major": "...", "degree": "...", "startDate": "YYYY-MM", "endDate": "YYYY-MM", "description": "..." } // 内部属性也驼峰
+    ],
+    "workList": [ // 驼峰
+      { "companyName": "...", "position": "...", "startDate": "YYYY-MM", "endDate": "YYYY-MM", "description": "..." } // 内部属性也驼峰
+    ],
+    "projectList": [ // 驼峰
+      { "projectName": "...", "role": "...", "startDate": "YYYY-MM", "endDate": "YYYY-MM", "description": "...", "projectLink": "..." } // 内部属性也驼峰
+    ]
+  }
+  ```
 - **响应 (Response - 成功 - 200)**:
   ```json
   {
@@ -806,27 +827,6 @@
       "size": 10,
       "records": [
         {
-          "id": 1,
-          "jobId": 1,
-          "jobTitle": "Java 开发工程师",
-          "companyId": 2,
-          "companyName": "某某科技",
-          "companyLogo": "url_to_logo",
-          "resumeId": 1,
-          "resumeTitle": "我的默认简历",
-          "status": "pending",
-          "applyTime": "2023-12-25T12:00:00Z",
-          "updateTime": null
-        }
-        // ... 更多申请记录
-      ]
-    }
-  }
-  ```
-
-### 7.3 学生获取申请详情
-
-- **Path**: `/api/applications/{applicationId}`
 - **Method**: `GET`
 - **描述**: 获取指定申请记录的详细信息。
 - **认证**: 需要 Token，且用户拥有该申请

@@ -1,11 +1,11 @@
 import request from '@/utils/request';
-import type { StudentProfile } from '@/types/student';
+import type { StudentProfileCamel } from '@/types/student-camel';
 
 /**
  * 获取当前登录学生的详细信息
  * @returns 学生详细信息
  */
-export function getStudentProfile(): Promise<{ data: StudentProfile }> {
+export function getStudentProfile(): Promise<{ data: StudentProfileCamel }> {
   // // 使用模拟数据，当后端API未实现时使用
   // console.log('API MOCK: getStudentProfile is using mock data.');
   //
@@ -36,12 +36,10 @@ export function getStudentProfile(): Promise<{ data: StudentProfile }> {
   // });
 
   // 当后端API实现后，取消注释下面的代码
-  // /*
   return request({
     url: '/api/students/me',
     method: 'get',
   });
-  // */
 }
 
 /**
@@ -49,26 +47,43 @@ export function getStudentProfile(): Promise<{ data: StudentProfile }> {
  * @param data 学生信息
  * @returns 更新结果
  */
-export function updateStudentProfile(data: Partial<StudentProfile>) {
-  // // 使用模拟数据，当后端API未实现时使用
-  // console.log('API MOCK: updateStudentProfile is using mock data.');
-  //
-  // // 返回模拟响应
-  // return Promise.resolve({
-  //   data: {
-  //     success: true,
-  //     message: '更新成功'
-  //   }
-  // });
+export function updateStudentProfile(data: Partial<StudentProfileCamel> | any) {
+  console.log('API: 正在更新学生档案，数据:', data);
 
-  // 当后端API实现后，取消注释下面的代码
-  // /*
+  // 直接使用驼峰命名字段，与后端保持一致
+  const completeData = {
+    // 确保这些字段存在，如果不存在则使用默认值
+    studentNumber: data.studentNumber || '', // 学号字段
+    realName: data.realName || '未填写',
+    gender: data.gender || '保密',
+    age: data.age || 20,
+    phone: data.phone || '',
+    school: data.school || '未填写',
+    major: data.major || '未填写',
+    education: data.education || '本科',
+    graduationYear: data.graduationYear || new Date().getFullYear() + 1,
+    skills: data.skills || ['暂无技能'],
+    introduction: data.introduction || '暂无介绍',
+    avatar: data.avatar || '',
+    // 添加期望薪资和期望工作地点字段
+    expectedSalary: data.expectedSalary || '面议',
+    expectedLocation: data.expectedLocation || '全国'
+  };
+
+  console.log('API: 完整的更新数据:', completeData);
+
+  // 调用后端API
   return request({
     url: '/api/students/me',
     method: 'put',
-    data,
+    data: completeData,
+  }).then(response => {
+    console.log('API: 更新学生档案响应:', response);
+    return response;
+  }).catch(error => {
+    console.error('API: 更新学生档案错误:', error);
+    throw error;
   });
-  // */
 }
 
 /**
@@ -89,7 +104,6 @@ export function uploadStudentAvatar(file: File) {
   // });
 
   // 当后端API实现后，取消注释下面的代码
-  // /*
   const formData = new FormData();
   formData.append('file', file);
 
@@ -101,5 +115,4 @@ export function uploadStudentAvatar(file: File) {
       'Content-Type': 'multipart/form-data',
     },
   });
-  // */
 }
