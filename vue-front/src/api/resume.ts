@@ -1,14 +1,19 @@
 import request from '@/utils/request';
 import type { ResumeInfo, CreateResumePayload } from '@/types/resume';
+import { clearCacheByUrlPrefix } from '@/utils/cacheInterceptor';
 
 /**
  * 获取学生的所有简历列表
+ * @param forceRefresh 是否强制刷新缓存
  * @returns 简历列表
  */
-export function getResumeList(): Promise<{ data: ResumeInfo[] }> {
+export function getResumeList(forceRefresh = false): Promise<{ data: ResumeInfo[] }> {
   return request({
-    url: '/api/resumes',
+    url: '/api/resumes/me',
     method: 'get',
+    cache: {
+      forceRefresh: forceRefresh
+    }
   });
 }
 
@@ -34,6 +39,9 @@ export function createResume(data: CreateResumePayload) {
     url: '/api/resumes',
     method: 'post',
     data,
+  }).then(response => {
+    clearCacheByUrlPrefix('/api/resumes/me');
+    return response;
   });
 }
 
@@ -48,6 +56,10 @@ export function updateResume(id: string | number, data: Partial<CreateResumePayl
     url: `/api/resumes/${id}`,
     method: 'put',
     data,
+  }).then(response => {
+    clearCacheByUrlPrefix('/api/resumes/me');
+    clearCacheByUrlPrefix(`/api/resumes/${id}`);
+    return response;
   });
 }
 
@@ -60,6 +72,10 @@ export function deleteResume(id: string | number) {
   return request({
     url: `/api/resumes/${id}`,
     method: 'delete',
+  }).then(response => {
+    clearCacheByUrlPrefix('/api/resumes/me');
+    clearCacheByUrlPrefix(`/api/resumes/${id}`);
+    return response;
   });
 }
 
@@ -72,6 +88,9 @@ export function setDefaultResume(id: string | number) {
   return request({
     url: `/api/resumes/${id}/default`,
     method: 'post',
+  }).then(response => {
+    clearCacheByUrlPrefix('/api/resumes/me');
+    return response;
   });
 }
 
@@ -95,6 +114,9 @@ export function uploadResumeFile(file: File, title?: string) {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
+  }).then(response => {
+    clearCacheByUrlPrefix('/api/resumes/me');
+    return response;
   });
 }
 

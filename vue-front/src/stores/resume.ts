@@ -30,10 +30,10 @@ export const useResumeStore = defineStore('resume', {
 
   actions: {
     // 获取简历列表
-    async fetchResumeList() {
+    async fetchResumeList(force = true) {
       this.loadingList = true;
       try {
-        const response = await getResumeList();
+        const response = await getResumeList(force);
         this.resumeList = response.data;
       } catch (error) {
         console.error('Failed to fetch resume list:', error);
@@ -60,15 +60,17 @@ export const useResumeStore = defineStore('resume', {
     },
 
     // 创建在线简历
-    async createResume(data: Partial<ResumeInfo>) {
+    async createResume(data: CreateResumePayload) {
       try {
         // 直接使用CreateResumePayload类型，不需要类型转换
+        // 确保 payload 构建逻辑与 CreateResumePayload 定义一致
+        // （这里的 || 逻辑是为了兼容调用方可能传入任一种命名，保留它）
         const payload: CreateResumePayload = {
           title: data.title || '',
           name: data.name,
           phone: data.phone,
           email: data.email,
-          // 支持驼峰命名和下划线命名
+          // 支持驼峰命名和下划线命名 (现在 data 是 CreateResumePayload，包含两种可选属性)
           educationExperiences: data.educationExperiences || data.education_experiences,
           workExperiences: data.workExperiences || data.work_experiences,
           projectExperiences: data.projectExperiences || data.project_experiences,

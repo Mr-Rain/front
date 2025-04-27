@@ -9,8 +9,8 @@ export interface EducationExperience {
   school: string;
   major: string;
   degree: string; // 学位 (例如: 学士, 硕士)
-  start_date: string; // YYYY-MM
-  end_date: string; // YYYY-MM 或 '至今'
+  startDate: string; // YYYY-MM (驼峰)
+  endDate: string; // YYYY-MM 或 '至今' (驼峰)
   description?: string; // 在校经历描述
 }
 
@@ -19,10 +19,10 @@ export interface EducationExperience {
  */
 export interface WorkExperience {
   id?: string | number;
-  company_name: string;
+  companyName: string; // (驼峰)
   position: string; // 职位
-  start_date: string; // YYYY-MM
-  end_date: string; // YYYY-MM 或 '至今'
+  startDate: string; // YYYY-MM (驼峰)
+  endDate: string; // YYYY-MM 或 '至今' (驼峰)
   description: string; // 工作内容描述 (Markdown格式)
 }
 
@@ -31,12 +31,12 @@ export interface WorkExperience {
  */
 export interface ProjectExperience {
   id?: string | number;
-  project_name: string;
+  projectName: string; // (驼峰)
   role: string; // 担任角色
-  start_date: string; // YYYY-MM
-  end_date: string; // YYYY-MM 或 '至今'
+  startDate: string; // YYYY-MM (驼峰)
+  endDate: string; // YYYY-MM 或 '至今' (驼峰)
   description: string; // 项目描述 (Markdown格式)
-  project_link?: string; // 项目链接 (可选)
+  projectLink?: string; // 项目链接 (可选, 驼峰)
 }
 
 /**
@@ -44,38 +44,35 @@ export interface ProjectExperience {
  */
 export interface ResumeInfo {
   id: string | number;
-  student_id?: string | number; // 关联的学生ID
   studentId?: string | number; // 关联的学生ID (驼峰命名)
   title: string; // 简历标题 (例如: 张三-前端开发工程师简历)
-  is_default?: boolean; // 是否为默认简历
+  type?: 'file' | 'online'; // 新增: 简历类型，区分附件还是在线创建
   isDefault?: boolean; // 是否为默认简历 (驼峰命名)
   // 基本信息 (可以从 StudentProfile 同步或独立维护)
   name?: string;
   phone?: string;
   email?: string;
   avatar?: string;
+  // --- 学生信息 (从后端 DTO 获取) ---
+  studentName?: string; // 驼峰命名
+  studentSchool?: string; // 驼峰命名
+  studentMajor?: string; // 驼峰命名
   // --- 简历核心内容 ---
-  education_experiences?: EducationExperience[];
-  educationExperiences?: EducationExperience[]; // 驼峰命名
-  work_experiences?: WorkExperience[];
-  workExperiences?: WorkExperience[]; // 驼峰命名
-  project_experiences?: ProjectExperience[];
-  projectExperiences?: ProjectExperience[]; // 驼峰命名
-  skills_description?: string; // 技能描述 (Markdown格式)
+  bio?: string; // 新增: 个人简介
+  skills?: string[]; // 新增: 技能标签数组
+  educationList?: EducationExperience[]; // 教育经历 (驼峰命名)
+  workList?: WorkExperience[]; // 工作经历 (驼峰命名)
+  projectList?: ProjectExperience[]; // 项目经历 (驼峰命名)
   skillsDescription?: string; // 技能描述 (驼峰命名)
-  self_evaluation?: string; // 自我评价 (Markdown格式)
   selfEvaluation?: string; // 自我评价 (驼峰命名)
+  expectedSalary?: string; // 新增: 期望薪资 (驼峰)
+  expectedLocation?: string; // 新增: 期望地点 (驼峰)
   // --- 文件信息 (如果支持上传附件) ---
-  file_url?: string; // 附件简历 URL
   fileUrl?: string; // 附件简历 URL (驼峰命名)
-  file_name?: string; // 附件简历文件名
   fileName?: string; // 附件简历文件名 (驼峰命名)
-  upload_time?: string; // 上传时间
   uploadTime?: string; // 上传时间 (驼峰命名)
   // --- 时间戳 ---
-  create_time?: string;
   createTime?: string; // 驼峰命名
-  update_time?: string;
   updateTime?: string; // 驼峰命名
 }
 

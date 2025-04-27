@@ -55,9 +55,10 @@ export interface StudentProfile extends UserInfo {
   // 扩展信息 (前端特有，可能不在后端)
   student_id?: string; // 学号
   grade?: string; // 年级
+  location?: string | null; // 新增: 地点/城市
   experience?: string; // 实习或项目经历
-  expected_salary?: string; // 期望薪资
-  expected_location?: string; // 期望工作地点
+  expectedSalary?: string | null; // 期望薪资 (改为驼峰)
+  expectedLocation?: string | null; // 期望工作地点 (改为驼峰)
   education_experiences?: EducationExperience[]; // 教育经历
   work_experiences?: WorkExperience[]; // 工作/实习经历
   bio?: string; // 个人简介

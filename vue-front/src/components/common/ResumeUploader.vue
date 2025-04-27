@@ -16,7 +16,8 @@
       :disabled="disabled || uploading"
       :multiple="multiple"
       :auto-upload="autoUpload"
-      :http-request="customHttpRequest" 
+      :http-request="customHttpRequest"
+      @change="handleInternalFileChange"
     >
       <template #trigger>
         <el-button type="primary" :loading="uploading" :disabled="disabled || uploading">
@@ -61,18 +62,13 @@
 import { ref, computed, watch } from 'vue';
 import type { PropType } from 'vue';
 import { ElMessage } from 'element-plus';
-import type { UploadInstance, UploadProps, UploadUserFile, UploadRawFile, UploadRequestOptions } from 'element-plus';
+import type { UploadInstance, UploadProps, UploadUserFile, UploadRawFile, UploadRequestOptions, UploadFile, UploadFiles } from 'element-plus';
 import { UploadFilled, Document, Close } from '@element-plus/icons-vue';
 // Import your actual resume upload API function
 import { uploadResumeFile } from '@/api/resume'; // Corrected import name
 import { useUserStore } from '@/stores/user'; // For getting token
 
 const props = defineProps({
-  // Model binding for file list (if needed outside)
-  modelValue: { 
-    type: Array as PropType<UploadUserFile[]>,
-    default: () => []
-  },
   limit: {
     type: Number,
     default: 1,
@@ -108,23 +104,18 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['update:modelValue', 'upload-success', 'upload-error', 'remove']);
+const emit = defineEmits(['upload-success', 'upload-error', 'remove']);
 
 const userStore = useUserStore();
 const uploadRef = ref<UploadInstance>();
 const uploading = ref(false);
-const internalFileList = ref<UploadUserFile[]>([]); // Internal state for file list
+const internalFileList = ref<UploadUserFile[]>([]); // 内部状态，不再依赖 prop
 
-// Sync modelValue with internalFileList
-watch(() => props.modelValue, (newVal) => {
-  if (JSON.stringify(newVal) !== JSON.stringify(internalFileList.value)) {
-      internalFileList.value = newVal;
-  }
-}, { deep: true, immediate: true });
-
-watch(internalFileList, (newVal) => {
-    emit('update:modelValue', newVal);
-}, { deep: true });
+// 添加 @change 事件处理器
+const handleInternalFileChange = (uploadFile: UploadFile, uploadFiles: UploadFiles) => {
+  console.log('handleInternalFileChange triggered. Updating internalFileList.');
+  internalFileList.value = uploadFiles;
+};
 
 // Computed header for authorization
 const uploadHeaders = computed(() => ({
@@ -153,17 +144,57 @@ const beforeResumeUpload: UploadProps['beforeUpload'] = (rawFile: UploadRawFile)
 };
 
 const handleSuccess: UploadProps['onSuccess'] = (response: any, uploadFile: UploadUserFile /*, uploadFiles: UploadUserFile[] */ ) => {
-  uploading.value = false;
-  ElMessage.success('简历上传成功');
-  const uploadedFileInfo = response.data; // Assuming success response structure
-  emit('upload-success', uploadedFileInfo, uploadFile);
+  // --- BEGIN EDIT ---
+  // 增加对 response 和其核心字段的检查，防止无效调用导致错误
+  // 如果 response 不存在，或者 code 不是 200，或者 data 不存在，则直接返回
+  if (!response || response.code !== 200 || response.data === undefined || response.data === null) {
+    // 可以在这里添加一个静默的日志，用于调试为什么会被无效调用
+    // console.warn('handleSuccess called with invalid response:', response);
+    // 如果第二次调用时 response 是 undefined，可能不需要重置 uploading 状态
+    // uploading.value = false; // 可能需要根据情况决定是否在这里设置
+    return; // 直接退出，不处理无效的调用
+  }
+  // --- END EDIT ---
 
-  const fileIndex = internalFileList.value.findIndex(f => f.uid === uploadFile.uid);
-  if (fileIndex > -1) {
-      internalFileList.value[fileIndex].status = 'success';
-      internalFileList.value[fileIndex].response = response;
-      // Assign URL if returned by API and needed in file list
-      internalFileList.value[fileIndex].url = uploadedFileInfo?.url || uploadFile.url;
+  // Log 1: 'response' is likely the backend Result object { code, message, data }
+  console.log("handleSuccess triggered. response (expected backend Result):", response);
+  uploading.value = false;
+  // ElMessage.success('简历上传成功'); // 移动到条件判断成功之后
+
+  // Log 3: 直接检查 response 的属性 (此处的 if 检查在上面的防御性检查后实际已冗余，但保留也无妨)
+  console.log("handleSuccess: Checking condition (response && response.code === 200 && response.data)");
+  if (response && response.code === 200 && response.data) {
+    ElMessage.success('简历上传成功'); // 在确认后端成功后再提示
+    console.log("handleSuccess: Condition met. response:", response); // Log 4
+    const backendData = response.data; // 获取 Result 对象中的 data 字段
+    console.log("handleSuccess: backendData (response.data):", backendData); // Log 5
+    emit('upload-success', backendData, uploadFile);
+
+    console.log("handleSuccess: Finding file index. internalFileList:", internalFileList.value, "uploadFile:", uploadFile); // Log 6
+    const fileIndex = internalFileList.value.findIndex(f => f.uid === uploadFile.uid);
+    console.log("handleSuccess: fileIndex:", fileIndex); // Log 7
+
+    if (fileIndex > -1) {
+        console.log("handleSuccess: Updating file in internalFileList."); // Log 8
+        internalFileList.value[fileIndex].status = 'success';
+        // 保存后端返回的 Result 对象作为响应
+        internalFileList.value[fileIndex].response = response; 
+        // 从 backendData 中读取 fileUrl
+        internalFileList.value[fileIndex].url = backendData.fileUrl || uploadFile.url;
+        console.log("handleSuccess: File updated:", internalFileList.value[fileIndex]); // Log 9
+    } else {
+      console.log("handleSuccess: File not found in internalFileList for update."); // Log 10
+    }
+  } else {
+      console.error("handleSuccess: Condition not met or backend error. response:", response); // Log 11
+      const errorMessage = response?.message || '上传失败或响应数据格式不正确';
+      ElMessage.error(errorMessage);
+      emit('upload-error', new Error(errorMessage), uploadFile);
+      // 尝试更新文件状态为失败
+      const fileIndex = internalFileList.value.findIndex(f => f.uid === uploadFile.uid);
+        if (fileIndex > -1) {
+            internalFileList.value[fileIndex].status = 'fail';
+        }
   }
 };
 
@@ -208,40 +239,32 @@ const handleExceed: UploadProps['onExceed'] = (files, uploadFiles) => {
 // Custom request function using your API util
 const customHttpRequest = async (options: UploadRequestOptions) => {
   const { file, onSuccess, onError, onProgress } = options;
-  const formData = new FormData();
-  formData.append('file', file); // Adjust field name if needed by your API
-
-  // Find the corresponding file in the internal list to update its progress/status
-  const internalFile = internalFileList.value.find(f => f.uid === (file as any).uid);
-  if (!internalFile) {
-      console.error('Cannot find internal file state for UID:', (file as any).uid);
-      onError(new Error('Internal file state error') as any);
-      return; 
-  }
+  // ---- 保持注释掉，让 API 函数处理 FormData ----
+  // const formData = new FormData();
+  // formData.append('file', file);
+  // ---- 保持注释掉 ----
 
   uploading.value = true; 
-  internalFile.status = 'uploading';
-  internalFile.percentage = 0; // Initialize percentage
+  // ---- 移除手动设置状态和进度的逻辑 START ----
+  // internalFile.status = 'uploading';
+  // internalFile.percentage = 0; // Initialize percentage
+  // ---- 移除手动设置状态和进度的逻辑 END ----
 
   try {
-    // --- Replace mock with actual API call --- 
-    // Pass the File object directly, assuming API function handles FormData creation
-    const response = await uploadResumeFile(file);
-    // Pass the actual response data to el-upload's onSuccess handler
+    // --- 调用实际 API，直接传递 File 对象 ---
+    const response = await uploadResumeFile(file as File); // 传递 File 对象，类型匹配
+    
+    // ---- 调用 el-upload 的 onSuccess 回调 ----
     onSuccess(response); 
 
   } catch (error: any) {
     console.error('Actual resume upload failed:', error);
-    // Pass the error to el-upload's onError handler
+    // ---- 调用 el-upload 的 onError 回调 ----
     onError(error);
 
   } finally {
-      // Ensure uploading state is reset even if API call fails early
       uploading.value = false;
-      // Reset percentage on error (success status/percentage handled in onSuccess)
-      // if (internalFile && internalFile.status !== 'success') {
-      //      internalFile.percentage = undefined;
-      // }
+      // 进度条和最终状态让 el-upload 通过 onSuccess/onError 处理
   }
 };
 

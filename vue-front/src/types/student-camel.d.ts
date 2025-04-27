@@ -32,12 +32,13 @@ export interface StudentProfileCamel extends UserInfo {
   studentNumber?: string; // 真实学号，存储在数据库中
 
   // 扩展信息
+  location?: string | null; // 新增: 地点/城市
   studentId?: string; // 用户ID，不再用作学号
   grade?: string; // 年级
   experience?: string; // 实习或项目经历
   expectedSalary?: string; // 期望薪资 (已在后端实现)
   expectedLocation?: string; // 期望工作地点 (已在后端实现)
-  educationExperiences?: EducationExperienceCamel[]; // 教育经历
-  workExperiences?: WorkExperienceCamel[]; // 工作/实习经历
+  educationExperiences?: EducationExperienceCamel[] | string; // 教育经历
+  workExperiences?: WorkExperienceCamel[] | string; // 工作/实习经历
   bio?: string; // 个人简介
 }

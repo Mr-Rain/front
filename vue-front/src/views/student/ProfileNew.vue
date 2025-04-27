@@ -12,6 +12,8 @@
         <p><strong>真实姓名：</strong> {{ studentStore.profile?.realName }}</p>
         <p><strong>学校：</strong> {{ studentStore.profile?.school }}</p>
         <p><strong>专业：</strong> {{ studentStore.profile?.major }}</p>
+        <p><strong>最后登录时间(UTC)：</strong> {{ studentStore.profile?.lastLoginTime }}</p>
+        <p><strong>最后登录时间(北京)：</strong> {{ formatToBeiJingTime(studentStore.profile?.lastLoginTime) }}</p>
         <p><strong>表单数据：</strong></p>
         <pre>{{ JSON.stringify(profileForm, null, 2) }}</pre>
         <el-button size="small" @click="forceRefreshData">强制刷新数据</el-button>
@@ -198,9 +200,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, reactive, onMounted, watch, getCurrentInstance } from 'vue';
 import { useRoute } from 'vue-router';
 import { useStudentStore } from '@/stores/student';
+import { formatToBeiJingTime, formatToBeiJingTimeShort } from '@/utils/dateUtils';
 import AvatarUploader from '@/components/common/AvatarUploader.vue';
 import EducationExperienceForm from '@/components/student/EducationExperienceForm.vue';
 import WorkExperienceForm from '@/components/student/WorkExperienceForm.vue';
@@ -323,7 +326,25 @@ watch(() => studentStore.profile, (newProfile, oldProfile) => {
 
     // 确保数组属性存在
     if (!profileForm.educationExperiences) profileForm.educationExperiences = [];
+    else if (typeof profileForm.educationExperiences === 'string') {
+      try {
+        profileForm.educationExperiences = JSON.parse(profileForm.educationExperiences);
+      } catch (e) {
+        console.error('Failed to parse educationExperiences:', e);
+        profileForm.educationExperiences = [];
+      }
+    }
+
     if (!profileForm.workExperiences) profileForm.workExperiences = [];
+    else if (typeof profileForm.workExperiences === 'string') {
+      try {
+        profileForm.workExperiences = JSON.parse(profileForm.workExperiences);
+      } catch (e) {
+        console.error('Failed to parse workExperiences:', e);
+        profileForm.workExperiences = [];
+      }
+    }
+
     if (!profileForm.skills) profileForm.skills = [];
 
     console.log('Profile form updated:', profileForm);
@@ -438,10 +459,19 @@ const saveProfile = async () => {
           avatar: profileForm.avatar || '',
           // 添加期望薪资和期望工作地点字段
           expectedSalary: profileForm.expectedSalary || '面议',
-          expectedLocation: profileForm.expectedLocation || '全国'
+          expectedLocation: profileForm.expectedLocation || '全国',
+          // 添加教育和工作经历 - 直接传递数组
+          educationExperiences: profileForm.educationExperiences || [],
+          workExperiences: profileForm.workExperiences || []
         };
 
-        console.log('发送到后端的数据:', updateData);
+        console.log('发送到后端的数据 (移除 stringify):', updateData);
+
+        // --- 添加的日志 ---
+        console.log('在调用 updateProfile 前 - educationExperiences:', updateData.educationExperiences); // 应该打印数组
+        console.log('在调用 updateProfile 前 - workExperiences:', updateData.workExperiences); // 应该打印数组
+        console.log('在调用 updateProfile 前 - 完整的 updateData:', JSON.stringify(updateData)); // 仍然打印 JSON 以供检查
+        // --- 添加的日志结束 ---
 
         // 调用store action更新个人信息
         await studentStore.updateProfile(updateData);

@@ -25,17 +25,17 @@
               <template #header>
                 <div class="resume-card-header">
                   <span class="resume-title">{{ resume.title || '未命名简历' }}</span>
-                  <el-tag v-if="resume.is_default" type="success" size="small">默认</el-tag>
+                  <el-tag v-if="resume.isDefault" type="success" size="small">默认</el-tag>
                 </div>
               </template>
               <div class="resume-meta">
-                <p v-if="resume.file_name">文件名: {{ resume.file_name }}</p>
-                <p v-if="resume.upload_time">上传时间: {{ formatTime(resume.upload_time) }}</p>
+                <p v-if="resume.fileName">文件名: {{ resume.fileName }}</p>
+                <p v-if="resume.uploadTime">上传时间: {{ formatTime(resume.uploadTime) }}</p>
                  <!-- Add more details like file size if available -->
               </div>
               <template #footer>
                  <div class="resume-actions">
-                   <el-button type="primary" link size="small" @click="handleSetDefault(resume.id)" :disabled="resume.is_default">
+                   <el-button type="primary" link size="small" @click="handleSetDefault(resume.id)" :disabled="resume.isDefault">
                      <span class="hide-on-mobile">设为默认</span>
                      <span class="show-on-mobile">默认</span>
                    </el-button>
@@ -132,7 +132,7 @@ import { useRouter } from 'vue-router';
 import { useResumeStore } from '@/stores/resume';
 import { useStudentStore } from '@/stores/student';
 import type { ResumeInfo } from '@/types/resume'; // Assuming types/resume.d.ts exists
-import { ElCard, ElButton, ElEmpty, ElRow, ElCol, ElTag, ElPopconfirm, ElDialog, ElMessage, ElInput, ElForm, ElFormItem, ElRadioGroup, ElRadio } from 'element-plus';
+import { ElCard, ElButton, ElEmpty, ElRow, ElCol, ElTag, ElPopconfirm, ElDialog, ElMessage, ElInput, ElForm, ElFormItem, ElRadioGroup, ElRadio, type UploadUserFile } from 'element-plus';
 import { UploadFilled, Plus, Download } from '@element-plus/icons-vue';
 import ResumeUploader from '@/components/common/ResumeUploader.vue'; // Import the uploader component
 import ResumeExport from '@/components/student/ResumeExport.vue'; // Import the resume export component
@@ -149,7 +149,6 @@ const newResumeTitle = ref(''); // Optional title for new upload
 const uploaderRef = ref<InstanceType<typeof ResumeUploader>>(); // Ref for uploader component
 
 // 导出相关
-
 const exportDialogVisible = ref(false);
 const exportFormat = ref('pdf');
 const exportFileName = ref('');
@@ -231,12 +230,26 @@ const handleDelete = async (id: string | number) => {
 
 const handlePreview = (resume: ResumeInfo) => {
     console.log("Previewing resume:", resume);
-    if(resume.file_url) {
-        // 如果是附件简历，直接打开文件链接
-        window.open(resume.file_url, '_blank');
-    } else {
-        // 如果是在线简历，跳转到简历预览页面
+    // 优先检查是否有 fileBucket 和 filePath，这表明它是一个已上传的附件简历
+    // @ts-ignore // 临时的，如果 ResumeInfo 类型没有更新，暂时忽略类型检查
+    if (resume.fileBucket && resume.filePath) {
+        // @ts-ignore
+        const bucket = encodeURIComponent(resume.fileBucket);
+        // @ts-ignore
+        const path = encodeURIComponent(resume.filePath);
+        // 构造指向后端文件下载/预览接口的 URL
+        const previewUrl = `/api/files/download?bucket=${bucket}&path=${path}&disposition=inline`;
+        console.log("Opening preview URL for attachment:", previewUrl);
+        // 在新标签页打开预览链接
+        window.open(previewUrl, '_blank');
+    } else if (!resume.fileUrl && resume.id) { // 假设在线简历没有 fileUrl 但有 id
+        // 如果没有 bucket/path，但有 id，认为是旧的在线简历，跳转到在线预览路由
+        console.log("Navigating to online resume preview page:", `/student/resume/${resume.id}/preview`);
         router.push(`/student/resume/${resume.id}/preview`);
+    } else {
+        // 处理其他无法预览的情况
+        console.error("Cannot preview resume: Missing required information (fileBucket/filePath or id).", resume);
+        ElMessage.error("无法预览此简历，缺少必要信息。");
     }
 };
 
@@ -250,54 +263,46 @@ const handleExport = async (resume: ResumeInfo) => {
   } else {
     exportFileName.value = `简历_${resume.id}`;
   }
-
-  // 如果是文件类型的简历，直接下载
-  if (resume.type === 'file' && resume.file_url) {
-    window.open(resume.file_url, '_blank');
-    return;
-  }
-
-  // 如果是在线简历，显示导出对话框
-  if (resume.type === 'online') {
-    // 获取简历详情
-    if (resume.id) {
-      try {
-        await resumeStore.fetchResumeDetail(resume.id);
-
-        // 如果没有用户信息，获取用户信息
-        if (!studentStore.profile) {
-          await studentStore.fetchProfile();
-        }
-
-        // 准备导出数据
-        if (resumeStore.currentResume && studentStore.profile) {
-          // 合并简历数据和用户信息
-          Object.assign(exportResumeData, {
-            name: studentStore.profile.username || '',
-            phone: studentStore.profile.phone || '',
-            email: studentStore.profile.email || '',
-            location: studentStore.profile.location || '',
-            school: studentStore.profile.school || '',
-            major: studentStore.profile.major || '',
-            education: studentStore.profile.education || '',
-            grade: studentStore.profile.grade || '',
-            bio: resumeStore.currentResume.bio || (studentStore.profile as any).bio || '',
-            skills: resumeStore.currentResume.skills || studentStore.profile.skills || [],
-            education_experiences: resumeStore.currentResume.education_experiences || (studentStore.profile as any).education_experiences || [],
-            work_experiences: resumeStore.currentResume.work_experiences || (studentStore.profile as any).work_experiences || [],
-            expected_salary: resumeStore.currentResume.expected_salary || studentStore.profile.expected_salary || '',
-            expected_location: resumeStore.currentResume.expected_location || studentStore.profile.expected_location || ''
-          });
-        }
-
-        // 显示导出对话框
-        exportDialogVisible.value = true;
-      } catch (error) {
-        console.error('Failed to fetch resume details:', error);
-        ElMessage.error('获取简历详情失败');
+  
+  // 如果是在线简历，需要获取完整数据
+  if (!resume.fileUrl) {
+    try {
+      await resumeStore.fetchResumeDetail(resume.id); 
+      if (resumeStore.currentResume) {
+        // 映射数据到 exportResumeData
+        Object.assign(exportResumeData, {
+            name: resumeStore.currentResume.name,
+            phone: resumeStore.currentResume.phone,
+            email: resumeStore.currentResume.email,
+            school: resumeStore.currentResume.studentSchool, // 从 currentResume 获取学校等信息
+            major: resumeStore.currentResume.studentMajor,
+            bio: resumeStore.currentResume.bio,
+            skillsDescription: resumeStore.currentResume.skillsDescription,
+            selfEvaluation: resumeStore.currentResume.selfEvaluation,
+            educationList: resumeStore.currentResume.educationList, // 使用驼峰命名
+            workList: resumeStore.currentResume.workList, // 使用驼峰命名
+            projectList: resumeStore.currentResume.projectList, // 使用驼峰命名
+            expectedSalary: resumeStore.currentResume.expectedSalary,
+            expectedLocation: resumeStore.currentResume.expectedLocation
+        });
+      } else {
+          ElMessage.error('获取简历详情失败，无法导出在线简历');
+          return;
       }
+    } catch (error) {
+      ElMessage.error('获取简历详情失败，无法导出在线简历');
+      return;
     }
+  } else {
+      // 附件简历暂时不支持导出为PDF/图片 (因为没有结构化数据)
+      ElMessage.info('附件简历可以直接下载源文件');
+      // 可以直接触发下载或打开新标签页
+      window.open(resume.fileUrl, '_blank'); // file_url -> fileUrl
+      return; // 阻止打开导出对话框
   }
+
+  exportFormat.value = 'pdf'; // 默认 PDF
+  exportDialogVisible.value = true;
 };
 
 // 确认导出
@@ -311,7 +316,7 @@ const confirmExport = async () => {
     exporting.value = true;
 
     // 调用导出组件的导出方法
-    await resumeExportRef.value.exportResume();
+    await resumeExportRef.value?.exportResume();
 
     // 关闭对话框
     exportDialogVisible.value = false;

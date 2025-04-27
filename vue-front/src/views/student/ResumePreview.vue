@@ -46,13 +46,13 @@
         </div>
 
         <!-- 教育经历 -->
-        <div class="resume-section" v-if="resumeStore.currentResume.education_experiences?.length">
+        <div class="resume-section" v-if="resumeStore.currentResume.educationList?.length">
           <h2 class="section-title">教育经历</h2>
           <div class="section-content">
-            <div v-for="(edu, index) in resumeStore.currentResume.education_experiences" :key="index" class="experience-item">
+            <div v-for="(edu, index) in resumeStore.currentResume.educationList" :key="index" class="experience-item">
               <div class="experience-header">
                 <h3>{{ edu.school }}</h3>
-                <span class="time-period">{{ edu.start_date }} - {{ edu.end_date }}</span>
+                <span class="time-period">{{ formatSimpleDate(edu.startDate) }} - {{ formatSimpleDate(edu.endDate) }}</span>
               </div>
               <div class="experience-details">
                 <p><strong>{{ edu.major }}</strong> | {{ edu.degree }}</p>
@@ -63,13 +63,13 @@
         </div>
 
         <!-- 工作经历 -->
-        <div class="resume-section" v-if="resumeStore.currentResume.work_experiences?.length">
+        <div class="resume-section" v-if="resumeStore.currentResume.workList?.length">
           <h2 class="section-title">工作/实习经历</h2>
           <div class="section-content">
-            <div v-for="(work, index) in resumeStore.currentResume.work_experiences" :key="index" class="experience-item">
+            <div v-for="(work, index) in resumeStore.currentResume.workList" :key="index" class="experience-item">
               <div class="experience-header">
-                <h3>{{ work.company_name }}</h3>
-                <span class="time-period">{{ work.start_date }} - {{ work.end_date }}</span>
+                <h3>{{ work.companyName }}</h3>
+                <span class="time-period">{{ formatSimpleDate(work.startDate) }} - {{ formatSimpleDate(work.endDate) }}</span>
               </div>
               <div class="experience-details">
                 <p><strong>{{ work.position }}</strong></p>
@@ -80,19 +80,19 @@
         </div>
 
         <!-- 项目经历 -->
-        <div class="resume-section" v-if="resumeStore.currentResume.project_experiences?.length">
+        <div class="resume-section" v-if="resumeStore.currentResume.projectList?.length">
           <h2 class="section-title">项目经历</h2>
           <div class="section-content">
-            <div v-for="(project, index) in resumeStore.currentResume.project_experiences" :key="index" class="experience-item">
+            <div v-for="(project, index) in resumeStore.currentResume.projectList" :key="index" class="experience-item">
               <div class="experience-header">
-                <h3>{{ project.project_name }}</h3>
-                <span class="time-period">{{ project.start_date }} - {{ project.end_date }}</span>
+                <h3>{{ project.projectName }}</h3>
+                <span class="time-period">{{ formatSimpleDate(project.startDate) }} - {{ formatSimpleDate(project.endDate) }}</span>
               </div>
               <div class="experience-details">
                 <p><strong>{{ project.role }}</strong></p>
                 <div class="description" v-html="formatMarkdown(project.description)"></div>
-                <p v-if="project.project_link" class="project-link">
-                  <el-link type="primary" :href="project.project_link" target="_blank">项目链接</el-link>
+                <p v-if="project.projectLink" class="project-link">
+                  <el-link type="primary" :href="project.projectLink" target="_blank">项目链接</el-link>
                 </p>
               </div>
             </div>
@@ -100,24 +100,24 @@
         </div>
 
         <!-- 技能描述 -->
-        <div class="resume-section" v-if="resumeStore.currentResume.skills_description">
+        <div class="resume-section" v-if="resumeStore.currentResume.skillsDescription">
           <h2 class="section-title">专业技能</h2>
           <div class="section-content">
-            <div class="skills-content" v-html="formatMarkdown(resumeStore.currentResume.skills_description)"></div>
+            <div class="skills-content" v-html="formatMarkdown(resumeStore.currentResume.skillsDescription)"></div>
           </div>
         </div>
 
         <!-- 自我评价 -->
-        <div class="resume-section" v-if="resumeStore.currentResume.self_evaluation">
+        <div class="resume-section" v-if="resumeStore.currentResume.selfEvaluation">
           <h2 class="section-title">自我评价</h2>
           <div class="section-content">
-            <div class="self-evaluation" v-html="formatMarkdown(resumeStore.currentResume.self_evaluation)"></div>
+            <div class="self-evaluation" v-html="formatMarkdown(resumeStore.currentResume.selfEvaluation)"></div>
           </div>
         </div>
 
         <!-- 更新时间 -->
         <div class="resume-footer">
-          <p class="update-time">最后更新: {{ formatTime(resumeStore.currentResume.update_time) }}</p>
+          <p class="update-time">最后更新: {{ formatTime(resumeStore.currentResume.updateTime) }}</p>
         </div>
       </div>
 
@@ -169,8 +169,31 @@ const goBack = () => {
 const formatTime = (timeStr: string | undefined): string => {
   if (!timeStr) return '未知';
   try {
-    return new Date(timeStr).toLocaleString();
+    // 尝试更健壮的日期解析和格式化
+    const date = new Date(timeStr);
+    if (isNaN(date.getTime())) { // 检查日期是否有效
+        return '无效日期';
+    }
+    // 返回年月日 时分秒 格式
+    return date.toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
   } catch (e) {
+    console.error('Error formatting time:', e);
+    return timeStr; // 解析失败则返回原始字符串
+  }
+};
+
+// 新增：格式化经历中的日期 (仅年月)
+const formatSimpleDate = (timeStr: string | undefined): string => {
+  if (!timeStr) return '至今'; // 或其他默认值
+  try {
+    const date = new Date(timeStr);
+    if (isNaN(date.getTime())) {
+        return '未知日期';
+    }
+    // 返回 YYYY-MM 格式
+    return date.getFullYear() + '-' + ('0' + (date.getMonth() + 1)).slice(-2);
+  } catch (e) {
+    console.error('Error formatting simple date:', e);
     return timeStr;
   }
 };

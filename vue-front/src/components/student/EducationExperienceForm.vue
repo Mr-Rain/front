@@ -8,11 +8,11 @@
       </el-button>
     </div>
 
-    <div v-if="modelValue.length === 0" class="empty-state">
+    <div v-if="getCurrentValueAsArray().length === 0" class="empty-state">
       <el-empty description="暂无教育经历，请点击添加" :image-size="100"></el-empty>
     </div>
 
-    <div v-for="(edu, index) in modelValue" :key="index" class="experience-item">
+    <div v-for="(edu, index) in getCurrentValueAsArray()" :key="index" class="experience-item">
       <div class="experience-header">
         <h4>{{ edu.school || '新教育经历' }} {{ edu.degree ? `(${edu.degree})` : '' }}</h4>
         <el-button
@@ -90,7 +90,7 @@ import { Plus, Delete } from '@element-plus/icons-vue';
 
 const props = defineProps({
   modelValue: {
-    type: Array as () => EducationExperienceCamel[],
+    type: [Array, String] as unknown as () => EducationExperienceCamel[] | string,
     required: true
   },
   editable: {
@@ -106,8 +106,41 @@ const dateRange = ref<[string, string][]>([]);
 
 // 初始化日期范围
 watch(() => props.modelValue, (newValue) => {
-  dateRange.value = newValue.map(edu => [edu.startDate, edu.endDate] as [string, string]);
+  if (typeof newValue === 'string') {
+    try {
+      const parsedValue = JSON.parse(newValue);
+      if (Array.isArray(parsedValue)) {
+        dateRange.value = parsedValue.map((edu: EducationExperienceCamel) =>
+          [edu.startDate, edu.endDate] as [string, string]);
+      } else {
+        dateRange.value = [];
+      }
+    } catch (e) {
+      console.error('Failed to parse educationExperiences:', e);
+      dateRange.value = [];
+    }
+  } else if (Array.isArray(newValue)) {
+    dateRange.value = newValue.map(edu => [edu.startDate, edu.endDate] as [string, string]);
+  } else {
+    dateRange.value = [];
+  }
 }, { immediate: true, deep: true });
+
+// 获取当前值的数组形式
+const getCurrentValueAsArray = (): EducationExperienceCamel[] => {
+  if (typeof props.modelValue === 'string') {
+    try {
+      const parsedValue = JSON.parse(props.modelValue);
+      return Array.isArray(parsedValue) ? parsedValue : [];
+    } catch (e) {
+      console.error('Failed to parse educationExperiences:', e);
+      return [];
+    }
+  } else if (Array.isArray(props.modelValue)) {
+    return props.modelValue;
+  }
+  return [];
+};
 
 // 添加新的教育经历
 const addEducation = () => {
@@ -120,7 +153,8 @@ const addEducation = () => {
     description: ''
   };
 
-  const updatedValue = [...props.modelValue, newEducation];
+  const currentValue = getCurrentValueAsArray();
+  const updatedValue = [...currentValue, newEducation];
   emit('update:modelValue', updatedValue);
 
   // 为新添加的教育经历初始化日期范围
@@ -129,7 +163,8 @@ const addEducation = () => {
 
 // 移除教育经历
 const removeEducation = (index: number) => {
-  const updatedValue = [...props.modelValue];
+  const currentValue = getCurrentValueAsArray();
+  const updatedValue = [...currentValue];
   updatedValue.splice(index, 1);
   emit('update:modelValue', updatedValue);
 
@@ -140,7 +175,8 @@ const removeEducation = (index: number) => {
 // 更新日期范围
 const updateDateRange = (index: number) => {
   if (dateRange.value[index]) {
-    const updatedValue = [...props.modelValue];
+    const currentValue = getCurrentValueAsArray();
+    const updatedValue = [...currentValue];
     updatedValue[index] = {
       ...updatedValue[index],
       startDate: dateRange.value[index][0],

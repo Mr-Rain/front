@@ -133,12 +133,16 @@ export const useStudentStore = defineStore('student', {
           avatar: data.avatar || '',
           // 添加期望薪资和期望工作地点字段
           expectedSalary: data.expectedSalary || '面议',
-          expectedLocation: data.expectedLocation || '全国'
+          expectedLocation: data.expectedLocation || '全国',
+
+          // 【修复】直接使用从 payload 接收到的数组
+          educationExperiences: data.educationExperiences || [],
+          workExperiences: data.workExperiences || []
         };
 
-        console.log('完整的更新数据:', completeData);
+        console.log('完整的更新数据 (移除 stringify):', completeData);
 
-        // 调用API更新个人信息 (发送驼峰命名数据)
+        // 调用API更新个人信息 (发送驼峰命名数据，包含数组)
         const response = await updateStudentProfile(completeData);
         console.log('更新学生档案响应:', response);
 
@@ -152,29 +156,61 @@ export const useStudentStore = defineStore('student', {
           console.log('更新成功，响应数据:', response.data);
 
           // 更新本地状态 (使用驼峰命名)
-          if (this.profile) {
-            // 直接合并驼峰命名的 completeData
-            this.profile = {
-              ...this.profile,
-              ...completeData
-            };
-          } else {
-            // 如果之前没有档案数据，创建一个新的 (使用驼峰命名)
-            this.profile = {
-              id: 0, // 假设 id 等信息需要从 fetchProfile 或其他地方获取
-              userType: 'student',
-              username: '', // 假设 username 等信息需要从 fetchProfile 或其他地方获取
-              email: '', // 假设 email 等信息需要从 fetchProfile 或其他地方获取
-              status: 'active',
-              createTime: new Date().toISOString(), // 假设 createTime 等信息需要从 fetchProfile 或其他地方获取
-              lastLoginTime: new Date().toISOString(), // 假设 lastLoginTime 等信息需要从 fetchProfile 或其他地方获取
-              ...completeData
-            };
-          }
+          // 【修复】使用后端响应数据更新状态，并解析 JSON 字段
+          if (response.data && response.data.data) { // 确保后端返回了有效数据
+            const responseData = response.data.data; // 获取后端返回的 DTO 数据
 
-          // 不再重新获取最新信息，直接使用更新后的数据
-          console.log('更新后的档案数据:', this.profile);
-          ElMessage.success('个人信息更新成功');
+            // 准备用于合并的数据，解析 JSON 字符串
+            const parsedUpdateData = {
+              ...responseData, // 先复制响应的所有字段
+              // 安全地解析 JSON，如果失败或为空，则默认为空数组
+              educationExperiences: (() => {
+                try {
+                  // 确保 responseData.educationExperiences 存在且是字符串
+                  return responseData.educationExperiences && typeof responseData.educationExperiences === 'string'
+                    ? JSON.parse(responseData.educationExperiences)
+                    : [];
+                } catch (e) {
+                  console.error('Failed to parse educationExperiences from response:', e);
+                  return [];
+                }
+              })(),
+              workExperiences: (() => {
+                try {
+                  // 确保 responseData.workExperiences 存在且是字符串
+                  return responseData.workExperiences && typeof responseData.workExperiences === 'string'
+                    ? JSON.parse(responseData.workExperiences)
+                    : [];
+                } catch (e) {
+                  console.error('Failed to parse workExperiences from response:', e);
+                  return [];
+                }
+              })()
+            };
+
+            if (this.profile) {
+              // 合并解析后的响应数据
+              this.profile = {
+                ...this.profile,
+                ...parsedUpdateData
+              };
+            } else {
+              // 如果之前没有档案数据，直接使用解析后的响应数据创建
+               this.profile = parsedUpdateData;
+               // 注意：这里可能需要确保基础信息 (id, username 等) 完整，
+               // 假设 responseData 已经包含了所有必要的基础信息
+               if (!this.profile.id) {
+                 console.warn('Profile created from response, but ID might be missing.');
+                 // 可能需要从其他地方获取或设置默认值
+               }
+            }
+            console.log('更新后的档案数据 (来自响应并解析):', this.profile);
+            ElMessage.success('个人信息更新成功');
+
+          } else {
+             console.error('更新成功，但响应数据格式不符合预期:', response);
+             ElMessage.error('更新成功但无法刷新本地数据');
+          }
         } else {
           console.error('更新失败，响应:', response);
           ElMessage.error('更新失败，请重试');

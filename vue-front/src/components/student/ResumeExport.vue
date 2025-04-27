@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, defineExpose } from 'vue';
 import { useStudentStore } from '@/stores/student';
 import { exportResumeToPDF } from '@/utils/exportUtils';
 import { Download, Phone, Message, Location } from '@element-plus/icons-vue';
@@ -214,6 +214,11 @@ const exportResume = async () => {
     exporting.value = false;
   }
 };
+
+// 暴露导出方法
+defineExpose({
+  exportResume
+});
 </script>
 
 <style scoped>

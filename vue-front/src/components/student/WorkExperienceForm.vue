@@ -8,11 +8,11 @@
       </el-button>
     </div>
 
-    <div v-if="modelValue.length === 0" class="empty-state">
+    <div v-if="getCurrentValueAsArray().length === 0" class="empty-state">
       <el-empty description="暂无工作经历，请点击添加" :image-size="100"></el-empty>
     </div>
 
-    <div v-for="(work, index) in modelValue" :key="index" class="experience-item">
+    <div v-for="(work, index) in getCurrentValueAsArray()" :key="index" class="experience-item">
       <div class="experience-header">
         <h4>{{ work.companyName || '新工作经历' }} {{ work.position ? `(${work.position})` : '' }}</h4>
         <el-button
@@ -83,7 +83,7 @@ import { marked } from 'marked'; // 需要安装: pnpm add marked
 
 const props = defineProps({
   modelValue: {
-    type: Array as () => WorkExperienceCamel[],
+    type: [Array, String] as unknown as () => WorkExperienceCamel[] | string,
     required: true
   },
   editable: {
@@ -97,9 +97,42 @@ const emit = defineEmits(['update:modelValue']);
 // 用于日期选择器的数据
 const dateRange = ref<[string, string][]>([]);
 
+// 获取当前值的数组形式
+const getCurrentValueAsArray = (): WorkExperienceCamel[] => {
+  if (typeof props.modelValue === 'string') {
+    try {
+      const parsedValue = JSON.parse(props.modelValue);
+      return Array.isArray(parsedValue) ? parsedValue : [];
+    } catch (e) {
+      console.error('Failed to parse workExperiences:', e);
+      return [];
+    }
+  } else if (Array.isArray(props.modelValue)) {
+    return props.modelValue;
+  }
+  return [];
+};
+
 // 初始化日期范围
 watch(() => props.modelValue, (newValue) => {
-  dateRange.value = newValue.map(work => [work.startDate, work.endDate] as [string, string]);
+  if (typeof newValue === 'string') {
+    try {
+      const parsedValue = JSON.parse(newValue);
+      if (Array.isArray(parsedValue)) {
+        dateRange.value = parsedValue.map((work: WorkExperienceCamel) =>
+          [work.startDate, work.endDate] as [string, string]);
+      } else {
+        dateRange.value = [];
+      }
+    } catch (e) {
+      console.error('Failed to parse workExperiences:', e);
+      dateRange.value = [];
+    }
+  } else if (Array.isArray(newValue)) {
+    dateRange.value = newValue.map(work => [work.startDate, work.endDate] as [string, string]);
+  } else {
+    dateRange.value = [];
+  }
 }, { immediate: true, deep: true });
 
 // 添加新的工作经历
@@ -112,7 +145,8 @@ const addWorkExperience = () => {
     description: ''
   };
 
-  const updatedValue = [...props.modelValue, newWorkExperience];
+  const currentValue = getCurrentValueAsArray();
+  const updatedValue = [...currentValue, newWorkExperience];
   emit('update:modelValue', updatedValue);
 
   // 为新添加的工作经历初始化日期范围
@@ -121,7 +155,8 @@ const addWorkExperience = () => {
 
 // 移除工作经历
 const removeWorkExperience = (index: number) => {
-  const updatedValue = [...props.modelValue];
+  const currentValue = getCurrentValueAsArray();
+  const updatedValue = [...currentValue];
   updatedValue.splice(index, 1);
   emit('update:modelValue', updatedValue);
 
@@ -132,7 +167,8 @@ const removeWorkExperience = (index: number) => {
 // 更新日期范围
 const updateDateRange = (index: number) => {
   if (dateRange.value[index]) {
-    const updatedValue = [...props.modelValue];
+    const currentValue = getCurrentValueAsArray();
+    const updatedValue = [...currentValue];
     updatedValue[index] = {
       ...updatedValue[index],
       startDate: dateRange.value[index][0],
