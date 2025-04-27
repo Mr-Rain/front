@@ -125,7 +125,7 @@
                     <div class="notification-actions">
                       <el-button
                         v-if="notification.status === 'unread'"
-                        type="text"
+                        type="success"
                         size="small"
                         @click.stop="markAsRead(notification.id)"
                       >
@@ -133,7 +133,7 @@
                       </el-button>
                       <el-button
                         v-if="notification.link"
-                        type="text"
+                        type="primary"
                         size="small"
                         @click.stop="navigateTo(notification.link)"
                       >
@@ -145,7 +145,7 @@
                       >
                         <template #reference>
                           <el-button
-                            type="text"
+                            type="danger"
                             size="small"
                             @click.stop
                           >

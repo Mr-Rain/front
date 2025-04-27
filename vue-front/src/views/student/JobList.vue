@@ -82,6 +82,19 @@
       </el-form>
     </el-card>
 
+    <!-- 添加调试信息 -->
+    <el-card v-if="showDebug" shadow="hover" class="debug-card responsive-card">
+      <div class="debug-info">
+        <p><strong>路由信息：</strong> {{ route.path }} ({{ route.name }})</p>
+        <p><strong>查询参数：</strong> {{ JSON.stringify(route.query) }}</p>
+        <p><strong>加载状态：</strong> {{ jobStore.loadingList ? '加载中' : '已加载' }}</p>
+        <p><strong>职位列表：</strong> {{ jobStore.jobList.length > 0 ? '已获取' : '未获取' }}</p>
+        <p><strong>职位总数：</strong> {{ jobStore.jobTotal }}</p>
+        <el-button size="small" @click="forceRefreshData">强制刷新数据</el-button>
+        <el-button size="small" @click="showDebug = false">隐藏调试信息</el-button>
+      </div>
+    </el-card>
+
     <el-card shadow="never" class="list-card responsive-card" v-loading="jobStore.loadingList">
       <!-- 搜索结果摘要 -->
       <div class="search-summary" v-if="jobStore.jobTotal > 0">
@@ -109,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useJobStore } from '@/stores/job';
 import JobCard from '@/components/common/JobCard.vue';
@@ -117,10 +130,19 @@ import Pagination from '@/components/common/Pagination.vue';
 import Breadcrumb from '@/components/common/Breadcrumb.vue';
 import type { JobListParams } from '@/types/job';
 import { Search, Filter, ArrowLeft } from '@element-plus/icons-vue';
+import { onUnmounted } from 'vue';
 
 const router = useRouter();
 const route = useRoute();
 const jobStore = useJobStore();
+const showDebug = ref(true); // 默认显示调试信息
+
+// 强制刷新数据
+const forceRefreshData = () => {
+  console.log('强制刷新职位列表数据');
+  jobStore.clearJobList();
+  fetchData();
+};
 
 // 判断是否显示返回按钮（只在/jobs路径下显示，在/student/jobs下不显示）
 const showBackButton = computed(() => {
@@ -190,6 +212,22 @@ const goBack = () => {
   }, 100);
 };
 
+// 监听路由变化，实现页面刷新
+watch(route, (to, from) => {
+  console.log('Route changed:', from.path, '->', to.path);
+  console.log('Route query params:', to.query);
+
+  // 如果路由参数中有时间戳，说明需要刷新数据
+  if (to.query.t) {
+    console.log('Time parameter detected, refreshing data...');
+
+    // 清除之前的职位列表/详情，加载新数据
+    jobStore.clearJobList();
+    jobStore.clearCurrentJob();
+    fetchData();
+  }
+});
+
 onMounted(() => {
   // 添加窗口大小变化监听
   window.addEventListener('resize', handleResize);
@@ -202,7 +240,6 @@ onMounted(() => {
 });
 
 // 组件卸载时移除事件监听
-import { onUnmounted } from 'vue';
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
 });
@@ -396,7 +433,26 @@ onUnmounted(() => {
     display: none;
   }
 
-  /* 调整表单布局 */
+  /* 调试信息样式 */
+.debug-card {
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+
+.debug-info {
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 4px solid #409EFF;
+  font-size: 14px;
+}
+
+.debug-info p {
+  margin: 5px 0;
+}
+
+/* 调整表单布局 */
   .filter-form {
     display: flex;
     flex-direction: column;

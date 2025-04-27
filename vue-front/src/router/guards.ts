@@ -28,8 +28,29 @@ function getHomePath(roles: string[]): string {
   return homePathMap[role] || '/';
 }
 
+// 防止无限重定向的标志
+let isRedirecting = false;
+let apiErrorOccurred = false;
+
 export function createRouterGuards(router: Router) {
   router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: any) => {
+    console.log(`Route navigation: ${from.path} -> ${to.path}`);
+
+    // 如果正在重定向或发生API错误，直接放行
+    if (isRedirecting || (apiErrorOccurred && to.path === '/login')) {
+      console.log('Skipping guard checks due to redirection or API error');
+      isRedirecting = false;
+      next();
+      return;
+    }
+
+    // 如果是从同一路径导航到同一路径（例如刷新页面），直接放行
+    if (from.path === to.path && from.name === to.name) {
+      console.log('Same route navigation, skipping guard checks');
+      next();
+      return;
+    }
+
     // NProgress.start();
     const userStore = useUserStore();
     const permissionStore = usePermissionStore();
@@ -53,23 +74,93 @@ export function createRouterGuards(router: Router) {
           try {
             // 异步获取用户信息
             if (!hasUserInfo) {
-              // 如果没有用户信息，直接跳转到登录页
-              userStore.resetAuth();
-              next(`/login?redirect=${to.path}`);
-              return;
+              try {
+                // 尝试获取用户信息
+                await userStore.getUserInfo();
+              } catch (error) {
+                console.error('Failed to get user info:', error);
+                // 如果获取用户信息失败，重置认证状态并跳转到登录页
+                userStore.resetAuth();
+                next(`/login?redirect=${to.path}`);
+                return;
+              }
             }
 
             // 异步获取权限信息 (角色和权限点)
             if (!hasPermissions) {
-              await permissionStore.fetchUserPermissions();
+              try {
+                await permissionStore.fetchUserPermissions();
+              } catch (error) {
+                console.error('Failed to fetch permissions:', error);
+                // 标记API错误已发生
+                apiErrorOccurred = true;
+
+                // 如果是网络错误，可能是后端未启动，使用用户类型作为备用
+                if (userStore.userInfo) {
+                  console.log('Using user type as fallback for permissions');
+                  const userType = userStore.userInfo?.user_type?.toLowerCase();
+                  if (userType) {
+                    // 手动设置角色，避免重复请求API
+                    permissionStore.setRoles([userType as any]);
+                    console.log('Set roles based on user type:', userType);
+
+                    // 继续导航
+                    next();
+                    return;
+                  } else {
+                    console.warn('No user type available in userInfo:', userStore.userInfo);
+                    // 如果没有用户类型，尝试继续导航
+                    next();
+                    return;
+                  }
+                } else {
+                  // 如果没有用户信息，重置认证状态并跳转到登录页
+                  userStore.resetAuth();
+                  isRedirecting = true;
+                  next(`/login?redirect=${to.path}`);
+                  return;
+                }
+              }
             }
 
             // 基于角色添加动态路由
             const roles = permissionStore.roles;
 
             // 使用 hasRoutePermission 方法检查路由权限
-            if (!permissionStore.hasRoutePermission(to)) {
+            if (to.meta.requiresAuth) {
+              console.log('Checking permission for route:', to.path);
+              console.log('User roles:', permissionStore.roles);
+              console.log('Required roles:', to.meta.roles);
+
+              // 获取用户类型
+              const userType = userStore.userInfo?.user_type?.toLowerCase();
+              console.log('User type:', userType);
+
+              // 检查用户是否有权限访问路由
+              const hasPermission = permissionStore.hasRoutePermission(to);
+              console.log('Has permission from permission store:', hasPermission);
+
+              // 检查用户类型是否匹配路由所需角色
+              const hasRoleByUserType = userType && to.meta.roles &&
+                Array.isArray(to.meta.roles) && to.meta.roles.includes(userType);
+              console.log('Has role by user type:', hasRoleByUserType);
+
+              // 如果有权限或用户类型匹配，允许访问
+              if (hasPermission || hasRoleByUserType) {
+                console.log('Permission granted for route:', to.path);
+
+                // 如果权限存储中没有角色，但用户类型匹配，设置角色
+                if (!hasPermission && hasRoleByUserType && userType) {
+                  console.log('Setting roles based on user type:', userType);
+                  permissionStore.setRoles([userType as any]);
+                }
+
+                next();
+                return;
+              }
+
               // 没有权限访问该路由
+              console.log('No permission to access route, redirecting to unauthorized');
               next({ path: '/unauthorized' });
               return;
             }
@@ -77,15 +168,23 @@ export function createRouterGuards(router: Router) {
             // 根据角色设置重定向路由
             if (to.path === '/' || to.path === '/home') {
               // 根据角色重定向到不同的首页
-              if (roles.includes('admin')) {
+              const userType = userStore.userInfo?.user_type?.toLowerCase();
+
+              // 优先使用权限存储中的角色，如果没有则使用用户类型
+              if (roles.includes('admin') || userType === 'admin') {
+                console.log('Redirecting admin to dashboard');
                 next({ path: '/admin/dashboard' });
                 return;
-              } else if (roles.includes('company')) {
+              } else if (roles.includes('company') || userType === 'company') {
+                console.log('Redirecting company to dashboard');
                 next({ path: '/company/dashboard' });
                 return;
-              } else if (roles.includes('student')) {
+              } else if (roles.includes('student') || userType === 'student') {
+                console.log('Redirecting student to dashboard');
                 next({ path: '/student/dashboard' });
                 return;
+              } else {
+                console.log('No valid role found, allowing access to home page');
               }
             }
 

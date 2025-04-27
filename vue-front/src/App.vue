@@ -13,9 +13,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <router-transition>
+  <RouterTransition>
     <RouterView />
-  </router-transition>
+  </RouterTransition>
 </template>
 
 <style scoped>

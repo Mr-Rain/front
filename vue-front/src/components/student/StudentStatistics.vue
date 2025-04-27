@@ -13,9 +13,9 @@
             </div>
           </template>
           <div v-loading="loading" class="chart-container">
-            <echart-component 
-              v-if="!loading && applicationStatusData.length > 0" 
-              :options="applicationStatusChartOptions" 
+            <EChartComponent
+              v-if="!loading && applicationStatusData.length > 0"
+              :options="applicationStatusChartOptions"
               height="300px"
               @chart-ready="handleChartReady"
             />
@@ -36,9 +36,9 @@
             </div>
           </template>
           <div v-loading="loading" class="chart-container">
-            <echart-component 
-              v-if="!loading && applicationTrendData.xAxis.length > 0" 
-              :options="applicationTrendChartOptions" 
+            <EChartComponent
+              v-if="!loading && applicationTrendData.xAxis.length > 0"
+              :options="applicationTrendChartOptions"
               height="300px"
             />
             <el-empty v-else-if="!loading" description="暂无趋势数据" />
@@ -60,9 +60,9 @@
             </div>
           </template>
           <div v-loading="loading" class="chart-container">
-            <echart-component 
-              v-if="!loading && jobTypeData.length > 0" 
-              :options="jobTypeChartOptions" 
+            <EChartComponent
+              v-if="!loading && jobTypeData.length > 0"
+              :options="jobTypeChartOptions"
               height="300px"
             />
             <el-empty v-else-if="!loading" description="暂无职位类型数据" />
@@ -82,9 +82,9 @@
             </div>
           </template>
           <div v-loading="loading" class="chart-container">
-            <echart-component 
-              v-if="!loading && applicationResultData.length > 0" 
-              :options="applicationResultChartOptions" 
+            <EChartComponent
+              v-if="!loading && applicationResultData.length > 0"
+              :options="applicationResultChartOptions"
               height="300px"
             />
             <el-empty v-else-if="!loading" description="暂无结果数据" />
@@ -155,12 +155,12 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useApplicationStore } from '@/stores/application';
 import EChartComponent from '@/components/common/EChartComponent.vue';
-import { 
-  InfoFilled, 
-  Document, 
-  ChatLineRound, 
-  GoodsFilled, 
-  DataAnalysis 
+import {
+  InfoFilled,
+  Document,
+  ChatLineRound,
+  GoodsFilled,
+  DataAnalysis
 } from '@element-plus/icons-vue';
 import type { EChartsOption } from 'echarts';
 
@@ -333,52 +333,112 @@ const handleChartReady = (chart: any) => {
 const fetchApplicationStatistics = async () => {
   loading.value = true;
   try {
-    // 这里应该调用API获取实际数据
-    // 模拟数据
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // 申请状态数据
-    applicationStatusData.value = [
-      { name: '待处理', value: 5 },
-      { name: '已查看', value: 8 },
-      { name: '面试中', value: 3 },
-      { name: '已录用', value: 2 },
-      { name: '未通过', value: 4 },
-      { name: '已撤回', value: 1 }
-    ];
-    
-    // 申请趋势数据
-    applicationTrendData.xAxis = ['1月', '2月', '3月', '4月', '5月', '6月'];
-    applicationTrendData.values = [2, 5, 3, 6, 4, 8];
-    
-    // 职位类型数据
-    jobTypeData.value = [
-      { name: '前端开发', value: 10 },
-      { name: 'UI设计', value: 5 },
-      { name: '后端开发', value: 8 },
-      { name: '产品经理', value: 3 },
-      { name: '测试工程师', value: 4 }
-    ];
-    
-    // 申请结果数据
-    applicationResultData.value = [
-      { name: '已录用', value: 2 },
-      { name: '未通过', value: 4 },
-      { name: '面试中', value: 3 },
-      { name: '待处理', value: 13 }
-    ];
-    
+    // 获取学生申请列表
+    await applicationStore.fetchStudentApplications({ pageSize: 100, page: 1 });
+
+    // 如果没有申请数据，使用默认值
+    if (!applicationStore.studentApplications || applicationStore.studentApplications.length === 0) {
+      // 设置默认值
+      statistics.totalApplications = 0;
+      statistics.interviewCount = 0;
+      statistics.offerCount = 0;
+      statistics.interviewPassRate = 0;
+
+      // 清空图表数据
+      applicationStatusData.value = [];
+      applicationTrendData.xAxis = [];
+      applicationTrendData.values = [];
+      jobTypeData.value = [];
+      applicationResultData.value = [];
+
+      loading.value = false;
+      return;
+    }
+
+    // 处理申请数据
+    const applications = applicationStore.studentApplications;
+
     // 统计数据
-    statistics.totalApplications = 23;
-    statistics.interviewCount = 5;
-    statistics.offerCount = 2;
-    statistics.interviewPassRate = 40; // 2/5 = 40%
-    
+    statistics.totalApplications = applications.length;
+    statistics.interviewCount = applications.filter(app => app.status === 'interview').length;
+    statistics.offerCount = applications.filter(app => app.status === 'offer').length;
+    statistics.interviewPassRate = statistics.interviewCount > 0
+      ? Math.round((statistics.offerCount / statistics.interviewCount) * 100)
+      : 0;
+
+    // 申请状态数据
+    const statusMap = new Map();
+    applications.forEach(app => {
+      const status = formatStatus(app.status);
+      statusMap.set(status, (statusMap.get(status) || 0) + 1);
+    });
+    applicationStatusData.value = Array.from(statusMap.entries()).map(([name, value]) => ({ name, value }));
+
+    // 申请趋势数据
+    const dateMap = new Map();
+    const now = new Date();
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(now.getMonth() - 5);
+
+    // 初始化过去6个月的数据
+    for (let i = 0; i < 6; i++) {
+      const date = new Date(sixMonthsAgo);
+      date.setMonth(sixMonthsAgo.getMonth() + i);
+      const monthName = date.toLocaleDateString('zh-CN', { month: 'short' });
+      dateMap.set(monthName, 0);
+    }
+
+    // 填充实际数据
+    applications.forEach(app => {
+      const applyDate = new Date(app.create_time || app.apply_time);
+      if (applyDate >= sixMonthsAgo) {
+        const monthName = applyDate.toLocaleDateString('zh-CN', { month: 'short' });
+        dateMap.set(monthName, (dateMap.get(monthName) || 0) + 1);
+      }
+    });
+
+    applicationTrendData.xAxis = Array.from(dateMap.keys());
+    applicationTrendData.values = Array.from(dateMap.values());
+
+    // 职位类型数据
+    const jobTypeMap = new Map();
+    applications.forEach(app => {
+      const jobType = app.job_info?.job_type || '未知';
+      jobTypeMap.set(jobType, (jobTypeMap.get(jobType) || 0) + 1);
+    });
+    jobTypeData.value = Array.from(jobTypeMap.entries()).map(([name, value]) => ({ name, value }));
+
+    // 申请结果数据
+    const resultMap = new Map();
+    applications.forEach(app => {
+      const result = formatStatus(app.status);
+      resultMap.set(result, (resultMap.get(result) || 0) + 1);
+    });
+    applicationResultData.value = Array.from(resultMap.entries()).map(([name, value]) => ({ name, value }));
+
   } catch (error) {
     console.error('Failed to fetch application statistics:', error);
+    // 设置默认值
+    statistics.totalApplications = 0;
+    statistics.interviewCount = 0;
+    statistics.offerCount = 0;
+    statistics.interviewPassRate = 0;
   } finally {
     loading.value = false;
   }
+};
+
+// 格式化申请状态
+const formatStatus = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    'pending': '待处理',
+    'viewed': '已查看',
+    'interview': '面试中',
+    'offer': '已录用',
+    'rejected': '未通过',
+    'withdrawn': '已撤回'
+  };
+  return statusMap[status] || status;
 };
 
 onMounted(() => {
@@ -491,20 +551,20 @@ onMounted(() => {
   .student-statistics {
     padding: 5px 0;
   }
-  
+
   .statistics-card, .statistics-summary-card {
     margin-bottom: 15px;
   }
-  
+
   .summary-icon {
     width: 50px;
     height: 50px;
   }
-  
+
   .summary-icon .el-icon {
     font-size: 24px;
   }
-  
+
   .summary-value {
     font-size: 20px;
   }

@@ -23,23 +23,40 @@ interface PermissionState {
 }
 
 export const usePermissionStore = defineStore('permission', {
-  state: (): PermissionState => ({
-    // 当前用户的角色和权限
-    roles: [],
-    permissions: [],
+  state: (): PermissionState => {
+    // 尝试从本地存储恢复权限数据
+    let roles: Role[] = [];
+    let permissions: PermissionCode[] = [];
 
-    // 管理端数据
-    roleList: [],
-    permissionList: [],
-    selectedRolePermissions: [],
-    userRoles: [],
+    try {
+      const storedData = localStorage.getItem('permissionsData') || sessionStorage.getItem('permissionsData');
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        roles = parsedData.roles || [];
+        permissions = parsedData.permissions || [];
+      }
+    } catch (error) {
+      console.error('Failed to parse stored permissions data:', error);
+    }
 
-    // 状态标记
-    loading: false,
-    loadingRoles: false,
-    loadingPermissions: false,
-    submitting: false,
-  }),
+    return {
+      // 当前用户的角色和权限
+      roles,
+      permissions,
+
+      // 管理端数据
+      roleList: [],
+      permissionList: [],
+      selectedRolePermissions: [],
+      userRoles: [],
+
+      // 状态标记
+      loading: false,
+      loadingRoles: false,
+      loadingPermissions: false,
+      submitting: false,
+    };
+  },
 
   actions: {
     // 获取当前用户权限
@@ -47,15 +64,68 @@ export const usePermissionStore = defineStore('permission', {
       // 可以在 userStore 中获取用户信息后再调用此方法
       this.loading = true;
       try {
+        // 检查是否处于离线模式（后端未启动）
+        if ((window as any).backendDown) {
+          console.log('Backend is down, using offline mode for permissions');
+
+          // 使用用户类型作为角色
+          const userStore = useUserStore();
+          const userType = userStore.userInfo?.user_type?.toLowerCase();
+
+          if (userType) {
+            this.roles = [userType as any];
+            this.permissions = [];
+
+            console.log('Using user type as role in offline mode:', userType);
+            return { roles: this.roles, permissions: this.permissions };
+          }
+
+          throw new Error('No user type available for offline mode');
+        }
+
+        // 正常模式：从API获取权限
         const response = await getUserPermissions();
-        this.roles = response.data.roles;
-        this.permissions = response.data.permissions;
-        // 将角色和权限信息同步到 userStore (可选，取决于设计)
-        // const userStore = useUserStore();
-        // userStore.setRoles(this.roles);
-        // userStore.setPermissions(this.permissions);
+
+        // 确保响应数据结构正确
+        if (response && response.data) {
+          this.roles = response.data.roles || [];
+          this.permissions = response.data.permissions || [];
+
+          // 保存到本地存储
+          const userStore = useUserStore();
+          const rememberMe = localStorage.getItem('rememberMe') === 'true';
+          const permissionsData = {
+            roles: this.roles,
+            permissions: this.permissions
+          };
+
+          if (rememberMe) {
+            localStorage.setItem('permissionsData', JSON.stringify(permissionsData));
+          } else {
+            sessionStorage.setItem('permissionsData', JSON.stringify(permissionsData));
+          }
+        } else {
+          console.warn('Invalid response format from getUserPermissions:', response);
+          throw new Error('Invalid response format');
+        }
+
+        console.log('Fetched user permissions:', { roles: this.roles, permissions: this.permissions });
       } catch (error) {
         console.error('Failed to fetch user permissions:', error);
+
+        // 如果是网络错误，尝试使用用户类型作为备用
+        if (error.type === 'network' || (window as any).backendDown) {
+          const userStore = useUserStore();
+          const userType = userStore.userInfo?.user_type?.toLowerCase();
+
+          if (userType) {
+            console.log('Using user type as fallback for permissions after error');
+            this.roles = [userType as any];
+            this.permissions = [];
+            return { roles: this.roles, permissions: this.permissions };
+          }
+        }
+
         this.roles = [];
         this.permissions = [];
       } finally {
@@ -70,11 +140,65 @@ export const usePermissionStore = defineStore('permission', {
       return checkList.every(p => this.permissions.includes(p));
     },
 
+    // 设置用户角色
+    setRoles(roles: Role[]) {
+        this.roles = roles;
+        console.log('Manually set roles:', roles);
+
+        // 保存到本地存储
+        const userStore = useUserStore();
+        const rememberMe = localStorage.getItem('rememberMe') === 'true';
+        const permissionsData = {
+            roles: this.roles,
+            permissions: this.permissions
+        };
+
+        if (rememberMe) {
+            localStorage.setItem('permissionsData', JSON.stringify(permissionsData));
+        } else {
+            sessionStorage.setItem('permissionsData', JSON.stringify(permissionsData));
+        }
+    },
+
     // 检查是否有指定角色
     hasRole(requiredRoles: Role | Role[]): boolean {
         if (!requiredRoles) return true;
+
+        // 获取用户类型作为备用
+        const userStore = useUserStore();
+        const userType = userStore.userInfo?.user_type?.toLowerCase();
+
         const checkList = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
-        return checkList.some(r => this.roles.includes(r));
+
+        // 首先检查权限存储中的角色
+        const hasRoleInPermissions = checkList.some(r => {
+            // 不区分大小写比较
+            return this.roles.some(role =>
+                typeof role === 'string' &&
+                typeof r === 'string' &&
+                role.toLowerCase() === r.toLowerCase()
+            );
+        });
+
+        // 如果权限存储中没有角色，但用户信息中有用户类型，也检查用户类型
+        const hasRoleInUserType = userType && checkList.some(r => {
+            // 不区分大小写比较
+            return typeof r === 'string' && r.toLowerCase() === userType.toLowerCase();
+        });
+
+        console.log('Required roles:', checkList);
+        console.log('User roles in permissions:', this.roles);
+        console.log('User type from userInfo:', userType);
+        console.log('Has role in permissions:', hasRoleInPermissions);
+        console.log('Has role in user type:', hasRoleInUserType);
+
+        // 如果用户类型匹配但权限存储中没有角色，自动设置角色
+        if (!hasRoleInPermissions && hasRoleInUserType && userType && this.roles.length === 0) {
+            console.log('Auto-setting role based on user type:', userType);
+            this.setRoles([userType as any]);
+        }
+
+        return hasRoleInPermissions || hasRoleInUserType;
     },
 
     // 检查是否有访问路由的权限
@@ -84,25 +208,37 @@ export const usePermissionStore = defineStore('permission', {
         return true;
       }
 
+      console.log('Checking route permission for:', route.path);
+      console.log('Route meta:', route.meta);
+
       // 检查角色权限
       if (route.meta.roles) {
         const hasRole = this.hasRole(route.meta.roles);
+        console.log('Has required role:', hasRole);
         if (!hasRole) return false;
       }
 
       // 检查特定权限
       if (route.meta.permissions) {
         const hasPermission = this.hasPermission(route.meta.permissions);
+        console.log('Has required permission:', hasPermission);
         if (!hasPermission) return false;
       }
 
-      return true;
+      // 如果没有指定角色或权限点，但需要认证，则只要用户已登录即可
+      const userStore = useUserStore();
+      const isLoggedIn = !!userStore.token && !!userStore.userInfo;
+      console.log('No specific roles/permissions required, checking if logged in:', isLoggedIn);
+      return isLoggedIn;
     },
 
     // 清除权限信息
     clearPermissions() {
       this.roles = [];
       this.permissions = [];
+      // 清除本地存储的权限数据
+      localStorage.removeItem('permissionsData');
+      sessionStorage.removeItem('permissionsData');
     },
 
     // (管理端) 获取所有角色

@@ -45,6 +45,7 @@
 import { ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePermissionStore } from '@/stores/permission';
+import { useUserStore } from '@/stores/user';
 import {
     Document,
     Menu as IconMenu,
@@ -86,34 +87,93 @@ interface MenuItem {
   children?: MenuItem[]; // Children are optional
 }
 
-// TODO: Generate menuItems dynamically based on user roles/permissions and routes
-// This is a placeholder structure
+// 生成菜单项
 const menuItems = computed((): MenuItem[] => { // Specify return type
-  // Example filtering based on roles (adapt as needed)
-  if (permissionStore.hasRole('student')) {
+  console.log('Sidebar roles:', permissionStore.roles); // 调试用
+
+  // 获取用户类型
+  const userStore = useUserStore();
+  const userType = userStore.userInfo?.user_type?.toLowerCase();
+  console.log('User type from userInfo:', userType); // 调试用
+
+  // 检查用户是否有学生角色（不区分大小写）
+  const hasStudentRole = permissionStore.roles.some(role =>
+    typeof role === 'string' && role.toLowerCase() === 'student'
+  );
+
+  // 检查用户是否有企业角色（不区分大小写）
+  const hasCompanyRole = permissionStore.roles.some(role =>
+    typeof role === 'string' && role.toLowerCase() === 'company'
+  );
+
+  // 检查用户是否有管理员角色（不区分大小写）
+  const hasAdminRole = permissionStore.roles.some(role =>
+    typeof role === 'string' && role.toLowerCase() === 'admin'
+  );
+
+  // 首先检查权限存储中的角色
+  if (hasStudentRole || userType === 'student') {
+    console.log('Generating student menu');
     return [
       { path: '/student/dashboard', meta: { title: '仪表盘', icon: DataAnalysis } },
       { path: '/student/profile', meta: { title: '个人信息', icon: User } },
-      { path: '/student/jobs', meta: { title: '浏览职位', icon: Briefcase } }, // Assuming a route exists
+      { path: '/student/jobs', meta: { title: '浏览职位', icon: Briefcase } },
       { path: '/student/resume', meta: { title: '我的简历', icon: Document } },
       { path: '/student/applications', meta: { title: '我的申请', icon: IconMenu } },
       { path: '/student/recommendations', meta: { title: '智能推荐', icon: Setting } },
     ];
-  } else if (permissionStore.hasRole('company')) {
+  } else if (hasCompanyRole || userType === 'company') {
+    console.log('Generating company menu');
     return [
        { path: '/company/dashboard', meta: { title: '仪表盘', icon: DataAnalysis } },
        { path: '/company/profile', meta: { title: '公司信息', icon: User } },
        { path: '/company/jobs', meta: { title: '职位管理', icon: Briefcase } },
        { path: '/company/applications', meta: { title: '收到申请', icon: Document } },
     ];
-  } else if (permissionStore.hasRole('admin')) {
-     return [
+  } else if (hasAdminRole || userType === 'admin') {
+    console.log('Generating admin menu');
+    return [
         { path: '/admin/dashboard', meta: { title: '仪表盘', icon: DataAnalysis } },
         { path: '/admin/users', meta: { title: '用户管理', icon: User } },
         { path: '/admin/companies', meta: { title: '企业审核', icon: Briefcase } },
      ];
   }
-  return []; // Default empty menu
+
+  // 如果没有匹配的角色，但有用户信息，尝试根据用户类型返回菜单
+  if (userStore.userInfo) {
+    console.log('Fallback to user type menu generation'); // 调试用
+
+    // 根据用户类型生成菜单
+    if (userType === 'student') {
+      console.log('Generating student menu based on user type');
+      return [
+        { path: '/student/dashboard', meta: { title: '仪表盘', icon: DataAnalysis } },
+        { path: '/student/profile', meta: { title: '个人信息', icon: User } },
+        { path: '/student/jobs', meta: { title: '浏览职位', icon: Briefcase } },
+        { path: '/student/resume', meta: { title: '我的简历', icon: Document } },
+        { path: '/student/applications', meta: { title: '我的申请', icon: IconMenu } },
+        { path: '/student/recommendations', meta: { title: '智能推荐', icon: Setting } },
+      ];
+    } else if (userType === 'company') {
+      console.log('Generating company menu based on user type');
+      return [
+        { path: '/company/dashboard', meta: { title: '仪表盘', icon: DataAnalysis } },
+        { path: '/company/profile', meta: { title: '公司信息', icon: User } },
+        { path: '/company/jobs', meta: { title: '职位管理', icon: Briefcase } },
+        { path: '/company/applications', meta: { title: '收到申请', icon: Document } },
+      ];
+    } else if (userType === 'admin') {
+      console.log('Generating admin menu based on user type');
+      return [
+        { path: '/admin/dashboard', meta: { title: '仪表盘', icon: DataAnalysis } },
+        { path: '/admin/users', meta: { title: '用户管理', icon: User } },
+        { path: '/admin/companies', meta: { title: '企业审核', icon: Briefcase } },
+      ];
+    }
+  }
+
+  console.log('No matching role or user type found, returning empty menu');
+  return []; // 默认返回空菜单
 });
 
 const toggleCollapse = () => {

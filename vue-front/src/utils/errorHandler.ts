@@ -148,14 +148,34 @@ class ErrorHandler {
       });
     } else if (isNetworkError(error)) {
       // 网络错误
+      // 检查是否是后端未启动的错误
+      const isBackendDown = error.message === 'Network Error' ||
+                           (error.code === 'ERR_CONNECTION_REFUSED');
+
+      if (isBackendDown) {
+        // 设置全局标志，表示后端可能未启动
+        (window as any).backendDown = true;
+
+        // 对于后端未启动的错误，只显示一次通知
+        if (!(window as any).networkErrorNotified) {
+          ElMessage({
+            message: '后端服务器可能未启动，部分功能将不可用',
+            type: 'warning',
+            duration: 5000
+          });
+          (window as any).networkErrorNotified = true;
+        }
+      }
+
       return createApiError(
         ApiErrorCode.NETWORK_ERROR,
-        '网络连接错误，请检查您的网络连接',
+        isBackendDown ? '后端服务器未启动，部分功能将不可用' : '网络连接错误，请检查您的网络连接',
         ErrorType.NETWORK,
         {
           originalError: error,
-          shouldRetry: this.config.autoRetryNetworkError,
-          retryCount: 0
+          shouldRetry: isBackendDown ? false : this.config.autoRetryNetworkError,
+          retryCount: 0,
+          isBackendDown
         }
       );
     } else if (isTimeoutError(error)) {
@@ -212,13 +232,20 @@ class ErrorHandler {
   private handleSpecificError(error: ApiError): void {
     // 处理认证错误
     if (error.code === ApiErrorCode.UNAUTHORIZED) {
-      // 清除本地存储的token
+      // 清除本地存储的token和用户信息
       localStorage.removeItem('token');
+      localStorage.removeItem('userInfo');
+      localStorage.removeItem('permissionsData');
       sessionStorage.removeItem('token');
+      sessionStorage.removeItem('userInfo');
+      sessionStorage.removeItem('permissionsData');
 
       // 跳转到登录页面
       const currentPath = window.location.pathname;
-      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
+      if (currentPath !== '/login') {
+        console.log('Redirecting to login page due to unauthorized access');
+        router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
+      }
     }
 
     // 处理权限错误
@@ -244,6 +271,11 @@ class ErrorHandler {
    * @param error API错误对象
    */
   private showErrorNotification(error: ApiError): void {
+    // 如果是后端未启动的错误，且已经显示过通知，则不再显示
+    if (error.type === ErrorType.NETWORK && (error as any).isBackendDown && (window as any).networkErrorNotified) {
+      return;
+    }
+
     // 根据错误类型选择不同的通知方式
     switch (error.type) {
       case ErrorType.AUTH:

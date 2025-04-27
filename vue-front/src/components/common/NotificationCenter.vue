@@ -18,10 +18,10 @@
           <div class="notification-header">
             <h3 class="notification-title">通知中心</h3>
             <div class="notification-actions">
-              <el-button v-if="hasUnread" type="text" size="small" @click="markAllAsRead">
+              <el-button v-if="hasUnread" type="primary" size="small" @click="markAllAsRead">
                 全部已读
               </el-button>
-              <el-button type="text" size="small" @click="viewAllNotifications">
+              <el-button type="primary" size="small" @click="viewAllNotifications">
                 查看全部
               </el-button>
             </div>

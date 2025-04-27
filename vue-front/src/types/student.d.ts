@@ -27,16 +27,35 @@ export interface WorkExperience {
 
 /**
  * 学生详细信息接口
+ * 与后端 StudentDTO 保持一致
  */
 export interface StudentProfile extends UserInfo {
   user_type: 'student'; // 明确用户类型为学生
+
+  // 基本信息 (来自 users 表)
+  username: string;
+  email?: string;
+  status: string;
+  create_time?: string;
+  last_login_time?: string;
+
+  // 学生特有信息 (来自 students 表)
+  real_name?: string | null; // 真实姓名
+  gender?: string | null; // 性别
+  age?: number | null; // 年龄
+  phone?: string | null; // 手机号
+  school?: string | null; // 学校
+  major?: string | null; // 专业
+  education?: string | null; // 学历
+  graduation_year?: number | null; // 毕业年份
+  skills?: string[] | null; // 技能标签
+  introduction?: string | null; // 个人介绍
+  avatar?: string | null; // 头像URL
+
+  // 扩展信息 (前端特有，可能不在后端)
   student_id?: string; // 学号
-  major?: string; // 专业
   grade?: string; // 年级
-  school?: string; // 学校
-  education?: string; // 学历 (例如: 本科, 硕士, 博士)
-  skills?: string[]; // 技能标签
-  experience?: string; // 实习或项目经历 (可以是 Markdown 格式)
+  experience?: string; // 实习或项目经历
   expected_salary?: string; // 期望薪资
   expected_location?: string; // 期望工作地点
   education_experiences?: EducationExperience[]; // 教育经历

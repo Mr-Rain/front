@@ -19,8 +19,22 @@
             <div class="el-scrollbar__view">
               <router-view v-slot="{ Component, route }">
                 <transition name="fade-transform" mode="out-in">
-                  <!-- Add keep-alive based on needs -->
-                  <component :is="Component" :key="route.path" />
+                  <suspense>
+                    <template #default>
+                      <!-- 添加错误边界和调试信息 -->
+                      <component
+                        :is="Component"
+                        :key="route.fullPath"
+                        @error="handleComponentError"
+                      />
+                    </template>
+                    <template #fallback>
+                      <div class="loading-container">
+                        <el-skeleton :rows="10" animated />
+                        <p class="text-center">正在加载内容...</p>
+                      </div>
+                    </template>
+                  </suspense>
                 </transition>
               </router-view>
             </div>
@@ -33,10 +47,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onErrorCaptured } from 'vue';
 // Reusing common components
 import Navbar from '@/components/common/Navbar.vue';
 import Sidebar from '@/components/common/Sidebar.vue';
+import { ElMessage } from 'element-plus';
 
 // 侧边栏折叠状态
 const isSidebarCollapsed = ref(false);
@@ -45,6 +60,24 @@ const isSidebarCollapsed = ref(false);
 const handleSidebarCollapse = (collapsed: boolean) => {
   isSidebarCollapsed.value = collapsed;
 };
+
+// 处理组件错误
+const handleComponentError = (error: any) => {
+  console.error('Component error:', error);
+  ElMessage.error('组件加载失败，请刷新页面重试');
+};
+
+// 捕获错误
+onErrorCaptured((error, instance, info) => {
+  console.error('Error captured in layout:', error);
+  console.error('Error instance:', instance);
+  console.error('Error info:', info);
+
+  ElMessage.error('页面加载出错，请刷新页面重试');
+
+  // 返回 false 阻止错误继续传播
+  return false;
+});
 </script>
 
 <style lang="scss" scoped>
@@ -113,6 +146,18 @@ const handleSidebarCollapse = (collapsed: boolean) => {
 
 .el-scrollbar__view {
   padding: 20px;
+}
+
+/* 加载容器样式 */
+.loading-container {
+  padding: 40px;
+  text-align: center;
+}
+
+.text-center {
+  text-align: center;
+  margin-top: 20px;
+  color: #909399;
 }
 
 /* Transition styles */

@@ -99,17 +99,23 @@ export const setupCacheInterceptor = (axios: AxiosInstance): void => {
           return config;
         }
 
-        // 创建一个取消令牌
-        const { CancelToken } = axios;
-        const source = CancelToken.source();
+        try {
+          // 创建一个取消令牌
+          const { CancelToken } = axios;
+          const source = CancelToken.source();
 
-        // 取消请求，使用缓存数据
-        config.cancelToken = source.token;
-        source.cancel(JSON.stringify({
-          type: 'CACHE_HIT',
-          cacheKey,
-          data: cachedData
-        }));
+          // 取消请求，使用缓存数据
+          config.cancelToken = source.token;
+          source.cancel(JSON.stringify({
+            type: 'CACHE_HIT',
+            cacheKey,
+            data: cachedData
+          }));
+        } catch (error) {
+          console.error('Error in cache interceptor:', error);
+          // 如果出错，继续发送请求
+          return config;
+        }
       }
 
       return config;

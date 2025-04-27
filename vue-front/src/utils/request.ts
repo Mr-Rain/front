@@ -1,104 +1,164 @@
 import axios from 'axios';
+// 导入 Axios 的类型定义，用于 TypeScript 的类型检查
 import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { useUserStore } from '@/stores/user'; // 用于获取 token
-import { ElMessage } from 'element-plus'; // 用于错误提示
-import errorHandler from '@/utils/errorHandler'; // 统一错误处理
-import { ApiErrorCode, ErrorType, createApiError } from '@/types/error'; // 错误类型定义
-import { setupCacheInterceptor } from '@/utils/cacheInterceptor'; // API缓存拦截器
+// 导入用户状态管理 store，用于获取和设置 token
+import { useUserStore } from '@/stores/user';
+// 导入 Element Plus 的消息提示组件
+import { ElMessage } from 'element-plus';
+// 导入自定义的统一错误处理器
+import errorHandler from '@/utils/errorHandler';
+// 导入自定义的错误类型和创建函数
+import { ApiErrorCode, ErrorType, createApiError } from '@/types/error';
+// 导入 API 缓存拦截器的设置函数
+import { setupCacheInterceptor } from '@/utils/cacheInterceptor';
 
-// 创建 axios 实例
+// 创建 axios 实例，用于发起 HTTP 请求
 const service: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/', // API基础URL，从环境变量读取或默认为 '/'
-  timeout: 10000, // 请求超时时间
+  // API 的基础 URL，从环境变量 VITE_API_BASE_URL 读取，若未设置则默认为 '/'
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/',
+  // 请求超时时间，单位毫秒
+  timeout: 10000,
 });
 
-// 设置缓存拦截器
+// 为创建的 axios 实例设置缓存拦截器
 setupCacheInterceptor(service);
 
-// 请求拦截器
+// 请求拦截器：在请求发送之前执行
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // 获取用户 store 实例
     const userStore = useUserStore();
+    // 从 store 中获取当前的 token
     const token = userStore.token;
 
-    // 如果存在 token，则添加到请求头
+    // 调试日志
+    console.log('Request URL:', config.url);
+    console.log('Request Method:', config.method);
+    console.log('Request Data:', config.data);
+    console.log('Token:', token);
+
+    // 如果存在 token，则将其添加到请求头的 Authorization 字段中
     if (token) {
-      // 确保token是一个有效的字符串
+      // 确保 token 是有效的非空字符串
       const tokenStr = String(token).trim();
       if (tokenStr) {
+        // 通常使用 Bearer Token 方案
         config.headers.Authorization = `Bearer ${tokenStr}`;
+        console.log('Added Authorization header:', `Bearer ${tokenStr.substring(0, 10)}...`);
       }
     }
+    // 返回修改后的请求配置
     return config;
   },
   (error) => {
-    // 使用统一错误处理
+    // 处理请求发送前的错误（例如网络问题、配置错误等）
+    // 使用统一错误处理器处理错误
     const apiError = errorHandler.handleApiError(error, {
-      showNotification: true,
-      rethrow: false
+      showNotification: true, // 配置为显示错误通知
+      rethrow: false // 配置为不重新抛出错误，避免上层重复处理
     });
-
+    // 返回一个被拒绝的 Promise，并将处理后的错误对象传递出去
     return Promise.reject(apiError);
   }
 );
 
-// 响应拦截器
+// 响应拦截器：在接收到响应之后执行
 service.interceptors.response.use(
   (response: AxiosResponse) => {
+    // 调试日志
+    console.log('Response URL:', response.config.url);
+    console.log('Response Status:', response.status);
+    console.log('Response Data:', response.data);
+
+    // 从响应对象中获取响应体数据
     const res = response.data;
 
-    // 如果响应头中包含新的token，则更新token
+    // 检查响应头中是否包含新的 token（用于 token 刷新机制）
     const newToken = response.headers['new-token'];
     if (newToken) {
+      // 如果有新 token，更新用户 store 中的 token
       const userStore = useUserStore();
+      // 检查用户是否选择了 "记住我"
       const rememberMe = localStorage.getItem('rememberMe') === 'true';
+      // 使用 store 的 setToken 方法更新 token，并根据 rememberMe 决定存储方式
       userStore.setToken(newToken, rememberMe);
     }
 
-    // 根据后端接口规范调整响应处理逻辑
+    // 根据后端接口规范，检查响应体中的业务状态码 (res.code)
+    // 如果存在 code 字段且不等于约定的成功码 (ApiErrorCode.SUCCESS)
     if (res.code && res.code !== ApiErrorCode.SUCCESS) {
-      // 创建API错误对象
+      // 根据后端返回的错误码创建前端的 API 错误对象
+      // 判断错误类型：认证错误、业务错误、服务器错误
       const errorType = res.code === ApiErrorCode.UNAUTHORIZED || res.code === ApiErrorCode.FORBIDDEN
-        ? ErrorType.AUTH
-        : res.code >= 1000 && res.code < 2000
+        ? ErrorType.AUTH // 401 或 403 视为认证错误
+        : res.code >= 1000 && res.code < 2000 // 假设 1000-1999 为业务逻辑错误
           ? ErrorType.BUSINESS
-          : ErrorType.SERVER;
+          : ErrorType.SERVER; // 其他视为服务器端错误
 
+      // 特殊处理认证错误 (401)
+      if (res.code === ApiErrorCode.UNAUTHORIZED) {
+        // Token无效或过期，清除用户状态并跳转到登录页
+        const userStore = useUserStore();
+        userStore.resetAuth();
+        // 避免在登录页面再次跳转到登录页
+        if (window.location.pathname !== '/login') {
+          console.log('Redirecting to login page due to unauthorized access');
+          ElMessage.error('登录状态已过期，请重新登录');
+          window.location.href = '/login';
+          return Promise.reject(new Error('登录状态已过期，请重新登录'));
+        }
+      }
+
+      // 使用 createApiError 创建结构化的错误对象，包含详细信息
       const apiError = createApiError(
-        res.code,
-        res.message || 'Error',
-        errorType,
+        res.code, // 后端返回的错误码
+        res.message || 'Error', // 后端返回的错误信息或默认值
+        errorType, // 前端定义的错误类型
         {
-          url: response.config.url,
-          method: response.config.method,
-          params: response.config.params,
-          data: response.config.data,
-          status: response.status,
-          response: res
+          url: response.config.url, // 请求 URL
+          method: response.config.method, // 请求方法
+          params: response.config.params, // 请求参数 (GET)
+          data: response.config.data, // 请求体数据 (POST/PUT)
+          status: response.status, // HTTP 状态码
+          response: res // 完整的后端响应体
         }
       );
 
-      // 使用统一错误处理
+      // 使用统一错误处理器处理这个 API 错误（例如，弹出错误消息）
       errorHandler.handleApiError(apiError, {
-        showNotification: true,
-        rethrow: false
+        showNotification: true, // 配置为显示错误通知
+        rethrow: false // 配置为不重新抛出错误
       });
 
+      // 返回一个被拒绝的 Promise，并将 API 错误对象传递出去
+      // 这会阻止调用方代码中的 .then() 执行，直接进入 .catch()
       return Promise.reject(apiError);
     }
 
-    // 如果响应正常，直接返回响应数据
+    // 如果响应正常（没有业务错误码或 code 为成功码），直接返回响应体数据 `res`
+    // 这样在调用 API 的地方可以通过 .then(data => ...) 直接获取后端返回的核心数据
     return res;
   },
   (error) => {
-    // 使用统一错误处理
-    const apiError = errorHandler.handleApiError(error, {
-      showNotification: true,
-      rethrow: false
-    });
+    // 调试日志
+    console.error('Response Error:', error);
+    console.error('Error Config:', error.config);
+    console.error('Error Message:', error.message);
+    if (error.response) {
+      console.error('Error Status:', error.response.status);
+      console.error('Error Data:', error.response.data);
+    }
 
+    // 处理 HTTP 层面的错误（例如网络断开、超时、500 服务器错误等）
+    // 使用统一错误处理器处理错误
+    const apiError = errorHandler.handleApiError(error, {
+      showNotification: true, // 配置为显示错误通知
+      rethrow: false // 配置为不重新抛出错误
+    });
+    // 返回一个被拒绝的 Promise，并将处理后的错误对象传递出去
     return Promise.reject(apiError);
   }
 );
 
+// 导出配置好的 axios 实例，供项目其他地方导入和使用
 export default service;

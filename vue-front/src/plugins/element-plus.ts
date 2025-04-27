@@ -53,7 +53,7 @@ import {
   // 导航组件
   ElMenu,
   ElMenuItem,
-  // ElSubMenu, // 在新版本中已不再作为独立组件导出
+  ElSubMenu,
   ElMenuItemGroup,
   ElTabs,
   ElTabPane,
@@ -65,6 +65,7 @@ import {
   ElDropdownMenu,
   ElSteps,
   ElStep,
+  ElScrollbar,
 
   // 反馈组件
   ElAlert,
@@ -87,7 +88,6 @@ import {
   ElMain,
   ElAside,
   ElCard,
-  ElDivider as ElDivider2, // 避免重复导入
 
   // 其他组件
   ElAffix,
@@ -147,7 +147,7 @@ import 'element-plus/es/components/result/style/css'
 import 'element-plus/es/components/statistic/style/css'
 import 'element-plus/es/components/menu/style/css'
 import 'element-plus/es/components/menu-item/style/css'
-// import 'element-plus/es/components/sub-menu/style/css' // 在新版本中已不再作为独立组件
+import 'element-plus/es/components/sub-menu/style/css'
 import 'element-plus/es/components/menu-item-group/style/css'
 import 'element-plus/es/components/tabs/style/css'
 import 'element-plus/es/components/tab-pane/style/css'
@@ -186,6 +186,12 @@ import 'element-plus/es/components/carousel/style/css'
 import 'element-plus/es/components/carousel-item/style/css'
 import 'element-plus/es/components/collapse-transition/style/css'
 import 'element-plus/es/components/autocomplete/style/css'
+import 'element-plus/es/components/scrollbar/style/css'
+
+// 指令 (尝试引入 Loading 指令)
+// 注意：按需引入指令的方式可能因版本而异，这里是一种尝试
+// 如果报错，可能需要查阅 Element Plus 文档确认正确的按需引入指令方式
+import { ElLoading } from 'element-plus'
 
 // 组件列表
 const components = [
@@ -239,7 +245,7 @@ const components = [
   // 导航组件
   ElMenu,
   ElMenuItem,
-  // ElSubMenu, // 在新版本中已不再作为独立组件导出
+  ElSubMenu,
   ElMenuItemGroup,
   ElTabs,
   ElTabPane,
@@ -251,6 +257,7 @@ const components = [
   ElDropdownMenu,
   ElSteps,
   ElStep,
+  ElScrollbar,
 
   // 反馈组件
   ElAlert,
@@ -296,7 +303,10 @@ export default {
       }
     })
 
-    // 注册所有图标
+    // 尝试注册 Loading 指令
+    app.directive('loading', ElLoading.directive)
+
+    // 全局注册图标
     for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
       app.component(key, component)
     }

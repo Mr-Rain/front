@@ -4,9 +4,9 @@
 type UserType = 'student' | 'company' | 'admin';
 
 /**
- * 用户状态：激活、禁用
+ * 用户状态：激活、禁用、锁定、删除
  */
-export type UserStatus = 'active' | 'inactive';
+export type UserStatus = 'active' | 'inactive' | 'locked' | 'deleted';
 
 /**
  * 用户信息接口

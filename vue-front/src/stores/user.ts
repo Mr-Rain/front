@@ -30,17 +30,21 @@ interface UserState {
   userList: UserInfo[];
   userTotal: number;
   loadingList: boolean;
+
+  // 登录状态
+  loading: boolean;
 }
 
 export const useUserStore = defineStore('user', {
   state: (): UserState => ({
     token: localStorage.getItem('token') || sessionStorage.getItem('token') || null,
-    userInfo: null,
+    userInfo: JSON.parse(localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo') || 'null'),
 
     // Admin User List Management Initial State
     userList: [],
     userTotal: 0,
     loadingList: false,
+    loading: false,
   }),
 
   actions: {
@@ -68,10 +72,26 @@ export const useUserStore = defineStore('user', {
     // 设置用户信息 (可以由 getUserInfo 调用)
     setUserInfo(userInfo: UserInfo | null) {
       this.userInfo = userInfo;
+
+      // 持久化存储用户信息
+      if (userInfo) {
+        // 检查是否选择了"记住我"
+        const rememberMe = localStorage.getItem('rememberMe') === 'true';
+        if (rememberMe) {
+          localStorage.setItem('userInfo', JSON.stringify(userInfo));
+        } else {
+          sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
+          localStorage.removeItem('userInfo');
+        }
+      } else {
+        localStorage.removeItem('userInfo');
+        sessionStorage.removeItem('userInfo');
+      }
     },
 
     // 登录
     async login(payload: LoginPayload, remember: boolean = false) {
+      this.loading = true;
       try {
         const response = await loginApi(payload);
         // 从响应中获取token和用户信息
@@ -103,11 +123,26 @@ export const useUserStore = defineStore('user', {
         const permissionStore = usePermissionStore();
         await permissionStore.fetchUserPermissions();
 
+        // 保存权限到本地存储
+        const permissionsData = {
+          roles: permissionStore.roles,
+          permissions: permissionStore.permissions
+        };
+
+        if (remember) {
+          localStorage.setItem('permissionsData', JSON.stringify(permissionsData));
+        } else {
+          sessionStorage.setItem('permissionsData', JSON.stringify(permissionsData));
+          localStorage.removeItem('permissionsData');
+        }
+
         return Promise.resolve(); // 返回成功状态
       } catch (error: any) {
         this.resetAuth(); // 登录失败，重置状态
         ElMessage.error(error?.message || '登录失败，请检查用户名和密码');
         return Promise.reject(error);
+      } finally {
+        this.loading = false;
       }
     },
 
@@ -129,18 +164,41 @@ export const useUserStore = defineStore('user', {
       if (!this.token) {
         throw new Error('Token not found, cannot get user info');
       }
-      // 如果 userInfo 已存在，可以考虑不重新获取，或者根据需要强制刷新
-      // if (this.userInfo) return this.userInfo;
+
+      this.loading = true;
       try {
         const response = await getUserInfoApi();
         this.setUserInfo(response.data);
+
+        // 获取权限
+        const permissionStore = usePermissionStore();
+        if (permissionStore.roles.length === 0) {
+          await permissionStore.fetchUserPermissions();
+
+          // 保存权限到本地存储
+          const permissionsData = {
+            roles: permissionStore.roles,
+            permissions: permissionStore.permissions
+          };
+
+          const rememberMe = localStorage.getItem('rememberMe') === 'true';
+          if (rememberMe) {
+            localStorage.setItem('permissionsData', JSON.stringify(permissionsData));
+          } else {
+            sessionStorage.setItem('permissionsData', JSON.stringify(permissionsData));
+          }
+        }
+
         return response.data;
       } catch (error) {
         // 获取用户信息失败，可能 token 失效
+        console.error('Failed to get user info:', error);
         this.resetAuth(); // 重置认证状态
         ElMessage.error('获取用户信息失败或登录已过期，请重新登录');
         router.push('/login'); // 跳转到登录页
         throw error;
+      } finally {
+        this.loading = false;
       }
     },
 
@@ -170,10 +228,14 @@ export const useUserStore = defineStore('user', {
     resetAuth() {
       this.setToken(null);
       this.setUserInfo(null);
-      // 确保清除所有存储中的token
+      // 确保清除所有存储中的token和用户信息
       localStorage.removeItem('token');
       localStorage.removeItem('rememberMe');
+      localStorage.removeItem('userInfo');
+      localStorage.removeItem('permissionsData');
       sessionStorage.removeItem('token');
+      sessionStorage.removeItem('userInfo');
+      sessionStorage.removeItem('permissionsData');
       // permission store 的清理在 logout 中完成
     },
 

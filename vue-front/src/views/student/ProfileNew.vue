@@ -20,7 +20,7 @@
               @upload="handleAvatarUpload"
             />
           </div>
-          
+
           <el-form
             ref="profileFormRef"
             :model="profileForm"
@@ -75,7 +75,7 @@
                   </el-form-item>
                 </el-col>
               </el-row>
-              
+
               <el-form-item label="个人简介" prop="bio">
                 <el-input
                   v-model="profileForm.bio"
@@ -159,7 +159,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, reactive, onMounted, watch, nextTick } from 'vue';
+import { useRoute } from 'vue-router';
 import { useStudentStore } from '@/stores/student';
 import AvatarUploader from '@/components/common/AvatarUploader.vue';
 import EducationExperienceForm from '@/components/student/EducationExperienceForm.vue';
@@ -170,6 +171,7 @@ import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage } from 'element-plus';
 import _ from 'lodash'; // 使用lodash进行深拷贝
 
+const route = useRoute();
 const studentStore = useStudentStore();
 const profileFormRef = ref<FormInstance>();
 const isEditing = ref(false);
@@ -212,24 +214,86 @@ const profileRules = reactive<FormRules>({
 });
 
 // 监听store中的profile变化并更新表单
-watch(() => studentStore.profile, (newProfile) => {
+watch(() => studentStore.profile, (newProfile, oldProfile) => {
+  console.log('Profile changed in store:', newProfile);
+  console.log('Old profile:', oldProfile);
+
   if (newProfile) {
     // 使用深拷贝防止引用问题
     originalProfileData = _.cloneDeep(newProfile);
+
+    // 清空表单，确保没有旧数据残留
+    Object.keys(profileForm).forEach(key => {
+      if (Array.isArray(profileForm[key])) {
+        profileForm[key] = [];
+      } else if (typeof profileForm[key] === 'object' && profileForm[key] !== null) {
+        profileForm[key] = {};
+      } else {
+        profileForm[key] = '';
+      }
+    });
+
+    // 重新赋值
     Object.assign(profileForm, newProfile);
-    
+
     // 确保数组属性存在
     if (!profileForm.education_experiences) profileForm.education_experiences = [];
     if (!profileForm.work_experiences) profileForm.work_experiences = [];
     if (!profileForm.skills) profileForm.skills = [];
+
+    console.log('Profile form updated:', profileForm);
+
+    // 如果表单引用已经存在，清除验证状态
+    if (profileFormRef.value) {
+      profileFormRef.value.clearValidate();
+    }
+  } else {
+    console.warn('Received null or undefined profile from store');
   }
 }, { immediate: true, deep: true });
 
-// 如果未加载，则获取个人信息
-onMounted(() => {
-  if (!studentStore.profile) {
-    studentStore.fetchProfile();
+// 监听路由变化，实现页面刷新
+watch(route, (to, from) => {
+  console.log('Route changed:', from.path, '->', to.path);
+  console.log('Route query params:', to.query);
+
+  // 如果路由参数中有时间戳，说明需要刷新数据
+  if (to.query.t) {
+    console.log('Time parameter detected, refreshing data...');
+
+    // 重新获取个人信息
+    studentStore.fetchProfile().then(profile => {
+      console.log('Profile data refreshed successfully via route watch:', profile);
+      ElMessage.success('个人信息已更新');
+    }).catch(error => {
+      console.error('Failed to refresh student profile via route watch:', error);
+      ElMessage.error('获取学生信息失败，请刷新页面重试');
+    });
   }
+});
+
+// 在组件挂载时获取个人信息
+onMounted(() => {
+  console.log('ProfileNew component mounted');
+  console.log('Route query params:', route.query);
+  console.log('Route path:', route.path);
+
+  // 添加一个小延迟，确保组件完全挂载
+  setTimeout(() => {
+    // 无论是否已加载，都重新获取个人信息，确保数据最新
+    console.log('Fetching profile data on mount...');
+    studentStore.fetchProfile().then(profile => {
+      console.log('Profile data fetched successfully on mount:', profile);
+
+      // 如果有时间戳参数，显示提示信息
+      if (route.query.t) {
+        // ElMessage.success('个人信息已更新'); // 在路由 watch 中处理此消息
+      }
+    }).catch(error => {
+      console.error('Failed to fetch student profile on mount:', error);
+      ElMessage.error('获取学生信息失败，请刷新页面重试');
+    });
+  }, 100);
 });
 
 // 处理头像上传
@@ -252,7 +316,7 @@ const toggleEdit = () => {
 // 保存个人信息
 const saveProfile = async () => {
   if (!profileFormRef.value) return;
-  
+
   profileFormRef.value.validate(async (valid) => {
     if (valid) {
       loading.value = true;
@@ -286,6 +350,20 @@ const cancelEdit = () => {
 <style scoped>
 .student-profile-page {
   padding: 20px;
+}
+
+/* 调试信息样式 */
+.debug-info {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 4px solid #409EFF;
+  font-size: 14px;
+}
+
+.debug-info p {
+  margin: 5px 0;
 }
 
 .card-header {
@@ -337,7 +415,7 @@ const cancelEdit = () => {
   .student-profile-page {
     padding: 10px;
   }
-  
+
   .form-section {
     padding: 15px;
   }

@@ -9,6 +9,11 @@ import DefaultLayout from '@/layouts/DefaultLayout.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  // 添加自定义导航行为
+  scrollBehavior(to, from, savedPosition) {
+    // 始终滚动到顶部
+    return { top: 0 }
+  },
   routes: [
     // === START: Add Home Route ===
     {
@@ -55,7 +60,7 @@ const router = createRouter({
         {
           path: 'profile',
           name: 'student-profile',
-          component: createLazyComponent('student/ProfileNew'),
+          component: () => import('../views/student/ProfileNew.vue'),
           meta: { title: '个人信息' }
         },
         {
@@ -339,6 +344,12 @@ const router = createRouter({
           name: 'static-cache-demo',
           component: createLazyComponent('common/StaticCacheDemo'),
           meta: { title: '静态资源缓存示例' }
+        },
+        {
+          path: 'api-test',
+          name: 'api-test',
+          component: () => import('@/components/common/ApiTest.vue'),
+          meta: { title: 'API测试' }
         }
       ]
     },

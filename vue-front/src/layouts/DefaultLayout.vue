@@ -19,7 +19,8 @@
               <div class="el-scrollbar__view">
                 <router-view v-slot="{ Component, route }">
                   <transition name="fade-transform" mode="out-in">
-                    <component :is="Component" :key="route.path" />
+                    <!-- 不使用 keep-alive，避免组件缓存导致的问题 -->
+                    <component :is="Component" :key="route.fullPath" />
                   </transition>
                 </router-view>
               </div>
@@ -32,7 +33,8 @@
             <div class="el-scrollbar__view">
               <router-view v-slot="{ Component, route }">
                 <transition name="fade-transform" mode="out-in">
-                  <component :is="Component" :key="route.path" />
+                  <!-- 不使用 keep-alive，避免组件缓存导致的问题 -->
+                  <component :is="Component" :key="route.fullPath" />
                 </transition>
               </router-view>
             </div>

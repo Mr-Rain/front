@@ -86,22 +86,76 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import { ElContainer, ElMain, ElButton, ElRow, ElCol, ElCard, ElIcon, ElText, ElFooter } from 'element-plus';
+import { ElContainer, ElMain, ElButton, ElRow, ElCol, ElCard, ElIcon, ElFooter, ElMessage } from 'element-plus';
 import { ArrowRightBold, Opportunity, DocumentChecked, TrendCharts } from '@element-plus/icons-vue';
+import { useUserStore } from '@/stores/user';
+import { usePermissionStore } from '@/stores/permission';
 
 const router = useRouter();
+const userStore = useUserStore();
+const permissionStore = usePermissionStore();
+
+// 获取用户对应的仪表盘路径
+const getUserDashboardPath = () => {
+  const userType = userStore.userInfo?.user_type?.toLowerCase();
+  const roles = permissionStore.roles;
+
+  if (roles.includes('admin') || userType === 'admin') {
+    return '/admin/dashboard';
+  } else if (roles.includes('company') || userType === 'company') {
+    return '/company/dashboard';
+  } else if (roles.includes('student') || userType === 'student') {
+    return '/student/dashboard';
+  }
+
+  return '/login';
+};
 
 const goToLogin = () => {
-  router.push('/login');
+  // 检查用户是否已登录
+  if (userStore.token && userStore.userInfo) {
+    // 已登录，直接导航到对应的仪表盘
+    const dashboardPath = getUserDashboardPath();
+    console.log('User already logged in, redirecting to dashboard:', dashboardPath);
+    console.log('User info:', userStore.userInfo);
+    console.log('User roles:', permissionStore.roles);
+
+    ElMessage.info('您已登录，正在跳转到仪表盘');
+
+    // 确保用户有权限信息
+    if (permissionStore.roles.length === 0) {
+      // 如果没有权限信息，使用用户类型作为角色
+      const userType = userStore.userInfo.user_type?.toLowerCase();
+      if (userType) {
+        permissionStore.setRoles([userType as any]);
+        console.log('Set roles based on user type:', userType);
+      }
+    }
+
+    router.push(dashboardPath);
+  } else {
+    // 未登录，导航到登录页
+    router.push('/login');
+  }
 };
 
 const goToRegister = () => {
-  router.push('/register');
+  // 检查用户是否已登录
+  if (userStore.token && userStore.userInfo) {
+    // 已登录，直接导航到对应的仪表盘
+    const dashboardPath = getUserDashboardPath();
+    console.log('User already logged in, redirecting to dashboard:', dashboardPath);
+    ElMessage.info('您已登录，正在跳转到仪表盘');
+    router.push(dashboardPath);
+  } else {
+    // 未登录，导航到注册页
+    router.push('/register');
+  }
 };
 
 const browseJobs = () => {
-    // 重定向到公共职位列表页面
-    router.push('/jobs');
+  // 重定向到公共职位列表页面
+  router.push('/jobs');
 };
 
 </script>
@@ -114,41 +168,41 @@ const browseJobs = () => {
   --primary: #409EFF;
   --primary-dark: #337ecc;
   --primary-light: #79bbff;
-  
+
   /* 辅助色调 */
   --success: #67C23A;
   --success-dark: #529b2e;
   --warning: #E6A23C;
   --danger: #F56C6C;
   --info: #909399;
-  
+
   /* 背景颜色 */
   --bg-light: #FFFFFF;
   --bg-dark: #181818;
   --bg-gradient: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.05) 100%);
   --bg-card: #F9FAFC;
   --bg-card-hover: #EBEEF5;
-  
+
   /* 文本颜色 */
   --text-primary: #303133;
   --text-regular: #606266;
   --text-secondary: #909399;
   --text-placeholder: #C0C4CC;
-  
+
   /* 边框与阴影 */
   --border-light: #DCDFE6;
   --border-base: #E4E7ED;
   --shadow-base: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
   --shadow-hover: 0 6px 24px rgba(0, 0, 0, 0.12);
-  
+
   /* 间距 */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
   --space-xl: 32px;
-  
+
   /* 圆角 */
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -399,7 +453,7 @@ const browseJobs = () => {
 
 /* CTA Section */
 .cta-section {
-  background: linear-gradient(to right, rgba(64, 158, 255, 0.9), rgba(103, 194, 58, 0.9)), 
+  background: linear-gradient(to right, rgba(64, 158, 255, 0.9), rgba(103, 194, 58, 0.9)),
               url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
   background-size: cover;
   background-position: center;
@@ -501,46 +555,46 @@ const browseJobs = () => {
   .hero-title {
     font-size: 2.5rem;
   }
-  
+
   .hero-subtitle {
     font-size: 1.5rem;
   }
-  
+
   .hero-description {
     font-size: 1rem;
   }
-  
+
   .section-title {
     font-size: 1.8rem;
   }
-  
+
   .cta-title {
     font-size: 2rem;
   }
-  
+
   .feature-card {
     margin-bottom: 30px;
     padding: 30px 20px;
   }
-  
+
   .feature-icon {
     width: 70px;
     height: 70px;
     font-size: 2rem;
   }
-  
+
   .hero-section, .features-section, .cta-section {
     padding: 60px 15px;
   }
-  
+
   .hero-section {
     min-height: auto;
   }
-  
+
   .hero-actions {
     gap: 10px;
   }
-  
+
   .action-button {
     padding: 10px 20px;
   }
@@ -550,27 +604,27 @@ const browseJobs = () => {
   .hero-title {
     font-size: 2rem;
   }
-  
+
   .hero-subtitle {
     font-size: 1.2rem;
   }
-  
+
   .hero-description br {
     display: none;
   }
-  
+
   .section-title {
     font-size: 1.5rem;
   }
-  
+
   .cta-title {
     font-size: 1.8rem;
   }
-  
+
   .cta-description {
     font-size: 1rem;
   }
-  
+
   .footer-links {
     gap: 15px;
   }

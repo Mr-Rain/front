@@ -7,38 +7,10 @@
 
     <div class="content-wrapper">
       <!-- Sidebar - Now below navbar -->
-      <aside class="sidebar-container" :class="{ 'is-collapsed': isCollapsed }">
-        <el-scrollbar>
-          <el-menu
-            router
-            :default-active="activeMenu"
-            :collapse="isCollapsed"
-            class="sidebar-menu"
-          >
-            <el-menu-item index="/admin/dashboard">
-              <el-icon><Platform /></el-icon>
-              <template #title>工作台</template>
-            </el-menu-item>
-            <el-menu-item index="/admin/users">
-              <el-icon><User /></el-icon>
-              <template #title>用户管理</template>
-            </el-menu-item>
-            <el-menu-item index="/admin/companies">
-              <el-icon><OfficeBuilding /></el-icon>
-              <template #title>企业审核</template>
-            </el-menu-item>
-          </el-menu>
-        </el-scrollbar>
-        <!-- 折叠按钮 -->
-        <div class="collapse-button" @click="toggleCollapse">
-          <el-icon :class="{ 'is-rotated': isCollapsed }">
-            <component :is="isCollapsed ? Expand : Fold" />
-          </el-icon>
-        </div>
-      </aside>
+      <Sidebar class="sidebar-container" :class="{ 'collapsed': isSidebarCollapsed }" @collapse-change="handleSidebarCollapse" />
 
       <!-- Main Container -->
-      <div class="main-container" :class="{ 'sidebar-collapsed': isCollapsed }">
+      <div class="main-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
 
       <!-- Main Content Area -->
       <main class="app-main">
@@ -47,7 +19,8 @@
             <div class="el-scrollbar__view">
               <router-view v-slot="{ Component, route }">
                 <transition name="fade-transform" mode="out-in">
-                  <component :is="Component" :key="route.path" />
+                  <!-- 不使用 keep-alive，避免组件缓存导致的问题 -->
+                  <component :is="Component" :key="route.fullPath" />
                 </transition>
               </router-view>
             </div>
@@ -60,35 +33,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useUserStore } from '@/stores/user';
-import { Platform, User, OfficeBuilding, ArrowDown, Fold, Expand } from '@element-plus/icons-vue';
+import { ref } from 'vue';
 import Navbar from '@/components/common/Navbar.vue';
-
-const route = useRoute();
-const router = useRouter();
-const userStore = useUserStore();
+import Sidebar from '@/components/common/Sidebar.vue';
 
 // 侧边栏折叠状态
-const isCollapsed = ref(false);
+const isSidebarCollapsed = ref(false);
 
-const activeMenu = computed(() => {
-  const { path } = route;
-  return path;
-});
-
-// 切换侧边栏折叠状态
-const toggleCollapse = () => {
-  isCollapsed.value = !isCollapsed.value;
+// 处理侧边栏折叠状态变化
+const handleSidebarCollapse = (collapsed: boolean) => {
+  isSidebarCollapsed.value = collapsed;
 };
 
-const handleCommand = async (command: string) => {
-  if (command === 'logout') {
-    await userStore.logout();
-    router.push('/login');
-  }
-};
+// 处理用户命令（如登出）- 由Navbar组件内部处理，这里不需要
 </script>
 
 <style lang="scss" scoped>
@@ -121,62 +78,10 @@ const handleCommand = async (command: string) => {
   transition: width 0.28s;
   overflow: hidden;
   z-index: 1001;
-  background-color: #304156;
-  color: #bfcbd9;
 }
 
-.sidebar-container.is-collapsed {
+.sidebar-container.collapsed {
   width: 64px;
-}
-
-.sidebar-menu {
-  border-right: none;
-  background-color: transparent;
-  user-select: none; /* Prevent text selection */
-  -webkit-user-select: none; /* Safari */
-  -moz-user-select: none; /* Firefox */
-  -ms-user-select: none; /* IE10+/Edge */
-}
-
-.sidebar-menu .el-menu-item {
-  color: #bfcbd9;
-}
-
-.sidebar-menu .el-menu-item:hover,
-.sidebar-menu .el-sub-menu__title:hover {
-  background-color: #263445;
-}
-
-.sidebar-menu .el-menu-item.is-active {
-  color: #409EFF;
-  background-color: #263445;
-}
-
-.collapse-button {
-  height: 40px;
-  line-height: 40px;
-  text-align: center;
-  cursor: pointer;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  color: #bfcbd9;
-  width: 100%; /* Make button width 100% of parent container */
-  transition: width 0.28s; /* Add transition to match sidebar */
-  user-select: none; /* Prevent text selection */
-  -webkit-user-select: none; /* Safari */
-  -moz-user-select: none; /* Firefox */
-  -ms-user-select: none; /* IE10+/Edge */
-}
-
-.collapse-button:hover {
-  background-color: #263445;
-}
-
-.collapse-button .el-icon {
-  transition: transform 0.3s; /* Add transition for icon rotation */
-}
-
-.collapse-button .el-icon.is-rotated {
-  transform: rotate(180deg);
 }
 
 .main-container {
@@ -189,7 +94,7 @@ const handleCommand = async (command: string) => {
   background-color: #f0f2f5;
 }
 
-.sidebar-collapsed {
+.main-container.sidebar-collapsed {
   width: calc(100% - 64px);
 }
 

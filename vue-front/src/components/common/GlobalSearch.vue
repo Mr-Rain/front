@@ -60,7 +60,7 @@
       <div class="history-header">
         <h3>搜索历史</h3>
         <el-button
-          type="text"
+          type="primary"
           @click="clearHistory"
         >
           清除历史
@@ -218,7 +218,7 @@
     <!-- 高级搜索切换按钮 -->
     <div class="advanced-search-toggle">
       <el-button
-        type="text"
+        type="primary"
         @click="toggleAdvancedSearch"
       >
         {{ showAdvancedSearch ? '收起高级搜索' : '展开高级搜索' }}
