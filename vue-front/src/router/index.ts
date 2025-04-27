@@ -350,6 +350,12 @@ const router = createRouter({
           name: 'api-test',
           component: () => import('@/components/common/ApiTest.vue'),
           meta: { title: 'API测试' }
+        },
+        {
+          path: 'data-transform',
+          name: 'data-transform-demo',
+          component: () => import('@/components/common/DataTransformDemo.vue'),
+          meta: { title: '数据转换演示' }
         }
       ]
     },

@@ -11,6 +11,8 @@ import errorHandler from '@/utils/errorHandler';
 import { ApiErrorCode, ErrorType, createApiError } from '@/types/error';
 // 导入 API 缓存拦截器的设置函数
 import { setupCacheInterceptor } from '@/utils/cacheInterceptor';
+// 导入数据转换工具
+import { camelToSnake, snakeToCamel } from '@/utils/dataTransformer';
 
 // 创建 axios 实例，用于发起 HTTP 请求
 const service: AxiosInstance = axios.create({
@@ -36,6 +38,18 @@ service.interceptors.request.use(
     console.log('Request Method:', config.method);
     console.log('Request Data:', config.data);
     console.log('Token:', token);
+
+    // 数据转换：将请求数据从 camelCase 转换为 snake_case
+    if (config.data && typeof config.data === 'object') {
+      config.data = camelToSnake(config.data);
+      console.log('Transformed Request Data:', config.data);
+    }
+
+    // 转换 URL 参数
+    if (config.params && typeof config.params === 'object') {
+      config.params = camelToSnake(config.params);
+      console.log('Transformed Request Params:', config.params);
+    }
 
     // 如果存在 token，则将其添加到请求头的 Authorization 字段中
     if (token) {
@@ -73,6 +87,12 @@ service.interceptors.response.use(
     // 从响应对象中获取响应体数据
     const res = response.data;
 
+    // 数据转换：将响应数据从 snake_case 转换为 camelCase
+    if (res && res.data && typeof res.data === 'object') {
+      res.data = snakeToCamel(res.data);
+      console.log('Transformed Response Data:', res.data);
+    }
+
     // 检查响应头中是否包含新的 token（用于 token 刷新机制）
     const newToken = response.headers['new-token'];
     if (newToken) {
@@ -88,12 +108,17 @@ service.interceptors.response.use(
     // 如果存在 code 字段且不等于约定的成功码 (ApiErrorCode.SUCCESS)
     if (res.code && res.code !== ApiErrorCode.SUCCESS) {
       // 根据后端返回的错误码创建前端的 API 错误对象
-      // 判断错误类型：认证错误、业务错误、服务器错误
-      const errorType = res.code === ApiErrorCode.UNAUTHORIZED || res.code === ApiErrorCode.FORBIDDEN
-        ? ErrorType.AUTH // 401 或 403 视为认证错误
-        : res.code >= 1000 && res.code < 2000 // 假设 1000-1999 为业务逻辑错误
-          ? ErrorType.BUSINESS
-          : ErrorType.SERVER; // 其他视为服务器端错误
+      // 判断错误类型：认证错误、权限错误、业务错误、服务器错误
+      let errorType: ErrorType;
+      if (res.code === ApiErrorCode.UNAUTHORIZED) { // 401
+        errorType = ErrorType.AUTH;
+      } else if (res.code === ApiErrorCode.FORBIDDEN) { // 403
+        errorType = ErrorType.PERMISSION;
+      } else if (res.code >= 1000 && res.code < 2000) { // 1xxx
+        errorType = ErrorType.BUSINESS;
+      } else { // 其他错误码 (如 5xx)
+        errorType = ErrorType.SERVER;
+      }
 
       // 特殊处理认证错误 (401)
       if (res.code === ApiErrorCode.UNAUTHORIZED) {

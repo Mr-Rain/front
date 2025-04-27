@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import type { JobInfo, JobListParams, JobStatus } from '@/types/job';
 import { getJobList, getJobDetail, createJob, updateJob, deleteJob } from '@/api/job';
+import type { CreateJobPayload } from '@/api/job';
 import { updateJobStatus } from '@/api/job';
 import { getCompanyJobList } from '@/api/company';
 import { ElMessage } from 'element-plus';
@@ -102,14 +103,13 @@ export const useJobStore = defineStore('job', {
     async createJob(data: Partial<JobInfo>) {
         this.submitting = true;
         try {
-            const response = await createJob(data as unknown as CreateJobPayload);
+            const response = await createJob(data as CreateJobPayload);
             ElMessage.success('职位发布成功');
             await this.fetchCompanyJobList(); // Refresh list
             return response.data; // Return created job info if needed
         } catch (error) {
             console.error('Failed to create job:', error);
-            ElMessage.error('发布职位失败');
-            throw error;
+            // ElMessage.error('发布职位失败'); // request.ts拦截器已处理
         } finally {
             this.submitting = false;
         }
@@ -127,8 +127,7 @@ export const useJobStore = defineStore('job', {
             }
         } catch (error) {
             console.error('Failed to update job:', error);
-            ElMessage.error('更新职位信息失败');
-            throw error;
+            // ElMessage.error('更新职位信息失败'); // request.ts拦截器已处理
         } finally {
             this.submitting = false;
         }
@@ -169,8 +168,7 @@ export const useJobStore = defineStore('job', {
             }
         } catch (error) {
             console.error('Failed to delete job:', error);
-            ElMessage.error('删除职位失败');
-            throw error;
+            // ElMessage.error('删除职位失败'); // request.ts拦截器已处理
         } finally {
             this.submitting = false;
         }

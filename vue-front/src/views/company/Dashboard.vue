@@ -82,7 +82,9 @@
 import { ref, reactive, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
+import { useCompanyStore } from '@/stores/company';
 import CompanyStatistics from '@/components/company/CompanyStatistics.vue';
+import { getCompanyDashboardStatistics } from '@/api/statistics';
 import {
   Document,
   Briefcase,
@@ -116,17 +118,42 @@ const stats = reactive({
     totalResumes: 0
 });
 
-onMounted(() => {
-    // 模拟数据
-    setTimeout(() => {
-      stats.pendingApplications = 12;
-      stats.activeJobs = 5;
-      stats.totalResumes = 48;
-    }, 500);
+// 加载状态
+const loading = ref(false);
 
-    // TODO: 从实际API获取数据
-    // const companyStore = useCompanyStore();
-    // stats.pendingApplications = await companyStore.fetchPendingApplicationCount();
+// 获取公司仪表盘统计数据
+const fetchDashboardStats = async () => {
+    loading.value = true;
+    try {
+        // 从API获取数据
+        const response = await getCompanyDashboardStatistics();
+        const data = response.data;
+
+        if (data && data.overview) {
+            stats.pendingApplications = data.overview.newApplications || 0;
+            stats.activeJobs = data.overview.activeJobs || 0;
+            stats.totalResumes = data.overview.totalApplications || 0;
+        }
+    } catch (error) {
+        console.error('Failed to fetch dashboard statistics:', error);
+        // 如果API调用失败，使用默认值
+        stats.pendingApplications = 0;
+        stats.activeJobs = 0;
+        stats.totalResumes = 0;
+    } finally {
+        loading.value = false;
+    }
+};
+
+onMounted(() => {
+    // 获取公司信息
+    const companyStore = useCompanyStore();
+    if (!companyStore.profile) {
+        companyStore.fetchProfile();
+    }
+
+    // 获取统计数据
+    fetchDashboardStats();
 });
 
 </script>

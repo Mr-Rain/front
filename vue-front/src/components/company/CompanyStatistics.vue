@@ -69,9 +69,9 @@
             </div>
           </template>
           <div v-loading="loading" class="chart-container">
-            <echart-component 
-              v-if="!loading && applicationTrendData.xAxis.length > 0" 
-              :options="applicationTrendChartOptions" 
+            <echart-component
+              v-if="!loading && applicationTrendData.xAxis.length > 0"
+              :options="applicationTrendChartOptions"
               height="300px"
             />
             <el-empty v-else-if="!loading" description="暂无趋势数据" />
@@ -91,9 +91,9 @@
             </div>
           </template>
           <div v-loading="loading" class="chart-container">
-            <echart-component 
-              v-if="!loading && applicationStatusData.length > 0" 
-              :options="applicationStatusChartOptions" 
+            <echart-component
+              v-if="!loading && applicationStatusData.length > 0"
+              :options="applicationStatusChartOptions"
               height="300px"
             />
             <el-empty v-else-if="!loading" description="暂无状态数据" />
@@ -115,9 +115,9 @@
             </div>
           </template>
           <div v-loading="loading" class="chart-container">
-            <echart-component 
-              v-if="!loading && jobPopularityData.yAxis.length > 0" 
-              :options="jobPopularityChartOptions" 
+            <echart-component
+              v-if="!loading && jobPopularityData.yAxis.length > 0"
+              :options="jobPopularityChartOptions"
               height="300px"
             />
             <el-empty v-else-if="!loading" description="暂无职位热度数据" />
@@ -137,9 +137,9 @@
             </div>
           </template>
           <div v-loading="loading" class="chart-container">
-            <echart-component 
-              v-if="!loading && educationData.length > 0" 
-              :options="educationChartOptions" 
+            <echart-component
+              v-if="!loading && educationData.length > 0"
+              :options="educationChartOptions"
               height="300px"
             />
             <el-empty v-else-if="!loading" description="暂无学历分布数据" />
@@ -153,14 +153,15 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
 import EChartComponent from '@/components/common/EChartComponent.vue';
-import { 
-  InfoFilled, 
+import {
+  InfoFilled,
   Briefcase,
-  Document, 
-  ChatLineRound, 
+  Document,
+  ChatLineRound,
   GoodsFilled
 } from '@element-plus/icons-vue';
 import type { EChartsOption } from 'echarts';
+import { getCompanyStatistics } from '@/api/statistics';
 
 const loading = ref(true);
 
@@ -351,46 +352,76 @@ const educationChartOptions = computed<EChartsOption>(() => ({
 const fetchCompanyStatistics = async () => {
   loading.value = true;
   try {
-    // 这里应该调用API获取实际数据
-    // 模拟数据
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // 统计数据
-    statistics.totalJobs = 12;
-    statistics.totalApplications = 85;
-    statistics.interviewCount = 32;
-    statistics.offerCount = 15;
-    
-    // 申请趋势数据
-    applicationTrendData.xAxis = ['1月', '2月', '3月', '4月', '5月', '6月'];
-    applicationTrendData.values = [10, 15, 12, 20, 18, 25];
-    
-    // 申请状态数据
-    applicationStatusData.value = [
-      { name: '待处理', value: 25 },
-      { name: '已查看', value: 18 },
-      { name: '面试中', value: 15 },
-      { name: '已录用', value: 15 },
-      { name: '未通过', value: 12 }
-    ];
-    
-    // 职位热度数据
-    jobPopularityData.yAxis = ['前端开发工程师', 'UI设计师', '后端开发工程师', '产品经理', '测试工程师'];
-    jobPopularityData.values = [25, 18, 15, 12, 8];
-    
-    // 应聘者学历分布数据
-    educationData.value = [
-      { name: '本科', value: 45 },
-      { name: '硕士', value: 25 },
-      { name: '博士', value: 5 },
-      { name: '大专', value: 10 }
-    ];
-    
+    // 调用API获取实际数据
+    const response = await getCompanyStatistics({ time_range: 'month' });
+    const data = response.data;
+
+    if (data && data.overview) {
+      // 统计数据
+      statistics.totalJobs = data.overview.totalJobs || 0;
+      statistics.totalApplications = data.overview.totalApplications || 0;
+      statistics.interviewCount = data.overview.interviewArranged || 0;
+      statistics.offerCount = data.overview.offerSent || 0;
+
+      // 申请趋势数据
+      if (data.applicationTrend && data.applicationTrend.length > 0) {
+        applicationTrendData.xAxis = data.applicationTrend.map(item => item.date);
+        applicationTrendData.values = data.applicationTrend.map(item => item.applications);
+      }
+
+      // 申请状态数据 - 需要后端提供或前端计算
+      // 这里使用一个简单的模拟，实际应该从API获取
+      applicationStatusData.value = [
+        { name: '待处理', value: data.overview.totalApplications - data.overview.interviewArranged - data.overview.offerSent || 0 },
+        { name: '面试中', value: data.overview.interviewArranged || 0 },
+        { name: '已录用', value: data.overview.offerSent || 0 }
+      ];
+
+      // 职位热度数据
+      if (data.jobStatistics && data.jobStatistics.length > 0) {
+        // 按申请数量排序
+        const sortedJobs = [...data.jobStatistics].sort((a, b) => b.applications - a.applications);
+        // 取前5个
+        const top5Jobs = sortedJobs.slice(0, 5);
+
+        jobPopularityData.yAxis = top5Jobs.map(job => job.jobTitle);
+        jobPopularityData.values = top5Jobs.map(job => job.applications);
+      }
+
+      // 应聘者学历分布数据 - 需要后端提供或前端计算
+      // 这里使用一个简单的模拟，实际应该从API获取
+      educationData.value = [
+        { name: '本科', value: Math.round(data.overview.totalApplications * 0.6) || 0 },
+        { name: '硕士', value: Math.round(data.overview.totalApplications * 0.3) || 0 },
+        { name: '博士', value: Math.round(data.overview.totalApplications * 0.05) || 0 },
+        { name: '大专', value: Math.round(data.overview.totalApplications * 0.05) || 0 }
+      ];
+    }
   } catch (error) {
     console.error('Failed to fetch company statistics:', error);
+    // 如果API调用失败，使用空数据
+    resetStatisticsData();
   } finally {
     loading.value = false;
   }
+};
+
+// 重置统计数据为空
+const resetStatisticsData = () => {
+  statistics.totalJobs = 0;
+  statistics.totalApplications = 0;
+  statistics.interviewCount = 0;
+  statistics.offerCount = 0;
+
+  applicationTrendData.xAxis = [];
+  applicationTrendData.values = [];
+
+  applicationStatusData.value = [];
+
+  jobPopularityData.yAxis = [];
+  jobPopularityData.values = [];
+
+  educationData.value = [];
 };
 
 onMounted(() => {
@@ -503,20 +534,20 @@ onMounted(() => {
   .company-statistics {
     padding: 5px 0;
   }
-  
+
   .statistics-card, .statistics-summary-card {
     margin-bottom: 15px;
   }
-  
+
   .summary-icon {
     width: 50px;
     height: 50px;
   }
-  
+
   .summary-icon .el-icon {
     font-size: 24px;
   }
-  
+
   .summary-value {
     font-size: 20px;
   }

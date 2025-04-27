@@ -5,6 +5,7 @@ import ErrorHandler from './errorHandler'
 import ApiCache from './apiCache'
 import StaticCache from './staticCache'
 import { registerFilters } from './filters'
+import { setupGlobalComponents } from './globalComponents'
 
 // 插件列表
 const plugins = [
@@ -24,4 +25,7 @@ export function setupPlugins(app: App) {
 
   // 注册全局过滤器
   registerFilters(app)
+
+  // 注册全局组件
+  setupGlobalComponents(app)
 }

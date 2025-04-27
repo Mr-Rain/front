@@ -64,20 +64,21 @@ export function getApplicationStatistics(params?: any): Promise<{ data: Statisti
  */
 export function getCompanyStatistics(params?: any): Promise<{ data: StatisticsData }> {
   return request({
-    url: '/api/admin/statistics/companies',
+    url: '/api/company/statistics',
     method: 'get',
     params,
   });
 }
 
 /**
- * 获取企业端统计数据
- * @returns 企业端统计数据
+ * 获取企业端仪表盘统计数据
+ * @returns 企业端仪表盘统计数据
  */
 export function getCompanyDashboardStatistics(): Promise<{ data: StatisticsData }> {
   return request({
-    url: '/api/company/statistics/dashboard',
+    url: '/api/company/statistics',
     method: 'get',
+    params: { time_range: 'week' }
   });
 }
 

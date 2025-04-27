@@ -132,8 +132,10 @@ export function createApiError(
 export function getErrorTypeByStatus(status: number): ErrorType {
   if (status >= 500) {
     return ErrorType.SERVER;
-  } else if (status === 401 || status === 403) {
+  } else if (status === 401) {
     return ErrorType.AUTH;
+  } else if (status === 403) {
+    return ErrorType.PERMISSION;
   } else if (status >= 400) {
     return ErrorType.CLIENT;
   } else {
