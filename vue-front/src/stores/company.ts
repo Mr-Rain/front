@@ -8,7 +8,9 @@ import {
   getCompanyJobList,
   uploadCompanyLogo,
   uploadCompanyLicense,
-  getPendingCompanies,
+  getCompanyAuditList,
+  getCompanyList,
+  getAdminCompanyList,
   approveCompany,
 } from '@/api/company';
 import { getCompanyApplicationList } from '@/api/application';
@@ -25,6 +27,12 @@ interface CompanyState {
   loadingApplications: boolean;
   submitting: boolean;
 
+  // 公开企业列表
+  companyList: CompanyProfile[];
+  companyTotal: number;
+  loadingCompanyList: boolean;
+
+  // 管理员审核列表
   auditList: CompanyProfile[];
   auditTotal: number;
   loadingAuditList: boolean;
@@ -43,6 +51,12 @@ export const useCompanyStore = defineStore('company', {
     loadingApplications: false,
     submitting: false,
 
+    // 公开企业列表
+    companyList: [],
+    companyTotal: 0,
+    loadingCompanyList: false,
+
+    // 管理员审核列表
     auditList: [],
     auditTotal: 0,
     loadingAuditList: false,
@@ -110,11 +124,11 @@ export const useCompanyStore = defineStore('company', {
       }
     },
 
-    // (Admin) Fetch pending companies for audit
+    // (Admin) Fetch companies for audit
     async fetchAuditList(params: any = {}) {
       this.loadingAuditList = true;
       try {
-        const response = await getPendingCompanies(params);
+        const response = await getCompanyAuditList(params);
         this.auditList = response.data.list || response.data.records || [];
         this.auditTotal = response.data.total || 0;
       } catch (error) {
@@ -132,10 +146,7 @@ export const useCompanyStore = defineStore('company', {
       this.submittingAudit = true;
       try {
         // 实际API调用
-        // await approveCompany(companyId, approved, message);
-
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await approveCompany(companyId, approved, message);
 
         // 更新本地数据
         const index = this.auditList.findIndex(company => company.id === companyId);
@@ -148,7 +159,7 @@ export const useCompanyStore = defineStore('company', {
 
         ElMessage.success(`公司审核操作成功`);
         // 刷新列表
-        // this.fetchAuditList();
+        this.fetchAuditList();
       } catch (error) {
         console.error(`Failed to submit audit for company ${companyId}:`, error);
         ElMessage.error('审核提交失败');
@@ -253,36 +264,55 @@ export const useCompanyStore = defineStore('company', {
     async uploadLicense(file: File) {
       this.submitting = true;
       try {
-        console.log('公司Store: 开始上传营业执照文件', file.name);
         const response = await uploadCompanyLicense(file);
-        console.log('公司Store: 文件上传API响应:', response);
-
-        if (!response || !response.data || !response.data.url) {
-          console.error('公司Store: 文件上传响应缺少URL:', response);
-          throw new Error('文件上传响应格式错误');
-        }
-
         const licenseUrl = response.data.url;
-        console.log('公司Store: 获取到文件URL:', licenseUrl);
-
         if (this.profile) {
+          // 只更新本地状态，不保存到数据库
+          // 保存到数据库的操作将在用户点击"保存"按钮时进行
           this.profile.businessLicense = licenseUrl;
-          console.log('公司Store: 已更新本地状态的businessLicense字段');
-
-          // 注释掉这里，让Profile.vue中的handleLicenseSuccess方法来处理保存
-          // await this.updateProfile({ businessLicense: licenseUrl });
-          // console.log('营业执照URL已保存到数据库:', licenseUrl);
-        } else {
-          console.warn('公司Store: profile为空，无法更新本地状态');
         }
-
+        ElMessage.success('营业执照上传成功');
         return licenseUrl;
       } catch (error) {
-        console.error('公司Store: 上传营业执照失败:', error);
+        console.error('Failed to upload license:', error);
         ElMessage.error('营业执照上传失败');
         throw error;
       } finally {
         this.submitting = false;
+      }
+    },
+
+    // 获取公开企业列表
+    async fetchCompanyList(params: any = {}) {
+      this.loadingCompanyList = true;
+      try {
+        const response = await getCompanyList(params);
+        this.companyList = response.data.list || response.data.records || [];
+        this.companyTotal = response.data.total || 0;
+      } catch (error) {
+        console.error('Failed to fetch company list:', error);
+        ElMessage.error('获取企业列表失败');
+        this.companyList = [];
+        this.companyTotal = 0;
+      } finally {
+        this.loadingCompanyList = false;
+      }
+    },
+
+    // 获取管理员企业列表
+    async fetchAdminCompanyList(params: any = {}) {
+      this.loadingAuditList = true;
+      try {
+        const response = await getAdminCompanyList(params);
+        this.auditList = response.data.list || response.data.records || [];
+        this.auditTotal = response.data.total || 0;
+      } catch (error) {
+        console.error('Failed to fetch admin company list:', error);
+        ElMessage.error('获取管理员企业列表失败');
+        this.auditList = [];
+        this.auditTotal = 0;
+      } finally {
+        this.loadingAuditList = false;
       }
     },
 
@@ -293,6 +323,8 @@ export const useCompanyStore = defineStore('company', {
       this.jobTotal = 0;
       this.applicationList = [];
       this.applicationTotal = 0;
+      this.companyList = [];
+      this.companyTotal = 0;
     },
   },
 });

@@ -174,20 +174,20 @@ export const useApplicationStore = defineStore('application', {
           }
 
           // 更新面试相关信息
-          if (data.interview_time) {
-            this.companyApplications[companyAppIndex].interview_time = data.interview_time;
+          if (data.interviewTime) {
+            this.companyApplications[companyAppIndex].interviewTime = data.interviewTime;
           }
-          if (data.interview_type) {
-            this.companyApplications[companyAppIndex].interview_type = data.interview_type;
+          if (data.interviewType) {
+            this.companyApplications[companyAppIndex].interviewType = data.interviewType;
           }
-          if (data.interview_location) {
-            this.companyApplications[companyAppIndex].interview_location = data.interview_location;
+          if (data.interviewLocation) {
+            this.companyApplications[companyAppIndex].interviewLocation = data.interviewLocation;
           }
-          if (data.interview_contact) {
-            this.companyApplications[companyAppIndex].interview_contact = data.interview_contact;
+          if (data.interviewContact) {
+            this.companyApplications[companyAppIndex].interviewContact = data.interviewContact;
           }
-          if (data.interview_contact_info) {
-            this.companyApplications[companyAppIndex].interview_contact_info = data.interview_contact_info;
+          if (data.interviewContactInfo) {
+            this.companyApplications[companyAppIndex].interviewContactInfo = data.interviewContactInfo;
           }
         }
 
@@ -202,20 +202,20 @@ export const useApplicationStore = defineStore('application', {
           }
 
           // 更新面试相关信息
-          if (data.interview_time) {
-            this.currentApplicationDetail.interview_time = data.interview_time;
+          if (data.interviewTime) {
+            this.currentApplicationDetail.interviewTime = data.interviewTime;
           }
-          if (data.interview_type) {
-            this.currentApplicationDetail.interview_type = data.interview_type;
+          if (data.interviewType) {
+            this.currentApplicationDetail.interviewType = data.interviewType;
           }
-          if (data.interview_location) {
-            this.currentApplicationDetail.interview_location = data.interview_location;
+          if (data.interviewLocation) {
+            this.currentApplicationDetail.interviewLocation = data.interviewLocation;
           }
-          if (data.interview_contact) {
-            this.currentApplicationDetail.interview_contact = data.interview_contact;
+          if (data.interviewContact) {
+            this.currentApplicationDetail.interviewContact = data.interviewContact;
           }
-          if (data.interview_contact_info) {
-            this.currentApplicationDetail.interview_contact_info = data.interview_contact_info;
+          if (data.interviewContactInfo) {
+            this.currentApplicationDetail.interviewContactInfo = data.interviewContactInfo;
           }
         }
 
@@ -252,20 +252,20 @@ export const useApplicationStore = defineStore('application', {
             }
 
             // 更新面试相关信息
-            if (data.interview_time) {
-              this.companyApplications[companyAppIndex].interview_time = data.interview_time;
+            if (data.interviewTime) {
+              this.companyApplications[companyAppIndex].interviewTime = data.interviewTime;
             }
-            if (data.interview_type) {
-              this.companyApplications[companyAppIndex].interview_type = data.interview_type;
+            if (data.interviewType) {
+              this.companyApplications[companyAppIndex].interviewType = data.interviewType;
             }
-            if (data.interview_location) {
-              this.companyApplications[companyAppIndex].interview_location = data.interview_location;
+            if (data.interviewLocation) {
+              this.companyApplications[companyAppIndex].interviewLocation = data.interviewLocation;
             }
-            if (data.interview_contact) {
-              this.companyApplications[companyAppIndex].interview_contact = data.interview_contact;
+            if (data.interviewContact) {
+              this.companyApplications[companyAppIndex].interviewContact = data.interviewContact;
             }
-            if (data.interview_contact_info) {
-              this.companyApplications[companyAppIndex].interview_contact_info = data.interview_contact_info;
+            if (data.interviewContactInfo) {
+              this.companyApplications[companyAppIndex].interviewContactInfo = data.interviewContactInfo;
             }
           }
 
@@ -280,20 +280,20 @@ export const useApplicationStore = defineStore('application', {
             }
 
             // 更新面试相关信息
-            if (data.interview_time) {
-              this.currentApplicationDetail.interview_time = data.interview_time;
+            if (data.interviewTime) {
+              this.currentApplicationDetail.interviewTime = data.interviewTime;
             }
-            if (data.interview_type) {
-              this.currentApplicationDetail.interview_type = data.interview_type;
+            if (data.interviewType) {
+              this.currentApplicationDetail.interviewType = data.interviewType;
             }
-            if (data.interview_location) {
-              this.currentApplicationDetail.interview_location = data.interview_location;
+            if (data.interviewLocation) {
+              this.currentApplicationDetail.interviewLocation = data.interviewLocation;
             }
-            if (data.interview_contact) {
-              this.currentApplicationDetail.interview_contact = data.interview_contact;
+            if (data.interviewContact) {
+              this.currentApplicationDetail.interviewContact = data.interviewContact;
             }
-            if (data.interview_contact_info) {
-              this.currentApplicationDetail.interview_contact_info = data.interview_contact_info;
+            if (data.interviewContactInfo) {
+              this.currentApplicationDetail.interviewContactInfo = data.interviewContactInfo;
             }
           }
         }
@@ -324,24 +324,31 @@ export const useApplicationStore = defineStore('application', {
     async fetchApplicationStatistics() {
       this.loadingStatistics = true;
       try {
-        // 模拟 API 调用
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // 获取企业收到的所有申请
+        const response = await getCompanyApplicationList({ pageSize: 1000 });
+        const applications = response.data.list || response.data.records || [];
 
-        // 模拟数据
-        this.totalApplications = 42;
-        this.pendingApplications = 15;
-        this.approvedApplications = 20;
-        this.rejectedApplications = 7;
+        // 计算统计数据
+        this.totalApplications = applications.length;
+        this.pendingApplications = applications.filter(app => app.status === 'pending').length;
+        this.approvedApplications = applications.filter(app => app.status === 'accepted').length;
+        this.rejectedApplications = applications.filter(app => app.status === 'rejected').length;
 
-        // 实际 API 调用应该是这样的：
-        // const response = await getApplicationStatistics();
-        // this.totalApplications = response.data.total;
-        // this.pendingApplications = response.data.pending;
-        // this.approvedApplications = response.data.approved;
-        // this.rejectedApplications = response.data.rejected;
+        console.log('Application statistics:', {
+          total: this.totalApplications,
+          pending: this.pendingApplications,
+          approved: this.approvedApplications,
+          rejected: this.rejectedApplications
+        });
       } catch (error) {
         console.error('Failed to fetch application statistics:', error);
         ElMessage.error('获取申请统计数据失败');
+
+        // 重置统计数据
+        this.totalApplications = 0;
+        this.pendingApplications = 0;
+        this.approvedApplications = 0;
+        this.rejectedApplications = 0;
       } finally {
         this.loadingStatistics = false;
       }

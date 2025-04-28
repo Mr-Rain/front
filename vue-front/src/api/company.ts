@@ -68,10 +68,11 @@ export function updateCompanyProfile(data: Partial<CompanyProfile>) {
  * @returns 职位列表
  */
 export function getCompanyJobList(params: PaginationParams): Promise<{ data: PaginatedResponse<JobInfo> }> {
+  // 获取当前登录用户的ID，而不是使用'me'字符串
   return request({
-    url: '/api/jobs',
+    url: '/api/jobs/company/current',
     method: 'get',
-    params: { ...params, companyId: 'me' },
+    params,
   });
 }
 
@@ -124,11 +125,24 @@ export function uploadCompanyLicense(file: File): Promise<any> {
 // --- 管理员API ---
 
 /**
- * 获取企业列表（含待审核）
+ * 获取企业列表（公开API，只返回已审核通过的企业）
  * @param params 查询参数
  * @returns 企业列表
  */
 export function getCompanyList(params: PaginationParams): Promise<{ data: PaginatedResponse<CompanyProfile> }> {
+  return request({
+    url: '/api/companies/list',
+    method: 'get',
+    params,
+  });
+}
+
+/**
+ * 获取企业审核列表（管理员API，含所有企业）
+ * @param params 查询参数
+ * @returns 企业列表
+ */
+export function getAdminCompanyList(params: PaginationParams): Promise<{ data: PaginatedResponse<CompanyProfile> }> {
   return request({
     url: '/api/admin/companies',
     method: 'get',
@@ -137,19 +151,22 @@ export function getCompanyList(params: PaginationParams): Promise<{ data: Pagina
 }
 
 /**
- * 获取待审核企业列表
+ * 获取企业审核列表（管理员API，用于审核页面）
  * @param params 查询参数
- * @returns 待审核企业列表
+ * @returns 企业列表
  */
-export function getPendingCompanies(params: PaginationParams): Promise<{ data: PaginatedResponse<CompanyProfile> }> {
+export function getCompanyAuditList(params: PaginationParams): Promise<{ data: PaginatedResponse<CompanyProfile> }> {
   try {
     return request({
       url: '/api/admin/companies',
       method: 'get',
-      params: { ...params, auditStatus: 'pending' },
+      params: {
+        ...params,
+        auditStatus: 'pending' // 只获取待审核的企业
+      },
     });
   } catch (error) {
-    console.error('获取待审核企业列表失败:', error);
+    console.error('获取企业审核列表失败:', error);
     throw error; // 保持错误冒泡，便于上层处理
   }
 }

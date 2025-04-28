@@ -13,6 +13,7 @@ export interface CreateJobPayload {
   experience_required: string;
   education_required: string;
   tags: string[];
+  benefits: string[];
   description: string;
   requirements: string;
 }

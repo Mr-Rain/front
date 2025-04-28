@@ -10,12 +10,12 @@
       <el-skeleton :rows="10" animated />
     </div>
     <div v-else-if="userDetail" class="user-detail-content">
-      <el-descriptions :column="1" border size="medium">
+      <el-descriptions :column="1" border size="default">
         <el-descriptions-item label="用户ID">{{ userDetail.id }}</el-descriptions-item>
         <el-descriptions-item label="用户名">{{ userDetail.username }}</el-descriptions-item>
         <el-descriptions-item label="用户类型">
-          <el-tag :type="getUserTypeTagType(userDetail.user_type)">
-            {{ formatUserType(userDetail.user_type) }}
+          <el-tag :type="getUserTypeTagType(userDetail.user_type || userDetail.userType)">
+            {{ formatUserType(userDetail.user_type || userDetail.userType) }}
           </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="账号状态">
@@ -25,14 +25,14 @@
         </el-descriptions-item>
         <el-descriptions-item label="邮箱">{{ userDetail.email || '-' }}</el-descriptions-item>
         <el-descriptions-item label="手机号">{{ userDetail.phone || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="注册时间">{{ formatTime(userDetail.create_time) }}</el-descriptions-item>
+        <el-descriptions-item label="注册时间">{{ formatTime(userDetail.create_time || userDetail.createTime) }}</el-descriptions-item>
       </el-descriptions>
 
       <!-- 学生特有信息 -->
-      <template v-if="userDetail.user_type === 'student' && studentProfile">
+      <template v-if="(userDetail.user_type === 'student' || userDetail.userType === 'student') && studentProfile">
         <h3 class="section-title">学生信息</h3>
-        <el-descriptions :column="1" border size="medium">
-          <el-descriptions-item label="姓名">{{ (studentProfile as any).name || studentProfile.username || '-' }}</el-descriptions-item>
+        <el-descriptions :column="1" border size="default">
+          <el-descriptions-item label="姓名">{{ studentProfile.real_name || (studentProfile as any).name || studentProfile.username || '-' }}</el-descriptions-item>
           <el-descriptions-item label="学校">{{ studentProfile.school || '-' }}</el-descriptions-item>
           <el-descriptions-item label="专业">{{ studentProfile.major || '-' }}</el-descriptions-item>
           <el-descriptions-item label="学历">{{ studentProfile.education || '-' }}</el-descriptions-item>
@@ -41,16 +41,16 @@
       </template>
 
       <!-- 企业特有信息 -->
-      <template v-if="userDetail.user_type === 'company' && companyProfile">
+      <template v-if="(userDetail.user_type === 'company' || userDetail.userType === 'company') && companyProfile">
         <h3 class="section-title">企业信息</h3>
-        <el-descriptions :column="1" border size="medium">
-          <el-descriptions-item label="公司名称">{{ companyProfile.company_name || '-' }}</el-descriptions-item>
+        <el-descriptions :column="1" border size="default">
+          <el-descriptions-item label="公司名称">{{ companyProfile.companyName || '-' }}</el-descriptions-item>
           <el-descriptions-item label="行业">{{ companyProfile.industry || '-' }}</el-descriptions-item>
           <el-descriptions-item label="规模">{{ companyProfile.scale || '-' }}</el-descriptions-item>
           <el-descriptions-item label="地址">{{ companyProfile.location || '-' }}</el-descriptions-item>
           <el-descriptions-item label="审核状态">
-            <el-tag :type="getAuditStatusTagType(companyProfile.audit_status)">
-              {{ formatAuditStatus(companyProfile.audit_status) }}
+            <el-tag :type="getAuditStatusTagType(companyProfile.auditStatus)">
+              {{ formatAuditStatus(companyProfile.auditStatus) }}
             </el-tag>
           </el-descriptions-item>
         </el-descriptions>
@@ -137,8 +137,26 @@ const title = computed(() => {
 const formatTime = (timeStr: string | undefined): string => {
   if (!timeStr) return '-';
   try {
-    return new Date(timeStr).toLocaleString();
+    // 创建一个日期对象
+    const date = new Date(timeStr);
+
+    // 检查日期是否有效
+    if (isNaN(date.getTime())) {
+      return timeStr || '-';
+    }
+
+    // 格式化为本地时间字符串（北京时间）
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
   } catch (e) {
+    console.error('日期格式化错误:', e);
     return timeStr || '-';
   }
 };
@@ -146,45 +164,73 @@ const formatTime = (timeStr: string | undefined): string => {
 // 格式化用户类型
 const formatUserType = (type: UserType | undefined): string => {
   if (!type) return '未知';
+
+  // 处理大写的用户类型
+  let normalizedType = type;
+  if (typeof type === 'string') {
+    normalizedType = type.toLowerCase() as UserType;
+  }
+
   const map: Record<UserType, string> = {
     student: '学生',
     company: '企业',
     admin: '管理员'
   };
-  return map[type] || type;
+  return map[normalizedType] || type;
 };
 
 // 获取用户类型标签样式
 const getUserTypeTagType = (type: UserType | undefined): string => {
   if (!type) return 'info';
+
+  // 处理大写的用户类型
+  let normalizedType = type;
+  if (typeof type === 'string') {
+    normalizedType = type.toLowerCase() as UserType;
+  }
+
   const map: Record<UserType, string> = {
     student: 'success',
     company: 'primary',
     admin: 'danger'
   };
-  return map[type] || 'info';
+  return map[normalizedType] || 'info';
 };
 
 // 格式化审核状态
 const formatAuditStatus = (status: CompanyAuditStatus | undefined): string => {
   if (!status) return '未知';
+
+  // 处理大写的审核状态
+  let normalizedStatus = status;
+  if (typeof status === 'string') {
+    normalizedStatus = status.toLowerCase() as CompanyAuditStatus;
+  }
+
   const map: Record<CompanyAuditStatus, string> = {
     pending: '待审核',
     approved: '已通过',
     rejected: '未通过'
   };
-  return map[status] || status;
+  return map[normalizedStatus] || status;
 };
 
 // 获取审核状态标签样式
 const getAuditStatusTagType = (status: CompanyAuditStatus | undefined): string => {
   if (!status) return 'info';
+
+  // 处理大写的审核状态
+  let normalizedStatus = status;
+  if (typeof status === 'string') {
+    normalizedStatus = status.toLowerCase() as CompanyAuditStatus;
+  }
+
   const map: Record<CompanyAuditStatus, string> = {
     pending: 'warning',
     approved: 'success',
     rejected: 'danger'
   };
-  return map[status] || 'info';
+  return map[normalizedStatus] || 'info';
 };
 
 // 处理关闭抽屉
@@ -219,7 +265,15 @@ const handleStatusChange = async () => {
 
 // 查看企业详情
 const handleViewCompanyDetail = () => {
-  if (!props.userDetail || props.userDetail.user_type !== 'company') return;
+  if (!props.userDetail) return;
+
+  // 检查用户类型，支持不同的命名风格
+  const userType = props.userDetail.user_type || props.userDetail.userType;
+  if (typeof userType !== 'string' ||
+      (userType.toLowerCase() !== 'company' && userType.toLowerCase() !== 'company')) {
+    return;
+  }
+
   emit('view-company', props.userDetail.id);
 };
 </script>

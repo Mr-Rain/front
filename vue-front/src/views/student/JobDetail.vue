@@ -153,8 +153,8 @@ const handleApply = async () => {
   try {
       // Call the store action to apply
       await applicationStore.applyForJob({
-          job_id: jobStore.currentJob.id,
-          resume_id: resumeIdToUse
+          jobId: jobStore.currentJob.id,
+          resumeId: resumeIdToUse
       });
       // Success message is handled within the store action
       // Optionally, disable button or show 'Applied' state after success

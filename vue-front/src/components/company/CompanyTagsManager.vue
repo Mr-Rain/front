@@ -5,14 +5,14 @@
         v-for="tag in modelValue"
         :key="tag"
         class="tag-item"
-        closable
+        :closable="!disabled"
         :disable-transitions="false"
         @close="handleClose(tag)"
       >
         {{ tag }}
       </el-tag>
       <el-input
-        v-if="inputVisible"
+        v-if="inputVisible && !disabled"
         ref="InputRef"
         v-model="inputValue"
         class="tag-input"
@@ -20,7 +20,13 @@
         @keyup.enter="handleInputConfirm"
         @blur="handleInputConfirm"
       />
-      <el-button v-else class="button-new-tag" size="small" @click="showInput">
+      <el-button
+        v-else-if="!disabled"
+        class="button-new-tag"
+        size="small"
+        @click="showInput"
+        :disabled="modelValue.length >= maxTags"
+      >
         + 添加标签
       </el-button>
     </div>
@@ -28,10 +34,11 @@
       <p class="suggestions-title">推荐标签：</p>
       <div class="suggestions-list">
         <el-tag
-          v-for="tag in suggestions"
+          v-for="tag in availableSuggestions"
           :key="tag"
           class="suggestion-tag"
-          @click="addTag(tag)"
+          @click="!disabled && addTag(tag)"
+          :class="{ 'disabled': disabled }"
         >
           {{ tag }}
         </el-tag>
@@ -61,6 +68,10 @@ const props = defineProps({
   showSuggestions: {
     type: Boolean,
     default: true
+  },
+  disabled: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -166,8 +177,13 @@ const addTag = (tag: string) => {
   transition: all 0.2s;
 }
 
-.suggestion-tag:hover {
+.suggestion-tag:hover:not(.disabled) {
   transform: scale(1.05);
+}
+
+.disabled {
+  cursor: not-allowed !important;
+  opacity: 0.7;
 }
 
 @media (max-width: 768px) {

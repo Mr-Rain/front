@@ -220,7 +220,7 @@ import type { UserInfo, UserType, UserStatus } from '@/types/user';
 import type { CompanyProfile } from '@/types/company';
 import type { StudentProfile } from '@/types/student';
 import type { RoleInfo, UserRoleUpdatePayload } from '@/types/permission';
-import { ElCard, ElTable, ElTableColumn, ElTag, ElButton, ElEmpty, ElMessage, ElMessageBox, ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElDialog, ElScrollbar, ElRadioGroup, ElRadio, ElIcon } from 'element-plus';
+import { ElCard, ElTable, ElTableColumn, ElTag, ElButton, ElEmpty, ElMessage, ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElDialog, ElScrollbar, ElRadioGroup, ElRadio, ElIcon } from 'element-plus';
 import { Search, View, Lock, Unlock, Setting } from '@element-plus/icons-vue';
 import Pagination from '@/components/common/Pagination.vue';
 import UserDetailDrawer from '@/components/admin/UserDetailDrawer.vue';
@@ -246,7 +246,7 @@ const submitting = ref(false);
 
 // 判断当前用户是否为管理员
 const isAdmin = computed(() => {
-  return userStore.currentUser?.user_type === 'admin';
+  return userStore.userInfo?.user_type === 'admin';
 });
 
 // 批量操作表单
@@ -271,10 +271,21 @@ const fetchUsers = () => {
 // 页面加载时获取数据
 onMounted(() => {
     fetchUsers();
-    // 获取角色列表
-    permissionStore.fetchRoles();
-    // 获取权限列表
-    permissionStore.fetchPermissions();
+
+    // 尝试获取角色和权限列表，但不阻止页面加载
+    try {
+        // 获取角色列表
+        permissionStore.fetchRoles().catch(error => {
+            console.warn('获取角色列表失败，但不影响页面基本功能:', error);
+        });
+
+        // 获取权限列表
+        permissionStore.fetchPermissions().catch(error => {
+            console.warn('获取权限列表失败，但不影响页面基本功能:', error);
+        });
+    } catch (error) {
+        console.warn('权限数据加载失败，但不影响页面基本功能:', error);
+    }
 });
 
 // 处理表格选择变化
@@ -342,15 +353,15 @@ const handleViewDetail = async (id: string | number) => {
 
         // 根据用户类型获取相应的详细信息
         if (userDetail.user_type === 'student') {
-            // 模拟学生信息
-            studentProfile.value = {
-                id: userDetail.id,
-                name: `学生${userDetail.id}`,
-                school: '测试大学',
-                major: '计算机科学',
-                education: '本科',
-                graduation_year: '2023'
-            };
+            // 获取学生信息
+            try {
+                // 这里应该调用API获取学生详细信息
+                // 暂时使用模拟数据
+                studentProfile.value = userDetail as StudentProfile;
+            } catch (error) {
+                console.error('获取学生信息失败:', error);
+                studentProfile.value = null;
+            }
             companyProfile.value = null;
         } else if (userDetail.user_type === 'company') {
             // 获取公司信息
@@ -386,7 +397,21 @@ const handleManagePermissions = async (user?: UserInfo) => {
         // 如果指定了用户，获取该用户的角色
         selectedUserId.value = user.id;
         currentUserDetail.value = user;
-        await permissionStore.fetchUserRoles(user.id);
+        try {
+            await permissionStore.fetchUserRoles(user.id);
+        } catch (error) {
+            console.warn('获取用户角色失败，使用默认角色:', error);
+            // 使用默认角色
+            if (user.user_type === 'admin') {
+                permissionStore.userRoles = ['admin'];
+            } else if (user.user_type === 'student') {
+                permissionStore.userRoles = ['student'];
+            } else if (user.user_type === 'company') {
+                permissionStore.userRoles = ['company'];
+            } else {
+                permissionStore.userRoles = [];
+            }
+        }
     } else {
         // 如果没有指定用户，打开角色管理页面
         selectedUserId.value = '';

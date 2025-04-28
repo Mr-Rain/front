@@ -96,10 +96,10 @@
         <div class="company-list">
           <div v-for="company in companyList" :key="company.id" class="company-card">
             <div class="company-logo">
-              <el-avatar :size="64" :src="company.logo || defaultLogo">{{ company.name.substring(0, 1) }}</el-avatar>
+              <el-avatar :size="64" :src="company.logo || defaultLogo">{{ (company.companyName || company.company_name || '').substring(0, 1) }}</el-avatar>
             </div>
             <div class="company-info">
-              <h3 class="company-name">{{ company.name }}</h3>
+              <h3 class="company-name">{{ company.companyName || company.company_name }}</h3>
               <div class="company-meta">
                 <span class="company-industry">{{ company.industry }}</span>
                 <span class="company-location">{{ company.location }}</span>
@@ -135,16 +135,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
+import { useRouter } from 'vue-router';
 import { Search, ArrowLeft } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import Breadcrumb from '@/components/common/Breadcrumb.vue';
+import { useCompanyStore } from '@/stores/company';
 
 const router = useRouter();
-const route = useRoute();
 const loading = ref(false);
 const defaultLogo = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
+const companyStore = useCompanyStore();
 
 // 返回按钮相关逻辑
 // 始终显示返回按钮
@@ -185,122 +186,35 @@ const hasActiveFilters = computed(() => {
   return !!listQuery.keyword || !!listQuery.industry || !!listQuery.location;
 });
 
-// 模拟数据 - 实际项目中应该从API获取
-const companyList = ref([
-  {
-    id: 1,
-    name: '科技创新有限公司',
-    logo: '',
-    industry: '互联网',
-    location: '北京',
-    description: '专注于人工智能和大数据分析的科技公司，致力于为企业提供智能化解决方案。',
-    tags: ['人工智能', '大数据', '云计算']
-  },
-  {
-    id: 2,
-    name: '未来教育科技',
-    logo: '',
-    industry: '教育',
-    location: '上海',
-    description: '专注于在线教育和教育科技的创新企业，提供智能学习平台和个性化教育服务。',
-    tags: ['在线教育', 'EdTech', '智能学习']
-  },
-  {
-    id: 3,
-    name: '健康医疗科技',
-    logo: '',
-    industry: '医疗',
-    location: '广州',
-    description: '致力于医疗健康领域的科技创新，提供远程医疗和健康管理解决方案。',
-    tags: ['医疗科技', '远程医疗', '健康管理']
-  },
-  {
-    id: 4,
-    name: '金融科技服务',
-    logo: '',
-    industry: '金融',
-    location: '深圳',
-    description: '专注于金融科技领域，提供智能金融服务和风险管理解决方案。',
-    tags: ['金融科技', '支付', '风险管理']
-  },
-  {
-    id: 5,
-    name: '智能制造科技',
-    logo: '',
-    industry: '制造业',
-    location: '杭州',
-    description: '专注于智能制造和工业自动化，提供工业4.0解决方案。',
-    tags: ['智能制造', '工业自动化', '物联网']
-  }
-]);
+// 企业列表数据 - 使用计算属性从store获取
+const companyList = computed(() => companyStore.companyList);
 
-// 企业总数
-const companyTotal = ref(5);
+// 企业总数 - 使用计算属性从store获取
+const companyTotal = computed(() => companyStore.companyTotal);
 
-// 获取数据 - 模拟API调用
-const fetchData = () => {
+// 获取企业列表数据
+const fetchData = async () => {
   loading.value = true;
 
-  // 模拟API延迟
-  setTimeout(() => {
-    // 模拟筛选逻辑
-    const filteredList = [
-      {
-        id: 1,
-        name: '科技创新有限公司',
-        logo: '',
-        industry: '互联网',
-        location: '北京',
-        description: '专注于人工智能和大数据分析的科技公司，致力于为企业提供智能化解决方案。',
-        tags: ['人工智能', '大数据', '云计算']
-      },
-      {
-        id: 2,
-        name: '未来教育科技',
-        logo: '',
-        industry: '教育',
-        location: '上海',
-        description: '专注于在线教育和教育科技的创新企业，提供智能学习平台和个性化教育服务。',
-        tags: ['在线教育', 'EdTech', '智能学习']
-      },
-      {
-        id: 3,
-        name: '健康医疗科技',
-        logo: '',
-        industry: '医疗',
-        location: '广州',
-        description: '致力于医疗健康领域的科技创新，提供远程医疗和健康管理解决方案。',
-        tags: ['医疗科技', '远程医疗', '健康管理']
-      },
-      {
-        id: 4,
-        name: '金融科技服务',
-        logo: '',
-        industry: '金融',
-        location: '深圳',
-        description: '专注于金融科技领域，提供智能金融服务和风险管理解决方案。',
-        tags: ['金融科技', '支付', '风险管理']
-      },
-      {
-        id: 5,
-        name: '智能制造科技',
-        logo: '',
-        industry: '制造业',
-        location: '杭州',
-        description: '专注于智能制造和工业自动化，提供工业4.0解决方案。',
-        tags: ['智能制造', '工业自动化', '物联网']
-      }
-    ].filter(company => {
-      if (listQuery.industry && company.industry !== listQuery.industry) return false;
-      if (listQuery.location && !company.location.includes(listQuery.location)) return false;
-      if (listQuery.keyword && !company.name.includes(listQuery.keyword)) return false;
-      return true;
-    });
+  try {
+    // 构建查询参数
+    const params = {
+      page: listQuery.page,
+      pageSize: listQuery.pageSize,
+      keyword: listQuery.keyword || undefined,
+      industry: listQuery.industry || undefined,
+      location: listQuery.location || undefined
+    };
 
-    companyList.value = filteredList;
-    companyTotal.value = filteredList.length;
+    // 调用store的fetchCompanyList方法获取数据
+    await companyStore.fetchCompanyList(params);
+
+  } catch (error) {
+    console.error('获取企业列表失败:', error);
+    ElMessage.error('获取企业列表失败，请稍后重试');
+  } finally {
     loading.value = false;
-  }, 500);
+  }
 };
 
 // 处理筛选
@@ -329,13 +243,13 @@ const handleCurrentChange = (val: number) => {
 };
 
 // 查看企业详情
-const viewCompany = (id: number) => {
+const viewCompany = (_id: string | number) => {
   ElMessage.info('企业详情功能开发中');
-  // router.push(`/companies/${id}`);
+  // router.push(`/companies/${_id}`);
 };
 
 // 查看企业职位
-const viewJobs = (id: number) => {
+const viewJobs = (id: string | number) => {
   router.push({
     path: '/jobs',
     query: { company_id: id.toString() }
@@ -349,6 +263,11 @@ onMounted(() => {
 
   // 获取数据
   fetchData();
+});
+
+// 组件卸载前移除事件监听
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize);
 });
 </script>
 

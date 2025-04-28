@@ -11,6 +11,7 @@ type ApplicationStatus =
   | 'viewed' // 已查看
   | 'interview' // 邀请面试
   | 'offer' // 发放 Offer
+  | 'accepted' // 录用
   | 'rejected' // 不合适
   | 'withdrawn'; // 学生撤回
 
@@ -19,40 +20,41 @@ type ApplicationStatus =
  */
 export interface ApplicationInfo {
   id: string | number;
-  job_id: string | number;
-  student_id: string | number;
-  resume_id: string | number; // 使用的简历ID
+  jobId: string | number;
+  studentId: string | number;
+  resumeId: string | number; // 使用的简历ID
   status: ApplicationStatus;
-  apply_time: string; // 申请时间 (ISO 8601)
-  update_time?: string; // 状态更新时间 (ISO 8601)
+  applyTime: string; // 申请时间 (ISO 8601)
+  updateTime?: string; // 状态更新时间 (ISO 8601)
   feedback?: string; // 企业反馈/面试安排等 (可选, Markdown)
   rating?: number; // 候选人评分 (1-5)
 
   // 面试相关信息
-  interview_time?: string; // 面试时间 (ISO 8601)
-  interview_location?: string; // 面试地点
-  interview_type?: 'onsite' | 'video' | 'phone'; // 面试方式
-  interview_contact?: string; // 面试联系人
-  interview_contact_info?: string; // 联系人信息
+  interviewTime?: string; // 面试时间 (ISO 8601)
+  interviewLocation?: string; // 面试地点
+  interviewType?: 'onsite' | 'video' | 'phone'; // 面试方式
+  interviewContact?: string; // 面试联系人
+  interviewContactInfo?: string; // 联系人信息
 
   // --- 冗余信息，方便前端展示 ---
-  job_info?: Pick<JobInfo, 'id' | 'title' | 'company_name' | 'location' | 'salary_range'>; // 职位简要信息
-  student_info?: Pick<StudentProfile, 'id' | 'name' | 'school' | 'major'>; // 学生简要信息 (企业端)
-  resume_snapshot?: Partial<ResumeInfo>; // 申请时简历快照 (可选)
+  jobInfo?: Pick<JobInfo, 'id' | 'title' | 'companyName' | 'location' | 'salaryRange'>; // 职位简要信息
+  studentInfo?: Pick<StudentProfile, 'id' | 'name' | 'school' | 'major'>; // 学生简要信息 (企业端)
+  resumeSnapshot?: Partial<ResumeInfo>; // 申请时简历快照 (可选)
 
   // 直接展示的字段，方便前端使用
-  job_title?: string;
-  company_name?: string;
-  resume_title?: string;
-  application_time?: string; // 申请时间，等同于 apply_time
+  jobTitle?: string;
+  companyName?: string;
+  resumeTitle?: string;
+
+  // 移除下划线命名的属性，统一使用驼峰命名法
 }
 
 /**
  * (学生端) 申请职位荷载
  */
 export interface ApplyJobPayload {
-  job_id: string | number;
-  resume_id: string | number; // 选择的简历ID
+  jobId: string | number;
+  resumeId: string | number; // 选择的简历ID
 }
 
 /**
@@ -64,9 +66,11 @@ export interface UpdateApplicationStatusPayload {
   rating?: number; // 候选人评分 (1-5)
 
   // 面试相关信息
-  interview_time?: string;
-  interview_type?: 'onsite' | 'video' | 'phone';
-  interview_location?: string;
-  interview_contact?: string;
-  interview_contact_info?: string;
+  interviewTime?: string;
+  interviewType?: 'onsite' | 'video' | 'phone';
+  interviewLocation?: string;
+  interviewContact?: string;
+  interviewContactInfo?: string;
+
+  // 移除下划线命名的属性，统一使用驼峰命名法
 }

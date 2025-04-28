@@ -88,6 +88,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { ElMessage } from 'element-plus';
+import { useCompanyStore } from '@/stores/company';
 import type { UploadFile, UploadUserFile, UploadRequestOptions } from 'element-plus';
 
 // 使用Vue的编译器宏defineProps，不需要导入
@@ -121,6 +122,7 @@ const props = defineProps({
 // 使用Vue的编译器宏defineEmits，不需要导入
 const emit = defineEmits(['update:modelValue', 'upload-success', 'upload-error', 'remove']);
 
+const companyStore = useCompanyStore();
 const action = ''; // 实际上不会使用这个action，因为我们使用自定义上传
 const uploading = ref(false);
 const fileList = ref<UploadUserFile[]>([]);
@@ -181,91 +183,21 @@ const beforeUpload = (file: File) => {
 const customUpload = async (options: UploadRequestOptions) => {
   const { file } = options;
   if (!file || !(file instanceof File)) {
-    console.error('文件上传失败: 无效的文件对象');
     ElMessage.error('文件上传失败');
     return;
   }
 
-  console.log('开始上传文件:', file.name, '大小:', file.size, '类型:', file.type);
   uploading.value = true;
-
   try {
-    // 直接调用API上传文件，不经过store的保存逻辑
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('bucket', 'company-licenses');
-
-    // 生成文件路径
-    const ext = file.name.substring(file.name.lastIndexOf('.'));
-    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const randomStr = Math.random().toString(36).substring(2, 10);
-    const path = `licenses/${date}_${randomStr}${ext}`;
-    formData.append('path', path);
-
-    console.log('准备发送文件上传请求，路径:', path);
-
-    // 使用fetch API直接发送请求，确保请求被发送
-    console.log('发送文件上传请求，表单数据:', {
-      file: file.name,
-      bucket: 'company-licenses',
-      path: path
-    });
-
-    const token = localStorage.getItem('token');
-    console.log('使用的Token:', token ? token.substring(0, 10) + '...' : 'null');
-
-    const response = await fetch('/api/files/upload', {
-      method: 'POST',
-      body: formData,
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`上传失败: ${response.status} ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    console.log('文件上传API响应:', result);
-
-    if (!result.data || !result.data.url) {
-      throw new Error('上传响应缺少URL');
-    }
-
-    const licenseUrl = result.data.url;
-    console.log('文件上传成功，获取到URL:', licenseUrl);
-    console.log('URL类型:', typeof licenseUrl);
-    console.log('URL长度:', licenseUrl ? licenseUrl.length : 0);
-
-    // 确保URL是有效的字符串
-    if (!licenseUrl || typeof licenseUrl !== 'string' || licenseUrl.trim() === '') {
-      console.error('获取到的URL无效');
-      throw new Error('获取到的URL无效');
-    }
-
+    const licenseUrl = await companyStore.uploadLicense(file);
     previewUrl.value = licenseUrl;
-    console.log('设置previewUrl:', previewUrl.value);
-
-    // 更新父组件的v-model值
     emit('update:modelValue', licenseUrl);
-    console.log('已触发update:modelValue事件，值:', licenseUrl);
-
-    // 触发上传成功事件
     emit('upload-success', licenseUrl);
-    console.log('已触发upload-success事件，值:', licenseUrl);
-
-    // 显示成功消息，并提示用户需要点击编辑按钮
-    ElMessage({
-      message: '文件上传成功！请点击"编辑"按钮，然后点击"保存营业执照"按钮完成保存。',
-      type: 'success',
-      duration: 5000,
-      showClose: true
-    });
+    ElMessage.success('资质文件上传成功，请点击"保存"按钮保存所有修改');
   } catch (error) {
-    console.error('文件上传失败，详细错误:', error);
+    console.error('License upload failed:', error);
     emit('upload-error', error);
-    ElMessage.error('文件上传失败');
+    ElMessage.error('资质文件上传失败');
   } finally {
     uploading.value = false;
   }

@@ -11,11 +11,11 @@
  */
 export function snakeToCamel(obj: any): any {
   if (obj === null || typeof obj !== 'object') return obj;
-  
+
   if (Array.isArray(obj)) {
     return obj.map(item => snakeToCamel(item));
   }
-  
+
   return Object.keys(obj).reduce((result, key) => {
     // 转换键名：snake_case 到 camelCase
     const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
@@ -32,11 +32,11 @@ export function snakeToCamel(obj: any): any {
  */
 export function camelToSnake(obj: any): any {
   if (obj === null || typeof obj !== 'object') return obj;
-  
+
   if (Array.isArray(obj)) {
     return obj.map(item => camelToSnake(item));
   }
-  
+
   return Object.keys(obj).reduce((result, key) => {
     // 转换键名：camelCase 到 snake_case
     const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
@@ -53,7 +53,7 @@ export function camelToSnake(obj: any): any {
  */
 export function hasSnakeCase(obj: any): boolean {
   if (obj === null || typeof obj !== 'object') return false;
-  
+
   return Object.keys(obj).some(key => key.includes('_'));
 }
 
@@ -64,7 +64,7 @@ export function hasSnakeCase(obj: any): boolean {
  */
 export function hasCamelCase(obj: any): boolean {
   if (obj === null || typeof obj !== 'object') return false;
-  
+
   return Object.keys(obj).some(key => /[a-z][A-Z]/.test(key));
 }
 
@@ -77,7 +77,7 @@ export function hasCamelCase(obj: any): boolean {
  */
 export function transformKeys(obj: any, targetStyle: 'camel' | 'snake' = 'camel'): any {
   if (obj === null || typeof obj !== 'object') return obj;
-  
+
   if (targetStyle === 'camel') {
     if (hasSnakeCase(obj)) {
       return snakeToCamel(obj);
@@ -87,6 +87,6 @@ export function transformKeys(obj: any, targetStyle: 'camel' | 'snake' = 'camel'
       return camelToSnake(obj);
     }
   }
-  
+
   return obj;
 }

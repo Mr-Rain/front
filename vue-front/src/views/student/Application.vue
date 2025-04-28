@@ -10,7 +10,7 @@
               :columns="exportColumns"
               :file-name="'申请列表_' + formatDate(new Date())"
               title="申请列表导出"
-              subtitle="导出时间：{{ formatDateTime(new Date()) }}"
+              :subtitle="`导出时间：${formatDateTime(new Date())}`"
               :support-types="['excel', 'pdf', 'csv']"
             />
           </div>
@@ -18,26 +18,28 @@
       </template>
 
       <el-table :data="applicationStore.studentApplications" style="width: 100%" empty-text="暂无申请记录">
-        <el-table-column prop="job_title" label="职位名称" min-width="180">
+        <el-table-column prop="jobTitle" label="职位名称" min-width="180">
            <template #default="scope">
                 <!-- Link to job detail -->
-                <el-link type="primary" @click="goToJobDetail(scope.row.job_id)">{{ scope.row.job_title || '职位信息加载中...' }}</el-link>
+                <el-link type="primary" @click="goToJobDetail(scope.row.jobId)">
+                  {{ scope.row.jobTitle || '职位信息加载中...' }}
+                </el-link>
            </template>
         </el-table-column>
-        <el-table-column prop="company_name" label="公司名称" min-width="150">
+        <el-table-column prop="companyName" label="公司名称" min-width="150">
              <template #default="scope">
-                {{ scope.row.company_name || '-' }}
+                {{ scope.row.companyName || '-' }}
              </template>
         </el-table-column>
-         <el-table-column prop="resume_title" label="投递简历" min-width="150">
+         <el-table-column prop="resumeTitle" label="投递简历" min-width="150">
              <template #default="scope">
-                {{ scope.row.resume_title || '-' }}
+                {{ scope.row.resumeTitle || '-' }}
                 <!-- Optionally link to preview resume -->
              </template>
         </el-table-column>
-        <el-table-column prop="application_time" label="申请时间" width="180">
+        <el-table-column prop="applyTime" label="申请时间" width="180">
           <template #default="scope">
-            {{ formatTime(scope.row.application_time) }}
+            {{ formatTime(scope.row.applyTime) }}
           </template>
         </el-table-column>
         <el-table-column prop="status" label="申请状态" width="120" align="center">
@@ -70,10 +72,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue';
+import { reactive, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useApplicationStore } from '@/stores/application';
-import type { ApplicationInfo, ApplicationStatus } from '@/types/application'; // Assuming types/application.d.ts exists
+import type { ApplicationStatus } from '@/types/application'; // Assuming types/application.d.ts exists
 import { ElCard, ElTable, ElTableColumn, ElTag, ElButton, ElMessageBox, ElMessage, ElLink } from 'element-plus';
 import Pagination from '@/components/common/Pagination.vue'; // Import pagination component
 import TableExport from '@/components/common/TableExport.vue'; // Import table export component
@@ -94,6 +96,7 @@ const fetchApplications = () => {
 };
 
 onMounted(() => {
+  console.log('Application component mounted, fetching applications...');
   fetchApplications();
 });
 
@@ -114,6 +117,7 @@ const formatStatus = (status: ApplicationStatus | undefined): string => {
         viewed: '已查看',
         interview: '面试中',
         offer: '已录用',
+        accepted: '已录用',
         rejected: '未录用',
         withdrawn: '已撤销'
     };
@@ -181,13 +185,13 @@ const viewApplicationDetail = (id: string | number) => {
 
 // 导出列定义
 const exportColumns = computed(() => [
-  { prop: 'job_title', label: '职位名称' },
-  { prop: 'company_name', label: '公司名称' },
-  { prop: 'resume_title', label: '投递简历' },
+  { prop: 'jobTitle', label: '职位名称' },
+  { prop: 'companyName', label: '公司名称' },
+  { prop: 'resumeTitle', label: '投递简历' },
   {
-    prop: 'application_time',
+    prop: 'applyTime',
     label: '申请时间',
-    formatter: (row: any) => formatTime(row.application_time)
+    formatter: (row: any) => formatTime(row.applyTime)
   },
   {
     prop: 'status',
@@ -205,7 +209,7 @@ const formatDate = (date: Date): string => {
   return `${year}${month}${day}`;
 };
 
-// 格式化日期时间（用于显示）
+// 格式化日期时间（用于导出标题，在TableExport组件中使用）
 const formatDateTime = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -214,7 +218,7 @@ const formatDateTime = (date: Date): string => {
   const minutes = String(date.getMinutes()).padStart(2, '0');
 
   return `${year}-${month}-${day} ${hours}:${minutes}`;
-};
+}
 
 </script>
 

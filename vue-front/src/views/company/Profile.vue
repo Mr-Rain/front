@@ -107,6 +107,7 @@
                   v-model="companyTags"
                   :suggestions="industryTagSuggestions"
                   :max-tags="10"
+                  :disabled="!isEditing"
                 />
               </el-form-item>
             </el-col>
@@ -167,23 +168,7 @@
                   @upload-success="handleLicenseSuccess"
                 />
 
-                <!-- 添加独立的保存按钮 -->
-                <div class="license-save-section" v-if="profileData.businessLicense">
-                  <el-button type="success" @click="saveLicenseOnly" :loading="savingLicense" :disabled="!isEditing">
-                    保存营业执照
-                  </el-button>
-                  <div class="license-save-tip" v-if="isEditing">
-                    如果营业执照未正确保存，请点击此按钮单独保存
-                  </div>
-                  <div class="license-save-tip" v-else>
-                    <el-alert
-                      title="请先点击'编辑'按钮，然后再保存营业执照"
-                      type="warning"
-                      :closable="false"
-                      show-icon
-                    />
-                  </div>
-                </div>
+
 
                 <div v-if="profileData.auditStatus" class="license-audit-status">
                   <p>
@@ -211,21 +196,19 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch, computed } from 'vue';
 import { useCompanyStore } from '@/stores/company';
-import { updateCompanyProfile } from '@/api/company';
 import UserAvatar from '@/components/common/UserAvatar.vue'; // Reusing avatar component for logo
 import CompanyTagsManager from '@/components/company/CompanyTagsManager.vue';
 import LicenseUploader from '@/components/company/LicenseUploader.vue';
 import type { CompanyProfile, CompanyAuditStatus } from '@/types/company';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage } from 'element-plus';
-import { Edit, Check, Close, InfoFilled, QuestionFilled } from '@element-plus/icons-vue';
+import { Edit, Check, Close, QuestionFilled } from '@element-plus/icons-vue';
 import _ from 'lodash';
 
 const companyStore = useCompanyStore();
 const profileFormRef = ref<FormInstance>();
 const isEditing = ref(false);
 const loading = ref(false);
-const savingLicense = ref(false);
 const licenseUploaderRef = ref<InstanceType<typeof LicenseUploader>>();
 
 // 计算属性：确保标签始终是数组
@@ -312,90 +295,12 @@ const showLicenseHelp = () => {
 };
 
 // 处理营业执照上传成功
-const handleLicenseSuccess = async (url: string) => {
-    console.log('营业执照上传成功，收到URL:', url);
-    console.log('URL类型:', typeof url);
-    console.log('URL长度:', url ? url.length : 0);
-
-    // 确保URL是有效的字符串
-    if (!url || typeof url !== 'string' || url.trim() === '') {
-        console.error('收到的URL无效');
-        ElMessage.warning('文件上传成功，但URL无效，请重试');
-        return;
-    }
-
-    // 更新本地状态
+const handleLicenseSuccess = (url: string) => {
     profileData.businessLicense = url;
     profileData.businessLicenseName = '营业执照';
-    console.log('已更新本地状态 profileData.businessLicense:', profileData.businessLicense);
-
-    // 如果当前处于编辑模式，尝试直接保存营业执照URL到数据库
-    if (isEditing.value) {
-        try {
-            console.log('正在保存营业执照URL到数据库...');
-            console.log('发送的数据:', JSON.stringify({
-                businessLicense: url,
-                businessLicenseName: '营业执照'
-            }));
-
-            // 直接使用API调用而不是通过store
-            const response = await updateCompanyProfile({
-                businessLicense: url,
-                businessLicenseName: '营业执照'
-            });
-
-            console.log('保存营业执照API响应:', response);
-            console.log('营业执照URL成功保存到数据库');
-            ElMessage.success('营业执照已成功保存');
-        } catch (error) {
-            console.error('保存营业执照URL失败:', error);
-            ElMessage.warning('营业执照上传成功，但保存失败。请点击"保存营业执照"按钮重试。');
-        }
-    } else {
-        // 如果不在编辑模式，提示用户需要先点击编辑按钮
-        ElMessage.warning('营业执照上传成功，请点击"编辑"按钮，然后点击"保存营业执照"按钮完成保存。');
-    }
 };
 
-// 单独保存营业执照
-const saveLicenseOnly = async () => {
-    if (!profileData.businessLicense) {
-        ElMessage.warning('请先上传营业执照');
-        return;
-    }
 
-    if (!isEditing.value) {
-        ElMessage.warning('请先点击"编辑"按钮，然后再保存营业执照');
-        return;
-    }
-
-    savingLicense.value = true;
-    try {
-        console.log('单独保存营业执照URL到数据库:', profileData.businessLicense);
-        console.log('发送的数据:', JSON.stringify({
-            businessLicense: profileData.businessLicense,
-            businessLicenseName: profileData.businessLicenseName || '营业执照'
-        }));
-
-        // 直接使用API调用而不是通过store
-        const response = await updateCompanyProfile({
-            businessLicense: profileData.businessLicense,
-            businessLicenseName: profileData.businessLicenseName || '营业执照'
-        });
-
-        console.log('保存营业执照API响应:', response);
-        console.log('营业执照URL成功保存到数据库');
-        ElMessage.success('营业执照已成功保存');
-
-        // 刷新公司信息
-        await companyStore.fetchProfile();
-    } catch (error) {
-        console.error('保存营业执照URL失败:', error);
-        ElMessage.error('营业执照保存失败，请重试');
-    } finally {
-        savingLicense.value = false;
-    }
-};
 
 const saveProfile = async () => {
   if (!profileFormRef.value) return;
@@ -405,21 +310,11 @@ const saveProfile = async () => {
       try {
         // Exclude readonly fields before sending
         const updateData = _.omit(profileData, ['id', 'username', 'email', 'userType', 'auditStatus', 'auditMessage']);
-
-        // 确保营业执照URL被包含在请求中
-        console.log('保存表单时的营业执照URL:', profileData.businessLicense);
-
-        // 如果有营业执照URL，确保它被包含在请求中
-        if (profileData.businessLicense) {
-          console.log('表单提交包含营业执照URL:', profileData.businessLicense);
-        }
-
         await companyStore.updateProfile(updateData);
         isEditing.value = false;
         ElMessage.success('公司信息更新成功');
       } catch (error) {
-         console.error('保存公司信息失败:', error);
-         ElMessage.error('保存失败，请重试');
+         // Error handled in store
       } finally {
         loading.value = false;
       }
@@ -546,19 +441,7 @@ const getAuditStatusType = (status: CompanyAuditStatus | undefined): ('success' 
     margin-bottom: 20px;
 }
 
-.license-save-section {
-    margin-top: 15px;
-    margin-bottom: 15px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
 
-.license-save-tip {
-    font-size: 12px;
-    color: var(--el-color-warning);
-    margin-top: 5px;
-}
 
 .license-audit-status {
     margin-top: 15px;

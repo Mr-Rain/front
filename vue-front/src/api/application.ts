@@ -35,14 +35,12 @@ export function applyForJob(data: ApplyJobPayload) {
   //   }
   // });
 
-  // 当后端API实现后，取消注释下面的代码
-  // /*
+  // 使用驼峰命名法(camelCase)的参数名称
   return request({
     url: '/api/applications',
     method: 'post',
     data,
   });
-  // */
 }
 
 /**
@@ -307,16 +305,11 @@ export function rateApplication(id: string | number, rating: number, comment?: s
  * @returns 申请列表
  */
 export function getCompanyApplicationList(params?: ApplicationFilterParams): Promise<{ data: PaginatedResponse<ApplicationInfo> }> {
-  // TODO: 实现企业端获取申请列表的模拟数据或真实API调用
-  console.warn('API: getCompanyApplicationList is not implemented yet.');
-  return Promise.resolve({ data: { records: [], total: 0, page: 1, pageSize: 10, totalPages: 0 } });
-  /*
   return request({
-    url: '/api/company/applications',
+    url: '/api/applications/company/current',
     method: 'get',
     params,
   });
-  */
 }
 
 /**
@@ -325,15 +318,10 @@ export function getCompanyApplicationList(params?: ApplicationFilterParams): Pro
  * @returns 申请详情
  */
 export function getCompanyApplicationDetail(id: string | number): Promise<{ data: ApplicationInfo }> {
-  // TODO: 实现企业端获取申请详情的模拟数据或真实API调用
-  console.warn('API: getCompanyApplicationDetail is not implemented yet.');
-  return Promise.reject({ message: 'Not implemented' });
-  /*
   return request({
-    url: `/api/company/applications/${id}`,
+    url: `/api/applications/${id}`,
     method: 'get',
   });
-  */
 }
 
 /**
@@ -343,25 +331,11 @@ export function getCompanyApplicationDetail(id: string | number): Promise<{ data
  * @returns 更新结果
  */
 export function updateApplicationStatus(id: string | number, data: UpdateApplicationStatusPayload) {
-  // // 使用模拟数据，当后端API未实现时使用
-  // console.log('API MOCK: updateApplicationStatus is using mock data.');
-  //
-  // // 返回模拟响应
-  // return Promise.resolve({
-  //   data: {
-  //     success: true,
-  //     message: '申请状态已更新'
-  //   }
-  // });
-
-  // 当后端API实现后，取消注释下面的代码
-  // /*
   return request({
     url: `/api/applications/${id}/status`,
     method: 'put',
     data,
   });
-  // */
 }
 
 /**
@@ -371,25 +345,11 @@ export function updateApplicationStatus(id: string | number, data: UpdateApplica
  * @returns 操作结果
  */
 export function scheduleInterview(id: string | number, interviewData: any) {
-  // // 使用模拟数据，当后端API未实现时使用
-  // console.log('API MOCK: scheduleInterview is using mock data.');
-  //
-  // // 返回模拟响应
-  // return Promise.resolve({
-  //   data: {
-  //     success: true,
-  //     message: '面试已安排'
-  //   }
-  // });
-
-  // 当后端API实现后，取消注释下面的代码
-  // /*
   return request({
     url: `/api/applications/${id}/interview`,
-    method: 'post',
+    method: 'put',
     data: interviewData,
   });
-  // */
 }
 
 /**

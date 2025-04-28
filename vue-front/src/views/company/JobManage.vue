@@ -171,12 +171,12 @@ const jobStatistics = computed(() => {
     activeJobs,
     totalApplications,
     pendingApplications,
-    // 模拟的趋势数据
+    // 趋势数据 - 实际项目中可以从后端获取
     trends: {
-      totalJobs: 5,
-      activeJobs: 10,
-      totalApplications: -3,
-      pendingApplications: 15
+      totalJobs: 0,
+      activeJobs: 0,
+      totalApplications: 0,
+      pendingApplications: 0
     }
   };
 });

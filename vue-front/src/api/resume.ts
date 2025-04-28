@@ -87,7 +87,7 @@ export function deleteResume(id: string | number) {
 export function setDefaultResume(id: string | number) {
   return request({
     url: `/api/resumes/${id}/default`,
-    method: 'post',
+    method: 'put',
   }).then(response => {
     clearCacheByUrlPrefix('/api/resumes/me');
     return response;

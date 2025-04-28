@@ -245,8 +245,27 @@ export const useUserStore = defineStore('user', {
         try {
             // 从API获取用户列表数据
             const response = await getUserList(params);
-            this.userList = response.data.records;
-            this.userTotal = response.data.total;
+            console.log('用户列表响应数据:', response.data);
+
+            // 检查响应数据结构
+            if (response.data && Array.isArray(response.data.list)) {
+                // 使用正确的数据结构
+                this.userList = response.data.list;
+                this.userTotal = response.data.total || 0;
+            } else if (response.data && Array.isArray(response.data.records)) {
+                // 兼容旧的数据结构
+                this.userList = response.data.records;
+                this.userTotal = response.data.total || 0;
+            } else if (Array.isArray(response.data)) {
+                // 直接是数组的情况
+                this.userList = response.data;
+                this.userTotal = response.data.length;
+            } else {
+                // 未知结构，清空数据
+                console.error('未知的用户列表数据结构:', response.data);
+                this.userList = [];
+                this.userTotal = 0;
+            }
         } catch (error) {
             console.error('获取用户列表失败:', error);
             ElMessage.error('获取用户列表失败');

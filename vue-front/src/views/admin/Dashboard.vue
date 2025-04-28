@@ -98,6 +98,7 @@
 import { ref, reactive, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
+import { getSystemOverview } from '@/api/statistics';
 import AdminStatistics from '@/components/admin/AdminStatistics.vue';
 import {
   User,
@@ -134,18 +135,44 @@ const stats = reactive({
     pendingCompanies: 0
 });
 
-onMounted(() => {
-    // 模拟数据
+onMounted(async () => {
+    // 从API获取实际数据
+    try {
+        // 使用封装的request工具
+        const result = await getSystemOverview();
+        console.log('Dashboard API返回数据:', result);
+
+        // 检查返回的数据结构
+        if (result && result.data) {
+            const data = result.data;
+            // 用户统计
+            if (data.userStats) {
+                stats.totalUsers = data.userStats.totalUsers || 0;
+                stats.totalCompanies = data.userStats.companyUsers || 0;
+            }
+
+            // 职位统计
+            if (data.jobStats) {
+                stats.totalJobs = data.jobStats.totalJobs || 0;
+            }
+
+            // 待审核企业数量 - 需要单独查询或从其他数据中获取
+            // 这里假设后端返回的数据中包含了待审核企业数量
+            stats.pendingCompanies = data.pendingCompanies || 0;
+        }
+    } catch (error) {
+        console.error('获取管理员统计数据失败:', error);
+    }
+
+    // 注释掉的模拟数据，保留作为参考
+    /*
     setTimeout(() => {
       stats.totalUsers = 1250;
       stats.totalCompanies = 85;
       stats.totalJobs = 320;
       stats.pendingCompanies = 15;
     }, 500);
-
-    // TODO: 从实际API获取数据
-    // const adminStore = useAdminStore();
-    // stats.totalUsers = await adminStore.fetchTotalUsers();
+    */
 });
 
 const goToAudit = () => {

@@ -43,6 +43,18 @@ export interface CompanyProfile extends UserInfo {
   auditStatus?: CompanyAuditStatus; // 审核状态 (管理端可见)
   auditMessage?: string; // 审核意见 (管理端/企业端可见)
 
+  // 兼容后端返回的蛇形命名字段
+  company_name?: string;
+  short_name?: string;
+  contact_person?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  business_license?: string;
+  business_license_name?: string;
+  submit_time?: string;
+  audit_status?: CompanyAuditStatus;
+  audit_message?: string;
+
   // 可以添加更多公司相关的字段
 }
 

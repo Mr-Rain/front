@@ -49,20 +49,45 @@
       </div>
 
       <el-table :data="companyStore.auditList" v-loading="companyStore.loadingAuditList" style="width: 100%">
-        <el-table-column prop="company_name" label="公司名称" min-width="180"></el-table-column>
-        <el-table-column prop="industry" label="行业" width="120"></el-table-column>
-        <el-table-column prop="location" label="地点" width="120"></el-table-column>
+        <el-table-column label="公司名称" min-width="180">
+          <template #default="scope">
+            {{ scope.row.company_name || scope.row.companyName || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="行业" width="120">
+          <template #default="scope">
+            {{ scope.row.industry || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="地点" width="120">
+          <template #default="scope">
+            {{ scope.row.location || '-' }}
+          </template>
+        </el-table-column>
         <el-table-column label="认证文件" width="120" align="center">
             <template #default="scope">
-                <el-link type="primary" @click="previewLicense(scope.row.business_license)" :disabled="!scope.row.business_license">预览文件</el-link>
+                <el-link
+                  type="primary"
+                  @click="previewLicense(scope.row.business_license || scope.row.businessLicense)"
+                  :disabled="!(scope.row.business_license || scope.row.businessLicense)"
+                >
+                  预览文件
+                </el-link>
             </template>
         </el-table-column>
-        <el-table-column prop="submit_time" label="提交时间" width="180">
-             <template #default="scope">{{ formatTime(scope.row.submit_time) }}</template>
+        <el-table-column label="提交时间" width="180">
+             <template #default="scope">
+               {{ formatTime(scope.row.submit_time || scope.row.submitTime) }}
+             </template>
         </el-table-column>
-         <el-table-column prop="audit_status" label="审核状态" width="120" align="center">
+        <el-table-column label="审核状态" width="120" align="center">
             <template #default="scope">
-                 <el-tag :type="getStatusTagType(scope.row.audit_status)" effect="light">{{ formatAuditStatus(scope.row.audit_status) }}</el-tag>
+                 <el-tag
+                   :type="getStatusTagType(scope.row.audit_status || scope.row.auditStatus)"
+                   effect="light"
+                 >
+                   {{ formatAuditStatus(scope.row.audit_status || scope.row.auditStatus) }}
+                 </el-tag>
             </template>
         </el-table-column>
         <el-table-column label="操作" width="180" align="center" fixed="right">
@@ -94,20 +119,37 @@
     <el-dialog v-model="detailDialogVisible" title="企业审核" width="600px">
         <div v-if="currentCompany" class="detail-content">
              <el-descriptions :column="1" border size="small" style="margin-bottom: 20px;">
-                 <el-descriptions-item label="公司名称">{{ currentCompany.company_name }}</el-descriptions-item>
-                 <el-descriptions-item label="行业">{{ currentCompany.industry }}</el-descriptions-item>
-                 <el-descriptions-item label="地点">{{ currentCompany.location }}</el-descriptions-item>
-                 <el-descriptions-item label="官网"> <el-link :href="currentCompany.website" target="_blank" type="primary" v-if="currentCompany.website">{{ currentCompany.website }}</el-link><span v-else>-</span></el-descriptions-item>
-                 <el-descriptions-item label="提交时间">{{ formatTime(currentCompany.submit_time) }}</el-descriptions-item>
-                  <el-descriptions-item label="联系人">{{ currentCompany.contact_person }} ({{ currentCompany.contact_email }} / {{ currentCompany.contact_phone }})</el-descriptions-item>
-                   <el-descriptions-item label="公司介绍">{{ currentCompany.description }}</el-descriptions-item>
+                 <el-descriptions-item label="公司名称">{{ currentCompany.company_name || currentCompany.companyName || '-' }}</el-descriptions-item>
+                 <el-descriptions-item label="行业">{{ currentCompany.industry || '-' }}</el-descriptions-item>
+                 <el-descriptions-item label="地点">{{ currentCompany.location || '-' }}</el-descriptions-item>
+                 <el-descriptions-item label="官网">
+                    <el-link
+                        :href="currentCompany.website"
+                        target="_blank"
+                        type="primary"
+                        v-if="currentCompany.website"
+                    >
+                        {{ currentCompany.website }}
+                    </el-link>
+                    <span v-else>-</span>
+                 </el-descriptions-item>
+                 <el-descriptions-item label="提交时间">{{ formatTime(currentCompany.submit_time || currentCompany.submitTime) }}</el-descriptions-item>
+                 <el-descriptions-item label="联系人">
+                    {{ currentCompany.contact_person || currentCompany.contactPerson || '-' }}
+                    <template v-if="currentCompany.contact_email || currentCompany.contactEmail || currentCompany.contact_phone || currentCompany.contactPhone">
+                        ({{ currentCompany.contact_email || currentCompany.contactEmail || '' }} / {{ currentCompany.contact_phone || currentCompany.contactPhone || '' }})
+                    </template>
+                 </el-descriptions-item>
+                 <el-descriptions-item label="公司介绍">{{ currentCompany.description || '-' }}</el-descriptions-item>
              </el-descriptions>
 
             <h4>认证文件</h4>
-            <p v-if="currentCompany.business_license">
-                <el-link type="primary" @click="previewLicense(currentCompany.business_license)">{{ currentCompany.business_license_name || '点击预览认证文件' }}</el-link>
+            <p v-if="currentCompany.business_license || currentCompany.businessLicense">
+                <el-link type="primary" @click="previewLicense(currentCompany.businessLicense || currentCompany.businessLicense)">
+                    {{ currentCompany.business_license_name || currentCompany.businessLicenseName || '点击预览认证文件' }}
+                </el-link>
             </p>
-             <p v-else>未上传认证文件</p>
+            <p v-else>未上传认证文件</p>
 
             <h4>审核操作</h4>
             <el-form ref="auditFormRef" :model="auditData">
@@ -140,7 +182,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, watch } from 'vue';
+import { ref, reactive, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useCompanyStore } from '@/stores/company';
 import type { CompanyProfile, CompanyAuditStatus, AuditPayload } from '@/types/company';
@@ -149,6 +191,7 @@ import { ElCard, ElTable, ElTableColumn, ElTag, ElButton, ElEmpty, ElMessage, El
 import { Search, Document } from '@element-plus/icons-vue';
 import Pagination from '@/components/common/Pagination.vue';
 import AuditLogDrawer from '@/components/admin/AuditLogDrawer.vue';
+import { clearCacheByUrlPrefix } from '@/utils/cacheInterceptor';
 
 const companyStore = useCompanyStore();
 const route = useRoute();
@@ -163,6 +206,11 @@ const listQuery = reactive({
     pageSize: 10,
     auditStatus: 'pending' as CompanyAuditStatus | undefined, // Default to pending
     keyword: ''
+});
+
+// 监听审核状态变化，重新获取数据
+watch(() => listQuery.auditStatus, () => {
+    fetchAuditList();
 });
 
 const detailDialogVisible = ref(false);
@@ -191,9 +239,27 @@ const handleFilter = () => {
 const formatTime = (timeStr: string | undefined): string => {
   if (!timeStr) return '-';
   try {
-    return new Date(timeStr).toLocaleString();
+    // 创建一个日期对象
+    const date = new Date(timeStr);
+
+    // 检查日期是否有效
+    if (isNaN(date.getTime())) {
+      return timeStr || '-';
+    }
+
+    // 格式化为本地时间字符串（北京时间）
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
   } catch (e) {
-    return timeStr;
+    console.error('日期格式化错误:', e);
+    return timeStr || '-';
   }
 };
 
@@ -295,15 +361,25 @@ const handleAuditSubmit = async () => {
                  return;
             }
             console.log(`Auditing company ${companyId} with status ${auditData.status}`);
-            // TODO: Ensure companyStore has submitAuditResult action
-             try {
-                 await companyStore.submitAudit(companyId, auditData.status === 'approved', auditData.message);
-                 ElMessage.success('审核结果提交成功');
-                 detailDialogVisible.value = false;
-                 fetchAuditList(); // Refresh list
-             } catch (error) {
-                 ElMessage.error('提交失败');
-             }
+            try {
+                // 提交审核结果
+                await companyStore.submitAudit(companyId, auditData.status === 'approved', auditData.message);
+                ElMessage.success('审核结果提交成功');
+                detailDialogVisible.value = false;
+
+                // 清除缓存并重新获取列表
+                ElMessage.info('正在刷新企业列表...');
+
+                // 清除API缓存
+                clearCacheByUrlPrefix('/api/admin/companies');
+
+                setTimeout(() => {
+                    // 根据当前选择的审核状态重新获取列表
+                    fetchAuditList();
+                }, 500);
+            } catch (error) {
+                ElMessage.error('提交失败');
+            }
         }
     });
 }

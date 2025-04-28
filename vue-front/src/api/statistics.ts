@@ -8,12 +8,21 @@ export interface StatisticsData {
 }
 
 /**
+ * API响应类型
+ */
+export interface ApiResponse<T> {
+  code: number;
+  message: string;
+  data: T;
+}
+
+/**
  * 获取系统概览统计数据
  * @returns 系统概览统计数据
  */
-export function getSystemOverview(): Promise<{ data: StatisticsData }> {
+export function getSystemOverview(): Promise<ApiResponse<StatisticsData>> {
   return request({
-    url: '/api/admin/statistics/overview',
+    url: '/api/admin/stats',
     method: 'get',
   });
 }
@@ -23,7 +32,7 @@ export function getSystemOverview(): Promise<{ data: StatisticsData }> {
  * @param params 查询参数
  * @returns 用户统计数据
  */
-export function getUserStatistics(params?: any): Promise<{ data: StatisticsData }> {
+export function getUserStatistics(params?: any): Promise<ApiResponse<StatisticsData>> {
   return request({
     url: '/api/admin/statistics/users',
     method: 'get',
@@ -36,7 +45,7 @@ export function getUserStatistics(params?: any): Promise<{ data: StatisticsData 
  * @param params 查询参数
  * @returns 职位统计数据
  */
-export function getJobStatistics(params?: any): Promise<{ data: StatisticsData }> {
+export function getJobStatistics(params?: any): Promise<ApiResponse<StatisticsData>> {
   return request({
     url: '/api/admin/statistics/jobs',
     method: 'get',
@@ -49,7 +58,7 @@ export function getJobStatistics(params?: any): Promise<{ data: StatisticsData }
  * @param params 查询参数
  * @returns 申请统计数据
  */
-export function getApplicationStatistics(params?: any): Promise<{ data: StatisticsData }> {
+export function getApplicationStatistics(params?: any): Promise<ApiResponse<StatisticsData>> {
   return request({
     url: '/api/admin/statistics/applications',
     method: 'get',
@@ -62,7 +71,7 @@ export function getApplicationStatistics(params?: any): Promise<{ data: Statisti
  * @param params 查询参数
  * @returns 企业统计数据
  */
-export function getCompanyStatistics(params?: any): Promise<{ data: StatisticsData }> {
+export function getCompanyStatistics(params?: any): Promise<ApiResponse<StatisticsData>> {
   return request({
     url: '/api/company/statistics',
     method: 'get',
@@ -74,11 +83,11 @@ export function getCompanyStatistics(params?: any): Promise<{ data: StatisticsDa
  * 获取企业端仪表盘统计数据
  * @returns 企业端仪表盘统计数据
  */
-export function getCompanyDashboardStatistics(): Promise<{ data: StatisticsData }> {
+export function getCompanyDashboardStatistics(): Promise<ApiResponse<StatisticsData>> {
   return request({
     url: '/api/company/statistics',
     method: 'get',
-    params: { time_range: 'week' }
+    params: { timeRange: 'week' }
   });
 }
 
@@ -86,7 +95,7 @@ export function getCompanyDashboardStatistics(): Promise<{ data: StatisticsData 
  * 获取学生端统计数据
  * @returns 学生端统计数据
  */
-export function getStudentDashboardStatistics(): Promise<{ data: StatisticsData }> {
+export function getStudentDashboardStatistics(): Promise<ApiResponse<StatisticsData>> {
   return request({
     url: '/api/student/statistics/dashboard',
     method: 'get',
