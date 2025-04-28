@@ -140,9 +140,9 @@ export const useCompanyStore = defineStore('company', {
         // 更新本地数据
         const index = this.auditList.findIndex(company => company.id === companyId);
         if (index !== -1) {
-          this.auditList[index].audit_status = approved ? 'approved' : 'rejected';
+          this.auditList[index].auditStatus = approved ? 'approved' : 'rejected';
           if (message) {
-            this.auditList[index].audit_message = message;
+            this.auditList[index].auditMessage = message;
           }
         }
 
@@ -191,11 +191,11 @@ export const useCompanyStore = defineStore('company', {
           {
             id: 2,
             company_id: companyId,
-            action: company.audit_status === 'approved' ? 'approve' : (company.audit_status === 'rejected' ? 'reject' : 'comment'),
+            action: company.auditStatus === 'approved' ? 'approve' : (company.auditStatus === 'rejected' ? 'reject' : 'comment'),
             operator_id: 1,
             operator_name: 'admin',
             audit_time: now.toISOString(),
-            message: company.audit_message || ''
+            message: company.auditMessage || ''
           }
         ];
       } catch (error) {
@@ -253,15 +253,32 @@ export const useCompanyStore = defineStore('company', {
     async uploadLicense(file: File) {
       this.submitting = true;
       try {
+        console.log('公司Store: 开始上传营业执照文件', file.name);
         const response = await uploadCompanyLicense(file);
-        const licenseUrl = response.data.url;
-        if (this.profile) {
-          this.profile.business_license = licenseUrl;
+        console.log('公司Store: 文件上传API响应:', response);
+
+        if (!response || !response.data || !response.data.url) {
+          console.error('公司Store: 文件上传响应缺少URL:', response);
+          throw new Error('文件上传响应格式错误');
         }
-        ElMessage.success('营业执照上传成功');
+
+        const licenseUrl = response.data.url;
+        console.log('公司Store: 获取到文件URL:', licenseUrl);
+
+        if (this.profile) {
+          this.profile.businessLicense = licenseUrl;
+          console.log('公司Store: 已更新本地状态的businessLicense字段');
+
+          // 注释掉这里，让Profile.vue中的handleLicenseSuccess方法来处理保存
+          // await this.updateProfile({ businessLicense: licenseUrl });
+          // console.log('营业执照URL已保存到数据库:', licenseUrl);
+        } else {
+          console.warn('公司Store: profile为空，无法更新本地状态');
+        }
+
         return licenseUrl;
       } catch (error) {
-        console.error('Failed to upload license:', error);
+        console.error('公司Store: 上传营业执照失败:', error);
         ElMessage.error('营业执照上传失败');
         throw error;
       } finally {

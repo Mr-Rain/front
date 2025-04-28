@@ -39,16 +39,25 @@ service.interceptors.request.use(
     console.log('Request Data:', config.data);
     console.log('Token:', token);
 
-    // 数据转换：将请求数据从 camelCase 转换为 snake_case
+    // 注释掉数据转换，统一使用驼峰命名法
+    // if (config.data && typeof config.data === 'object') {
+    //   config.data = camelToSnake(config.data);
+    //   console.log('Transformed Request Data:', config.data);
+    // }
+
+    // 注释掉URL参数转换
+    // if (config.params && typeof config.params === 'object') {
+    //   config.params = camelToSnake(config.params);
+    //   console.log('Transformed Request Params:', config.params);
+    // }
+
+    // 直接使用原始数据，不进行转换
     if (config.data && typeof config.data === 'object') {
-      config.data = camelToSnake(config.data);
-      console.log('Transformed Request Data:', config.data);
+      console.log('Request Data (no transformation):', config.data);
     }
 
-    // 转换 URL 参数
     if (config.params && typeof config.params === 'object') {
-      config.params = camelToSnake(config.params);
-      console.log('Transformed Request Params:', config.params);
+      console.log('Request Params (no transformation):', config.params);
     }
 
     // 如果存在 token，则将其添加到请求头的 Authorization 字段中
@@ -87,10 +96,15 @@ service.interceptors.response.use(
     // 从响应对象中获取响应体数据
     const res = response.data;
 
-    // 数据转换：将响应数据从 snake_case 转换为 camelCase
+    // 注释掉数据转换，统一使用驼峰命名法
+    // if (res && res.data && typeof res.data === 'object') {
+    //   res.data = snakeToCamel(res.data);
+    //   console.log('Transformed Response Data:', res.data);
+    // }
+
+    // 直接使用原始数据，不进行转换
     if (res && res.data && typeof res.data === 'object') {
-      res.data = snakeToCamel(res.data);
-      console.log('Transformed Response Data:', res.data);
+      console.log('Response Data (no transformation):', res.data);
     }
 
     // 检查响应头中是否包含新的 token（用于 token 刷新机制）

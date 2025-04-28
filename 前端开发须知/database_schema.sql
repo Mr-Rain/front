@@ -1,3 +1,55 @@
+/*
+grant usage on schema public to postgres, anon, authenticated, service_role;
+alter default privileges in schema public grant all on tables to postgres, anon, authenticated, service_role;
+alter default privileges in schema public grant all on functions to postgres, anon, authenticated, service_role;
+alter default privileges in schema public grant all on sequences to postgres, anon, authenticated, service_role;
+*/
+-- 你需要在你的 PostgreSQL 数据库的 resumes 表中添加 file_bucket 列。请执行以下 SQL 命令：
+ALTER TABLE resumes ADD COLUMN file_path TEXT;
+ALTER TABLE resumes ADD COLUMN file_bucket VARCHAR(255);
+
+-- 在students表中添加教育经历和工作经历字段
+ALTER TABLE students ADD COLUMN education_experiences JSONB;
+ALTER TABLE students ADD COLUMN work_experiences JSONB;
+
+-- 添加注释
+COMMENT ON COLUMN students.education_experiences IS '教育经历（JSON格式）';
+COMMENT ON COLUMN students.work_experiences IS '工作经历（JSON格式）';
+
+
+-- 为students表添加学号字段
+ALTER TABLE students ADD COLUMN student_number VARCHAR(64);
+
+-- 为现有记录设置默认学号（使用id作为临时学号）
+UPDATE students SET student_number = CONCAT('S', id) WHERE student_number IS NULL;
+
+-- 添加唯一约束，确保学号不重复
+ALTER TABLE students ADD CONSTRAINT uk_student_number UNIQUE (student_number);
+
+-- 添加注释
+COMMENT ON COLUMN students.student_number IS '学号，唯一标识';
+
+-- 添加期望薪资和期望工作地点字段
+ALTER TABLE students 
+ADD COLUMN expected_salary VARCHAR(64),
+ADD COLUMN expected_location VARCHAR(128);
+
+-- 添加注释
+COMMENT ON COLUMN students.expected_salary IS '期望薪资';
+COMMENT ON COLUMN students.expected_location IS '期望工作地点';
+
+-- 修改users表中的avatar字段类型
+ALTER TABLE users ALTER COLUMN avatar TYPE TEXT;
+
+-- 修改students表中的avatar字段类型
+ALTER TABLE students ALTER COLUMN avatar TYPE TEXT;
+
+-- 修改resumes表中的avatar字段类型
+ALTER TABLE resumes ALTER COLUMN avatar TYPE TEXT;
+
+
+ALTER TABLE users ADD COLUMN bio VARCHAR(1000); -- 或者 TEXT 类型，根据需要调整长度
+ALTER TABLE users ADD COLUMN update_time TIMESTAMP WITH TIME ZONE;
 -- 校园招聘系统数据库结构（PostgreSQL标准）
 -- 兼容Spring Boot / Supabase / Django ORM
 
@@ -268,3 +320,4 @@ CREATE TABLE user_settings (
 COMMENT ON TABLE user_settings IS '用户设置表';
 
 -- 所有表结构设计完毕
+

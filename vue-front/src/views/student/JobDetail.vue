@@ -138,7 +138,7 @@ const handleApply = async () => {
   }
 
   // Find the default resume
-  const defaultResume = resumeStore.resumeList.find(r => r.is_default);
+  const defaultResume = resumeStore.resumeList.find(r => r.isDefault);
   const resumeIdToUse = defaultResume?.id;
 
   if (!resumeIdToUse) {

@@ -19,9 +19,9 @@ export type CompanyAuditStatus = 'pending' | 'approved' | 'rejected';
  * 公司详细信息接口
  */
 export interface CompanyProfile extends UserInfo {
-  user_type: 'company'; // 明确用户类型为公司
-  company_name: string; // 公司名称
-  short_name?: string; // 公司简称
+  userType: 'company'; // 明确用户类型为公司
+  companyName: string; // 公司名称
+  shortName?: string; // 公司简称
   logo?: string; // 公司 Logo URL
   website?: string; // 公司官网
   industry?: string; // 所属行业
@@ -32,16 +32,16 @@ export interface CompanyProfile extends UserInfo {
   tags?: string[]; // 公司标签
 
   // --- 联系人信息 ---
-  contact_person?: string; // 联系人姓名
-  contact_email?: string;  // 联系人邮箱
-  contact_phone?: string;  // 联系人电话
+  contactPerson?: string; // 联系人姓名
+  contactEmail?: string;  // 联系人邮箱
+  contactPhone?: string;  // 联系人电话
 
   // --- 审核相关 ---
-  business_license?: string; // 营业执照/认证文件 URL
-  business_license_name?: string; // 认证文件名
-  submit_time?: string; // 认证提交时间 (ISO 8601)
-  audit_status?: CompanyAuditStatus; // 审核状态 (管理端可见)
-  audit_message?: string; // 审核意见 (管理端/企业端可见)
+  businessLicense?: string; // 营业执照/认证文件 URL
+  businessLicenseName?: string; // 认证文件名
+  submitTime?: string; // 认证提交时间 (ISO 8601)
+  auditStatus?: CompanyAuditStatus; // 审核状态 (管理端可见)
+  auditMessage?: string; // 审核意见 (管理端/企业端可见)
 
   // 可以添加更多公司相关的字段
 }

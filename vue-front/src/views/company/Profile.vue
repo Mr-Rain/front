@@ -33,13 +33,13 @@
               @upload-success="handleLogoSuccess"
               style="margin-bottom: 20px;"
             />
-            <div v-if="!isEditing" class="company-name-display">{{ profileData.company_name }}</div>
-            <div v-if="!isEditing && profileData.audit_status" class="audit-status-display">
-              <el-tag :type="getAuditStatusType(profileData.audit_status)" size="large">
-                审核状态: {{ formatAuditStatus(profileData.audit_status) }}
+            <div v-if="!isEditing" class="company-name-display">{{ profileData.companyName }}</div>
+            <div v-if="!isEditing && profileData.auditStatus" class="audit-status-display">
+              <el-tag :type="getAuditStatusType(profileData.auditStatus)" size="large">
+                审核状态: {{ formatAuditStatus(profileData.auditStatus) }}
               </el-tag>
-              <p v-if="profileData.audit_status === 'rejected' && profileData.audit_message" class="audit-message">
-                原因: {{ profileData.audit_message }}
+              <p v-if="profileData.auditStatus === 'rejected' && profileData.auditMessage" class="audit-message">
+                原因: {{ profileData.auditMessage }}
               </p>
             </div>
           </div>
@@ -49,13 +49,13 @@
         <div class="form-section">
           <el-row :gutter="20">
             <el-col :xs="24" :sm="12">
-              <el-form-item label="公司全称" prop="company_name">
-                <el-input v-model="profileData.company_name" placeholder="请输入公司完整名称"></el-input>
+              <el-form-item label="公司全称" prop="companyName">
+                <el-input v-model="profileData.companyName" placeholder="请输入公司完整名称"></el-input>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12">
-              <el-form-item label="公司简称" prop="short_name">
-                <el-input v-model="profileData.short_name" placeholder="请输入公司简称"></el-input>
+              <el-form-item label="公司简称" prop="shortName">
+                <el-input v-model="profileData.shortName" placeholder="请输入公司简称"></el-input>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12">
@@ -130,18 +130,18 @@
 
           <el-row :gutter="20">
             <el-col :xs="24" :sm="12">
-              <el-form-item label="联系人姓名" prop="contact_person">
-                <el-input v-model="profileData.contact_person" placeholder="请输入联系人姓名"></el-input>
+              <el-form-item label="联系人姓名" prop="contactPerson">
+                <el-input v-model="profileData.contactPerson" placeholder="请输入联系人姓名"></el-input>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12">
-              <el-form-item label="联系人电话" prop="contact_phone">
-                <el-input v-model="profileData.contact_phone" placeholder="请输入联系人电话"></el-input>
+              <el-form-item label="联系人电话" prop="contactPhone">
+                <el-input v-model="profileData.contactPhone" placeholder="请输入联系人电话"></el-input>
               </el-form-item>
             </el-col>
             <el-col :span="24">
-              <el-form-item label="联系人邮箱" prop="contact_email">
-                <el-input v-model="profileData.contact_email" placeholder="请输入联系人邮箱"></el-input>
+              <el-form-item label="联系人邮箱" prop="contactEmail">
+                <el-input v-model="profileData.contactEmail" placeholder="请输入联系人邮箱"></el-input>
               </el-form-item>
             </el-col>
           </el-row>
@@ -161,23 +161,41 @@
               <div class="license-section">
                 <license-uploader
                   ref="licenseUploaderRef"
-                  v-model="profileData.business_license"
+                  v-model="profileData.businessLicense"
                   :disabled="!isEditing"
-                  :file-name="profileData.business_license_name || '营业执照.pdf'"
+                  :file-name="profileData.businessLicenseName || '营业执照.pdf'"
                   @upload-success="handleLicenseSuccess"
                 />
 
-                <div v-if="profileData.audit_status" class="license-audit-status">
+                <!-- 添加独立的保存按钮 -->
+                <div class="license-save-section" v-if="profileData.businessLicense">
+                  <el-button type="success" @click="saveLicenseOnly" :loading="savingLicense" :disabled="!isEditing">
+                    保存营业执照
+                  </el-button>
+                  <div class="license-save-tip" v-if="isEditing">
+                    如果营业执照未正确保存，请点击此按钮单独保存
+                  </div>
+                  <div class="license-save-tip" v-else>
+                    <el-alert
+                      title="请先点击'编辑'按钮，然后再保存营业执照"
+                      type="warning"
+                      :closable="false"
+                      show-icon
+                    />
+                  </div>
+                </div>
+
+                <div v-if="profileData.auditStatus" class="license-audit-status">
                   <p>
                     <strong>审核状态：</strong>
-                    <el-tag :type="getAuditStatusType(profileData.audit_status)">
-                      {{ formatAuditStatus(profileData.audit_status) }}
+                    <el-tag :type="getAuditStatusType(profileData.auditStatus)">
+                      {{ formatAuditStatus(profileData.auditStatus) }}
                     </el-tag>
                   </p>
-                  <p v-if="profileData.audit_status === 'rejected' && profileData.audit_message" class="audit-message">
-                    <strong>原因：</strong> {{ profileData.audit_message }}
+                  <p v-if="profileData.auditStatus === 'rejected' && profileData.auditMessage" class="audit-message">
+                    <strong>原因：</strong> {{ profileData.auditMessage }}
                   </p>
-                  <p v-if="profileData.audit_status === 'pending'" class="audit-pending-message">
+                  <p v-if="profileData.auditStatus === 'pending'" class="audit-pending-message">
                     您的企业资质正在审核中，请耐心等待（1-3个工作日）
                   </p>
                 </div>
@@ -193,6 +211,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch, computed } from 'vue';
 import { useCompanyStore } from '@/stores/company';
+import { updateCompanyProfile } from '@/api/company';
 import UserAvatar from '@/components/common/UserAvatar.vue'; // Reusing avatar component for logo
 import CompanyTagsManager from '@/components/company/CompanyTagsManager.vue';
 import LicenseUploader from '@/components/company/LicenseUploader.vue';
@@ -206,6 +225,7 @@ const companyStore = useCompanyStore();
 const profileFormRef = ref<FormInstance>();
 const isEditing = ref(false);
 const loading = ref(false);
+const savingLicense = ref(false);
 const licenseUploaderRef = ref<InstanceType<typeof LicenseUploader>>();
 
 // 计算属性：确保标签始终是数组
@@ -225,8 +245,8 @@ const industryTagSuggestions = [
 ];
 
 const profileData = reactive<Partial<CompanyProfile>>({
-    company_name: '',
-    short_name: '',
+    companyName: '',
+    shortName: '',
     logo: '',
     website: '',
     industry: '',
@@ -236,33 +256,33 @@ const profileData = reactive<Partial<CompanyProfile>>({
     description: '',
     tags: [],
     // 联系人信息
-    contact_person: '',
-    contact_email: '',
-    contact_phone: '',
+    contactPerson: '',
+    contactEmail: '',
+    contactPhone: '',
     // 资质认证
-    business_license: '',
-    business_license_name: '',
+    businessLicense: '',
+    businessLicenseName: '',
     // Readonly fields
     username: '',
     email: '',
-    audit_status: undefined,
-    audit_message: ''
+    auditStatus: undefined,
+    auditMessage: ''
 });
 
 let originalProfileData: Partial<CompanyProfile> = {};
 
 const profileRules = reactive<FormRules>({
-  company_name: [{ required: true, message: '请输入公司全称', trigger: 'blur' }],
+  companyName: [{ required: true, message: '请输入公司全称', trigger: 'blur' }],
   industry: [{ required: true, message: '请输入所属行业', trigger: 'blur' }],
   location: [{ required: true, message: '请输入公司地址', trigger: 'blur' }],
   description: [{ required: true, message: '请输入公司简介', trigger: 'blur' }],
   website: [{ type: 'url', message: '请输入有效的网址', trigger: ['blur', 'change'] }],
-  contact_person: [{ required: true, message: '请输入联系人姓名', trigger: 'blur' }],
-  contact_email: [
+  contactPerson: [{ required: true, message: '请输入联系人姓名', trigger: 'blur' }],
+  contactEmail: [
     { required: true, message: '请输入联系人邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入有效的邮箱地址', trigger: ['blur', 'change'] }
   ],
-  contact_phone: [{ required: true, message: '请输入联系人电话', trigger: 'blur' }],
+  contactPhone: [{ required: true, message: '请输入联系人电话', trigger: 'blur' }],
 });
 
 watch(() => companyStore.profile, (newProfile) => {
@@ -292,9 +312,89 @@ const showLicenseHelp = () => {
 };
 
 // 处理营业执照上传成功
-const handleLicenseSuccess = (url: string) => {
-    profileData.business_license = url;
-    profileData.business_license_name = '营业执照';
+const handleLicenseSuccess = async (url: string) => {
+    console.log('营业执照上传成功，收到URL:', url);
+    console.log('URL类型:', typeof url);
+    console.log('URL长度:', url ? url.length : 0);
+
+    // 确保URL是有效的字符串
+    if (!url || typeof url !== 'string' || url.trim() === '') {
+        console.error('收到的URL无效');
+        ElMessage.warning('文件上传成功，但URL无效，请重试');
+        return;
+    }
+
+    // 更新本地状态
+    profileData.businessLicense = url;
+    profileData.businessLicenseName = '营业执照';
+    console.log('已更新本地状态 profileData.businessLicense:', profileData.businessLicense);
+
+    // 如果当前处于编辑模式，尝试直接保存营业执照URL到数据库
+    if (isEditing.value) {
+        try {
+            console.log('正在保存营业执照URL到数据库...');
+            console.log('发送的数据:', JSON.stringify({
+                businessLicense: url,
+                businessLicenseName: '营业执照'
+            }));
+
+            // 直接使用API调用而不是通过store
+            const response = await updateCompanyProfile({
+                businessLicense: url,
+                businessLicenseName: '营业执照'
+            });
+
+            console.log('保存营业执照API响应:', response);
+            console.log('营业执照URL成功保存到数据库');
+            ElMessage.success('营业执照已成功保存');
+        } catch (error) {
+            console.error('保存营业执照URL失败:', error);
+            ElMessage.warning('营业执照上传成功，但保存失败。请点击"保存营业执照"按钮重试。');
+        }
+    } else {
+        // 如果不在编辑模式，提示用户需要先点击编辑按钮
+        ElMessage.warning('营业执照上传成功，请点击"编辑"按钮，然后点击"保存营业执照"按钮完成保存。');
+    }
+};
+
+// 单独保存营业执照
+const saveLicenseOnly = async () => {
+    if (!profileData.businessLicense) {
+        ElMessage.warning('请先上传营业执照');
+        return;
+    }
+
+    if (!isEditing.value) {
+        ElMessage.warning('请先点击"编辑"按钮，然后再保存营业执照');
+        return;
+    }
+
+    savingLicense.value = true;
+    try {
+        console.log('单独保存营业执照URL到数据库:', profileData.businessLicense);
+        console.log('发送的数据:', JSON.stringify({
+            businessLicense: profileData.businessLicense,
+            businessLicenseName: profileData.businessLicenseName || '营业执照'
+        }));
+
+        // 直接使用API调用而不是通过store
+        const response = await updateCompanyProfile({
+            businessLicense: profileData.businessLicense,
+            businessLicenseName: profileData.businessLicenseName || '营业执照'
+        });
+
+        console.log('保存营业执照API响应:', response);
+        console.log('营业执照URL成功保存到数据库');
+        ElMessage.success('营业执照已成功保存');
+
+        // 刷新公司信息
+        await companyStore.fetchProfile();
+    } catch (error) {
+        console.error('保存营业执照URL失败:', error);
+        ElMessage.error('营业执照保存失败，请重试');
+    } finally {
+        savingLicense.value = false;
+    }
 };
 
 const saveProfile = async () => {
@@ -304,12 +404,22 @@ const saveProfile = async () => {
       loading.value = true;
       try {
         // Exclude readonly fields before sending
-        const updateData = _.omit(profileData, ['id', 'username', 'email', 'user_type', 'audit_status', 'audit_message']);
+        const updateData = _.omit(profileData, ['id', 'username', 'email', 'userType', 'auditStatus', 'auditMessage']);
+
+        // 确保营业执照URL被包含在请求中
+        console.log('保存表单时的营业执照URL:', profileData.businessLicense);
+
+        // 如果有营业执照URL，确保它被包含在请求中
+        if (profileData.businessLicense) {
+          console.log('表单提交包含营业执照URL:', profileData.businessLicense);
+        }
+
         await companyStore.updateProfile(updateData);
         isEditing.value = false;
         ElMessage.success('公司信息更新成功');
       } catch (error) {
-         // Error handled in store
+         console.error('保存公司信息失败:', error);
+         ElMessage.error('保存失败，请重试');
       } finally {
         loading.value = false;
       }
@@ -434,6 +544,20 @@ const getAuditStatusType = (status: CompanyAuditStatus | undefined): ('success' 
 /* 资质认证部分样式 */
 .license-section {
     margin-bottom: 20px;
+}
+
+.license-save-section {
+    margin-top: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.license-save-tip {
+    font-size: 12px;
+    color: var(--el-color-warning);
+    margin-top: 5px;
 }
 
 .license-audit-status {

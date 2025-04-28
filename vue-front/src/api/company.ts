@@ -102,6 +102,14 @@ export function uploadCompanyLogo(file: File): Promise<any> {
 export function uploadCompanyLicense(file: File): Promise<any> {
   const formData = new FormData();
   formData.append('file', file);
+  formData.append('bucket', 'company-licenses'); // 添加bucket参数
+
+  // 生成文件路径：licenses/年月日_随机字符.扩展名
+  const ext = file.name.substring(file.name.lastIndexOf('.'));
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const randomStr = Math.random().toString(36).substring(2, 10);
+  const path = `licenses/${date}_${randomStr}${ext}`;
+  formData.append('path', path);
 
   return request({
     url: '/api/files/upload',
