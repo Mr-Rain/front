@@ -77,7 +77,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import type { WorkExperienceCamel } from '@/types/work-experience-camel';
+import type { WorkExperienceCamel } from '@/types/student';
 import { Plus, Delete } from '@element-plus/icons-vue';
 import { marked } from 'marked'; // 需要安装: pnpm add marked
 

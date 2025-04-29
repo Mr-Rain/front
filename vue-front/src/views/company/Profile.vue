@@ -19,7 +19,7 @@
         label-width="120px"
         label-position="top"
         :disabled="!isEditing"
-        v-loading="companyStore.loadingProfile || loading"
+        v-loading="(companyStore && companyStore.loadingProfile) || loading"
         class="company-profile-form"
       >
         <!-- 公司基本信息区域 - 上下布局 -->
@@ -205,19 +205,16 @@ import { ElMessage } from 'element-plus';
 import { Edit, Check, Close, QuestionFilled } from '@element-plus/icons-vue';
 import _ from 'lodash';
 
+// 确保 store 正确初始化
 const companyStore = useCompanyStore();
+// 添加错误处理
+if (!companyStore) {
+  console.error('Company store initialization failed');
+}
 const profileFormRef = ref<FormInstance>();
 const isEditing = ref(false);
 const loading = ref(false);
 const licenseUploaderRef = ref<InstanceType<typeof LicenseUploader>>();
-
-// 计算属性：确保标签始终是数组
-const companyTags = computed({
-  get: () => profileData.tags || [],
-  set: (value: string[]) => {
-    profileData.tags = value;
-  }
-});
 
 // 行业标签建议
 const industryTagSuggestions = [
@@ -254,6 +251,17 @@ const profileData = reactive<Partial<CompanyProfile>>({
 
 let originalProfileData: Partial<CompanyProfile> = {};
 
+// 计算属性：确保标签始终是数组
+const companyTags = computed({
+  get: () => {
+    // 如果 tags 是 null 或不是数组，返回默认值
+    return Array.isArray(profileData.tags) ? profileData.tags : ['暂无标签'];
+  },
+  set: (value: string[]) => {
+    profileData.tags = value;
+  }
+});
+
 const profileRules = reactive<FormRules>({
   companyName: [{ required: true, message: '请输入公司全称', trigger: 'blur' }],
   industry: [{ required: true, message: '请输入所属行业', trigger: 'blur' }],
@@ -272,6 +280,12 @@ watch(() => companyStore.profile, (newProfile) => {
   if (newProfile) {
     originalProfileData = _.cloneDeep(newProfile);
     Object.assign(profileData, newProfile);
+
+    // 确保 tags 字段不为 null
+    if (profileData.tags === null) {
+      profileData.tags = ['暂无标签'];
+      console.log('初始化 tags 字段为默认值');
+    }
   }
 }, { immediate: true, deep: true });
 
@@ -310,6 +324,15 @@ const saveProfile = async () => {
       try {
         // Exclude readonly fields before sending
         const updateData = _.omit(profileData, ['id', 'username', 'email', 'userType', 'auditStatus', 'auditMessage']);
+
+        // 确保 tags 字段是数组且不为 null
+        if (updateData.tags === null || !Array.isArray(updateData.tags)) {
+          updateData.tags = ['暂无标签'];
+        } else if (updateData.tags.length === 0) {
+          updateData.tags = ['暂无标签'];
+        }
+
+        console.log('准备提交的公司数据:', updateData);
         await companyStore.updateProfile(updateData);
         isEditing.value = false;
         ElMessage.success('公司信息更新成功');

@@ -55,7 +55,8 @@ import type { InputInstance } from 'element-plus';
 const props = defineProps({
   modelValue: {
     type: Array as () => string[],
-    required: true
+    required: true,
+    default: () => ['暂无标签'] // 添加默认值，确保不会是null
   },
   suggestions: {
     type: Array as () => string[],
@@ -77,6 +78,11 @@ const props = defineProps({
 
 // 使用Vue的编译器宏defineEmits，不需要导入
 const emit = defineEmits(['update:modelValue']);
+
+// 确保初始值不为 null
+if (props.modelValue === null) {
+  emit('update:modelValue', ['暂无标签']);
+}
 
 const inputValue = ref('');
 const inputVisible = ref(false);
@@ -102,8 +108,17 @@ const showInput = () => {
 const handleInputConfirm = () => {
   if (inputValue.value) {
     const value = inputValue.value.trim();
-    if (value && !props.modelValue.includes(value) && props.modelValue.length < props.maxTags) {
-      const newTags = [...props.modelValue, value];
+
+    // 确保modelValue是数组
+    let currentTags = Array.isArray(props.modelValue) ? props.modelValue : ['暂无标签'];
+
+    // 如果当前只有默认的"暂无标签"，则移除它
+    if (currentTags.length === 1 && currentTags[0] === '暂无标签') {
+      currentTags = [];
+    }
+
+    if (value && !currentTags.includes(value) && currentTags.length < props.maxTags) {
+      const newTags = [...currentTags, value];
       emit('update:modelValue', newTags);
     }
   }
@@ -113,14 +128,30 @@ const handleInputConfirm = () => {
 
 // 处理标签关闭
 const handleClose = (tag: string) => {
-  const newTags = props.modelValue.filter(t => t !== tag);
+  // 确保modelValue是数组
+  const currentTags = Array.isArray(props.modelValue) ? props.modelValue : ['暂无标签'];
+  const newTags = currentTags.filter(t => t !== tag);
+
+  // 如果删除后没有标签，则添加默认标签
+  if (newTags.length === 0) {
+    newTags.push('暂无标签');
+  }
+
   emit('update:modelValue', newTags);
 };
 
 // 添加建议标签
 const addTag = (tag: string) => {
-  if (!props.modelValue.includes(tag) && props.modelValue.length < props.maxTags) {
-    const newTags = [...props.modelValue, tag];
+  // 确保modelValue是数组
+  let currentTags = Array.isArray(props.modelValue) ? props.modelValue : ['暂无标签'];
+
+  // 如果当前只有默认的"暂无标签"，则移除它
+  if (currentTags.length === 1 && currentTags[0] === '暂无标签') {
+    currentTags = [];
+  }
+
+  if (!currentTags.includes(tag) && currentTags.length < props.maxTags) {
+    const newTags = [...currentTags, tag];
     emit('update:modelValue', newTags);
   }
 };

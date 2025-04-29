@@ -110,11 +110,12 @@ export const useUserStore = defineStore('user', {
           username: data.username,
           email: data.email,
           // 将后端返回的大写用户类型转换为小写，以匹配前端期望的格式
-          user_type: data.userType?.toLowerCase() || 'student',
+          userType: data.userType?.toLowerCase() || 'student',
           avatar: data.avatar,
           status: data.status,
-          create_time: data.createTime,
-          last_login_time: data.lastLoginTime
+          createTime: data.createTime,
+          lastLoginTime: data.lastLoginTime,
+          previousLoginTime: data.previousLoginTime
         };
 
         this.setUserInfo(userInfo);

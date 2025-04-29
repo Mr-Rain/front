@@ -47,6 +47,7 @@
             :rules="profileRules"
             label-position="top"
             :disabled="!isEditing"
+            @submit.prevent
           >
             <!-- 基本信息部分 -->
             <div class="form-section">
@@ -208,9 +209,7 @@ import AvatarUploader from '@/components/common/AvatarUploader.vue';
 import EducationExperienceForm from '@/components/student/EducationExperienceForm.vue';
 import WorkExperienceForm from '@/components/student/WorkExperienceForm.vue';
 import SkillsTagsForm from '@/components/student/SkillsTagsForm.vue';
-import type { StudentProfileCamel } from '@/types/student-camel';
-import type { EducationExperienceCamel } from '@/types/education-experience-camel';
-import type { WorkExperienceCamel } from '@/types/work-experience-camel';
+import type { StudentProfileCamel, EducationExperienceCamel, WorkExperienceCamel } from '@/types/student';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage } from 'element-plus';
 import _ from 'lodash'; // 使用lodash进行深拷贝
@@ -234,7 +233,7 @@ const profileForm = reactive<Partial<StudentProfileCamel>>({
   major: '',
   education: '',
   grade: '', // 前端特有字段，用于设置graduationYear
-  skills: [],
+  skills: ['暂无技能'],
   expectedSalary: '', // 前端特有字段，不会保存到数据库
   expectedLocation: '', // 前端特有字段，不会保存到数据库
   experience: '', // 前端特有字段，不会保存到数据库
@@ -345,7 +344,17 @@ watch(() => studentStore.profile, (newProfile, oldProfile) => {
       }
     }
 
-    if (!profileForm.skills) profileForm.skills = [];
+    // 确保skills始终是数组
+    if (!profileForm.skills || !Array.isArray(profileForm.skills)) {
+      profileForm.skills = [];
+      console.warn('Skills was not an array, initialized as empty array');
+    }
+
+    // 强制初始化为空数组，确保不会是null
+    if (profileForm.skills === null) {
+      profileForm.skills = [];
+      console.warn('Skills was null, initialized as empty array');
+    }
 
     console.log('Profile form updated:', profileForm);
 
@@ -454,15 +463,25 @@ const saveProfile = async () => {
           major: profileForm.major || '未填写',
           education: profileForm.education || '本科',
           graduationYear: profileForm.grade ? parseInt(profileForm.grade) : Math.min(new Date().getFullYear() + 4, 2100),
-          skills: profileForm.skills && profileForm.skills.length > 0 ? profileForm.skills : ['暂无技能'],
+          skills: profileForm.skills && Array.isArray(profileForm.skills) ?
+            (profileForm.skills.length > 0 ? profileForm.skills : ['暂无技能']) :
+            ['暂无技能'],
           introduction: profileForm.introduction || '暂无介绍',
           avatar: profileForm.avatar || '',
           // 添加期望薪资和期望工作地点字段
           expectedSalary: profileForm.expectedSalary || '面议',
           expectedLocation: profileForm.expectedLocation || '全国',
-          // 添加教育和工作经历 - 直接传递数组
-          educationExperiences: profileForm.educationExperiences || [],
-          workExperiences: profileForm.workExperiences || []
+          // 添加教育和工作经历 - 确保是数组而不是字符串
+          educationExperiences: Array.isArray(profileForm.educationExperiences)
+            ? profileForm.educationExperiences
+            : (typeof profileForm.educationExperiences === 'string'
+              ? JSON.parse(profileForm.educationExperiences)
+              : []),
+          workExperiences: Array.isArray(profileForm.workExperiences)
+            ? profileForm.workExperiences
+            : (typeof profileForm.workExperiences === 'string'
+              ? JSON.parse(profileForm.workExperiences)
+              : [])
         };
 
         console.log('发送到后端的数据 (移除 stringify):', updateData);

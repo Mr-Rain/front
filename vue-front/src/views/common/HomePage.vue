@@ -97,8 +97,12 @@ const permissionStore = usePermissionStore();
 
 // 获取用户对应的仪表盘路径
 const getUserDashboardPath = () => {
-  const userType = userStore.userInfo?.user_type?.toLowerCase();
+  // 修正：使用 userType 而不是 user_type
+  const userType = userStore.userInfo?.userType?.toLowerCase();
   const roles = permissionStore.roles;
+
+  console.log('获取仪表盘路径 - 用户类型:', userType);
+  console.log('获取仪表盘路径 - 用户角色:', roles);
 
   if (roles.includes('admin') || userType === 'admin') {
     return '/admin/dashboard';
@@ -108,7 +112,8 @@ const getUserDashboardPath = () => {
     return '/student/dashboard';
   }
 
-  return '/login';
+  // 如果无法确定用户类型，返回首页而不是登录页
+  return '/';
 };
 
 const goToLogin = () => {
@@ -125,7 +130,7 @@ const goToLogin = () => {
     // 确保用户有权限信息
     if (permissionStore.roles.length === 0) {
       // 如果没有权限信息，使用用户类型作为角色
-      const userType = userStore.userInfo.user_type?.toLowerCase();
+      const userType = userStore.userInfo.userType?.toLowerCase();
       if (userType) {
         permissionStore.setRoles([userType as any]);
         console.log('Set roles based on user type:', userType);

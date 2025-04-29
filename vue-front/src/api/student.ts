@@ -1,5 +1,5 @@
 import request from '@/utils/request';
-import type { StudentProfileCamel } from '@/types/student-camel';
+import type { StudentProfileCamel, EducationExperienceCamel, WorkExperienceCamel } from '@/types/student';
 
 /**
  * 获取当前登录学生的详细信息
@@ -50,6 +50,33 @@ export function getStudentProfile(): Promise<{ data: StudentProfileCamel }> {
 export function updateStudentProfile(data: Partial<StudentProfileCamel> | any) {
   console.log('API: 正在更新学生档案，数据:', data);
 
+  // 提取教育经历和工作经历，确保是数组而不是字符串
+  let educationExperiences = [];
+  if (data.educationExperiences) {
+    if (Array.isArray(data.educationExperiences)) {
+      educationExperiences = data.educationExperiences;
+    } else if (typeof data.educationExperiences === 'string') {
+      try {
+        educationExperiences = JSON.parse(data.educationExperiences);
+      } catch (e) {
+        console.error('Failed to parse educationExperiences:', e);
+      }
+    }
+  }
+
+  let workExperiences = [];
+  if (data.workExperiences) {
+    if (Array.isArray(data.workExperiences)) {
+      workExperiences = data.workExperiences;
+    } else if (typeof data.workExperiences === 'string') {
+      try {
+        workExperiences = JSON.parse(data.workExperiences);
+      } catch (e) {
+        console.error('Failed to parse workExperiences:', e);
+      }
+    }
+  }
+
   // 直接使用驼峰命名字段，与后端保持一致
   const completeData = {
     // 确保这些字段存在，如果不存在则使用默认值
@@ -62,21 +89,31 @@ export function updateStudentProfile(data: Partial<StudentProfileCamel> | any) {
     major: data.major || '未填写',
     education: data.education || '本科',
     graduationYear: data.graduationYear || new Date().getFullYear() + 1,
-    skills: data.skills || ['暂无技能'],
+    skills: data.skills && Array.isArray(data.skills) ?
+      (data.skills.length > 0 ? data.skills : ['暂无技能']) :
+      ['暂无技能'],
     introduction: data.introduction || '暂无介绍',
     avatar: data.avatar || '',
     // 添加期望薪资和期望工作地点字段
     expectedSalary: data.expectedSalary || '面议',
-    expectedLocation: data.expectedLocation || '全国'
+    expectedLocation: data.expectedLocation || '全国',
+    // 添加教育经历和工作经历 - 确保正确传递
+    educationExperiences: educationExperiences,
+    workExperiences: workExperiences
   };
 
   console.log('API: 完整的更新数据:', completeData);
+  console.log('API: 教育经历:', completeData.educationExperiences);
+  console.log('API: 教育经历类型:', Array.isArray(completeData.educationExperiences) ? 'Array' : typeof completeData.educationExperiences);
+  console.log('API: 工作经历:', completeData.workExperiences);
+  console.log('API: 工作经历类型:', Array.isArray(completeData.workExperiences) ? 'Array' : typeof completeData.workExperiences);
 
   // 调用后端API
   return request({
     url: '/api/students/me',
     method: 'put',
-    data: completeData,
+    // 直接发送数据，不再将数组转换为JSON字符串
+    data: completeData
   }).then(response => {
     console.log('API: 更新学生档案响应:', response);
     return response;

@@ -12,7 +12,8 @@ import { ApiErrorCode, ErrorType, createApiError } from '@/types/error';
 // 导入 API 缓存拦截器的设置函数
 import { setupCacheInterceptor } from '@/utils/cacheInterceptor';
 // 导入数据转换工具
-import { camelToSnake, snakeToCamel } from '@/utils/dataTransformer';
+// 注释掉数据转换相关导入，我们不再需要它们
+// import { camelToSnake, snakeToCamel } from '@/utils/dataTransformer';
 
 // 创建 axios 实例，用于发起 HTTP 请求
 const service: AxiosInstance = axios.create({
@@ -39,16 +40,13 @@ service.interceptors.request.use(
     console.log('Request Data:', config.data);
     console.log('Token:', token);
 
-    // 恢复数据转换，将驼峰命名法（camelCase）转换为下划线命名法（snake_case）
+    // 直接使用原始数据，保持驼峰命名
     if (config.data && typeof config.data === 'object') {
-      config.data = camelToSnake(config.data);
-      console.log('Transformed Request Data:', config.data);
+      console.log('Request Data (camelCase):', config.data);
     }
 
-    // 恢复URL参数转换
     if (config.params && typeof config.params === 'object') {
-      config.params = camelToSnake(config.params);
-      console.log('Transformed Request Params:', config.params);
+      console.log('Request Params (camelCase):', config.params);
     }
 
     // 如果存在 token，则将其添加到请求头的 Authorization 字段中
@@ -87,10 +85,19 @@ service.interceptors.response.use(
     // 从响应对象中获取响应体数据
     const res = response.data;
 
+    // 注释掉名称转换相关代码
+    // 不再进行下划线命名法和驼峰命名法之间的转换
+    /*
     // 恢复数据转换，将下划线命名法（snake_case）转换为驼峰命名法（camelCase）
     if (res && res.data && typeof res.data === 'object') {
       res.data = snakeToCamel(res.data);
       console.log('Transformed Response Data:', res.data);
+    }
+    */
+
+    // 直接使用原始数据，保持驼峰命名
+    if (res && res.data && typeof res.data === 'object') {
+      console.log('Response Data (camelCase):', res.data);
     }
 
     // 检查响应头中是否包含新的 token（用于 token 刷新机制）

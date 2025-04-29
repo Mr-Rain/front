@@ -98,7 +98,7 @@ export function createRouterGuards(router: Router) {
                 // 如果是网络错误，可能是后端未启动，使用用户类型作为备用
                 if (userStore.userInfo) {
                   console.log('Using user type as fallback for permissions');
-                  const userType = userStore.userInfo?.user_type?.toLowerCase();
+                  const userType = userStore.userInfo?.userType?.toLowerCase();
                   if (userType) {
                     // 手动设置角色，避免重复请求API
                     permissionStore.setRoles([userType as any]);
@@ -133,7 +133,7 @@ export function createRouterGuards(router: Router) {
               console.log('Required roles:', to.meta.roles);
 
               // 获取用户类型
-              const userType = userStore.userInfo?.user_type?.toLowerCase();
+              const userType = userStore.userInfo?.userType?.toLowerCase();
               console.log('User type:', userType);
 
               // 检查用户是否有权限访问路由
@@ -168,7 +168,7 @@ export function createRouterGuards(router: Router) {
             // 根据角色设置重定向路由
             if (to.path === '/' || to.path === '/home') {
               // 根据角色重定向到不同的首页
-              const userType = userStore.userInfo?.user_type?.toLowerCase();
+              const userType = userStore.userInfo?.userType?.toLowerCase();
 
               // 优先使用权限存储中的角色，如果没有则使用用户类型
               if (roles.includes('admin') || userType === 'admin') {

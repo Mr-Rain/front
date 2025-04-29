@@ -11,6 +11,7 @@
           <div class="welcome-content">
             <h3>欢迎回来，{{ companyName }}</h3>
             <p>今天是 {{ currentDate }}，继续管理您的招聘活动吧！</p>
+            <p v-if="lastLoginTime" class="last-login-time">上次登录时间：{{ lastLoginTime }}</p>
             <div class="welcome-actions">
               <el-button type="primary" @click="router.push('/company/jobs/edit')">发布职位</el-button>
               <el-button @click="router.push('/company/applications')">管理申请</el-button>
@@ -111,6 +112,39 @@ const currentDate = computed(() => {
   });
 });
 
+// 上次登录时间
+const lastLoginTime = computed(() => {
+  const companyStore = useCompanyStore();
+  // 使用 previousLoginTime 字段，这是真正的上次登录时间
+  const lastLogin = companyStore.profile?.previousLoginTime || userStore.userInfo?.previousLoginTime;
+
+  if (!lastLogin) return null;
+
+  try {
+    // 创建一个日期对象
+    const date = new Date(lastLogin);
+
+    // 检查日期是否有效
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+
+    // 格式化为本地时间字符串（北京时间）
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  } catch (e) {
+    console.error('日期格式化错误:', e);
+    return null;
+  }
+});
+
 // 统计数据
 const stats = reactive({
     pendingApplications: 0,
@@ -200,7 +234,14 @@ onMounted(() => {
 
 .welcome-content p {
   color: var(--el-text-color-secondary);
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+}
+
+.last-login-time {
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+  margin-bottom: 15px;
+  font-style: italic;
 }
 
 .welcome-actions {

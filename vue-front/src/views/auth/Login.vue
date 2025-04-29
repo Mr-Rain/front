@@ -80,7 +80,7 @@ const handleLogin = () => {
         ElMessage.success('登录成功');
 
         // 根据用户类型跳转到相应页面
-        const userType = userStore.userInfo?.user_type?.toLowerCase();
+        const userType = userStore.userInfo?.userType?.toLowerCase();
         console.log('User type:', userType);
 
         if (userType === 'admin') {

@@ -45,8 +45,6 @@ export interface ApplicationInfo {
   jobTitle?: string;
   companyName?: string;
   resumeTitle?: string;
-
-  // 移除下划线命名的属性，统一使用驼峰命名法
 }
 
 /**
@@ -71,6 +69,4 @@ export interface UpdateApplicationStatusPayload {
   interviewLocation?: string;
   interviewContact?: string;
   interviewContactInfo?: string;
-
-  // 移除下划线命名的属性，统一使用驼峰命名法
 }

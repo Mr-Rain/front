@@ -85,7 +85,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import type { EducationExperienceCamel } from '@/types/education-experience-camel';
+import type { EducationExperienceCamel } from '@/types/student';
 import { Plus, Delete } from '@element-plus/icons-vue';
 
 const props = defineProps({

@@ -24,7 +24,7 @@
 
     <div class="skills-tags">
       <el-tag
-        v-for="(tag, index) in modelValue"
+        v-for="(tag, index) in tags"
         :key="index"
         :closable="editable"
         @close="removeSkill(index)"
@@ -33,7 +33,7 @@
       >
         {{ tag }}
       </el-tag>
-      <div v-if="modelValue.length === 0" class="empty-state">
+      <div v-if="tags.length === 0" class="empty-state">
         <el-empty description="暂无技能标签" :image-size="100"></el-empty>
       </div>
     </div>
@@ -58,14 +58,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Plus } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
+
+const emit = defineEmits(['update:modelValue']);
 
 const props = defineProps({
   modelValue: {
     type: Array as () => string[],
-    required: true
+    required: true,
+    default: () => [] // 添加默认值，确保不会是null
   },
   editable: {
     type: Boolean,
@@ -73,7 +76,21 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['update:modelValue']);
+// 确保 modelValue 始终是数组
+const tags = computed({
+  get: () => {
+    // 如果 modelValue 是 null 或不是数组，返回默认值
+    return Array.isArray(props.modelValue) ? props.modelValue : ['暂无技能'];
+  },
+  set: (value) => {
+    emit('update:modelValue', value);
+  }
+});
+
+// 确保初始值不为 null
+if (props.modelValue === null) {
+  emit('update:modelValue', ['暂无技能']);
+}
 
 const newSkill = ref('');
 
@@ -98,33 +115,57 @@ const addSkill = () => {
   const skill = newSkill.value.trim();
   if (!skill) return;
 
+  // 确保modelValue是数组
+  let currentSkills = Array.isArray(props.modelValue) ? props.modelValue : ['暂无技能'];
+
+  // 如果当前只有默认的"暂无技能"，则移除它
+  if (currentSkills.length === 1 && currentSkills[0] === '暂无技能') {
+    currentSkills = [];
+  }
+
   // 检查是否已存在
-  if (props.modelValue.includes(skill)) {
+  if (currentSkills.includes(skill)) {
     ElMessage.warning(`技能 "${skill}" 已存在`);
     return;
   }
 
-  const updatedValue = [...props.modelValue, skill];
+  const updatedValue = [...currentSkills, skill];
   emit('update:modelValue', updatedValue);
   newSkill.value = '';
 };
 
 // 移除技能
 const removeSkill = (index: number) => {
-  const updatedValue = [...props.modelValue];
+  // 确保modelValue是数组
+  const currentSkills = Array.isArray(props.modelValue) ? props.modelValue : ['暂无技能'];
+  const updatedValue = [...currentSkills];
   updatedValue.splice(index, 1);
+
+  // 如果删除后没有技能，则添加默认技能
+  if (updatedValue.length === 0) {
+    updatedValue.push('暂无技能');
+  }
+
   emit('update:modelValue', updatedValue);
 };
 
 // 添加推荐的技能
 const addSuggestedSkill = (skill: string) => {
+  // 确保modelValue是数组
+  let currentSkills = Array.isArray(props.modelValue) ? props.modelValue : ['暂无技能'];
+
+  // 如果当前只有默认的"暂无技能"，则移除它
+  if (currentSkills.length === 1 && currentSkills[0] === '暂无技能') {
+    currentSkills = [];
+  }
+
   // 检查是否已存在
-  if (props.modelValue.includes(skill)) {
+  if (currentSkills.includes(skill)) {
     ElMessage.warning(`技能 "${skill}" 已存在`);
     return;
   }
 
-  const updatedValue = [...props.modelValue, skill];
+  const updatedValue = [...currentSkills, skill];
   emit('update:modelValue', updatedValue);
 };
 </script>

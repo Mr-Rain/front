@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import type { StudentProfileCamel } from '@/types/student-camel';
+import type { StudentProfileCamel } from '@/types/student';
 import { getStudentProfile, updateStudentProfile } from '@/api/student';
 import { ElMessage } from 'element-plus';
 
@@ -155,11 +155,23 @@ export const useStudentStore = defineStore('student', {
              ((response as any).code === 200))) {
           console.log('更新成功，响应数据:', response.data);
 
-          // 更新本地状态 (使用驼峰命名)
-          // 【修复】使用后端响应数据更新状态，并解析 JSON 字段
-          if (response.data && response.data.data) { // 确保后端返回了有效数据
-            const responseData = response.data.data; // 获取后端返回的 DTO 数据
+          // 获取实际的响应数据对象，兼容多种后端返回格式
+          let responseData;
+          if (response.data && response.data.data) {
+            // 标准嵌套格式：response.data.data
+            responseData = response.data.data;
+          } else if (response.data && response.data.code === 200) {
+            // 更新成功的非嵌套格式：response.data 本身就是需要的数据
+            responseData = response.data;
+          } else if ((response as any).code === 200 && (response as any).data) {
+            // 直接返回 {code:200, data:...} 格式
+            responseData = (response as any).data;
+          } else {
+            // 其他情况，尝试使用整个响应作为数据
+            responseData = response;
+          }
 
+          if (responseData) {
             // 准备用于合并的数据，解析 JSON 字符串
             const parsedUpdateData = {
               ...responseData, // 先复制响应的所有字段
@@ -169,7 +181,9 @@ export const useStudentStore = defineStore('student', {
                   // 确保 responseData.educationExperiences 存在且是字符串
                   return responseData.educationExperiences && typeof responseData.educationExperiences === 'string'
                     ? JSON.parse(responseData.educationExperiences)
-                    : [];
+                    : (Array.isArray(responseData.educationExperiences) 
+                       ? responseData.educationExperiences 
+                       : []);
                 } catch (e) {
                   console.error('Failed to parse educationExperiences from response:', e);
                   return [];
@@ -180,7 +194,9 @@ export const useStudentStore = defineStore('student', {
                   // 确保 responseData.workExperiences 存在且是字符串
                   return responseData.workExperiences && typeof responseData.workExperiences === 'string'
                     ? JSON.parse(responseData.workExperiences)
-                    : [];
+                    : (Array.isArray(responseData.workExperiences) 
+                       ? responseData.workExperiences 
+                       : []);
                 } catch (e) {
                   console.error('Failed to parse workExperiences from response:', e);
                   return [];
@@ -208,8 +224,9 @@ export const useStudentStore = defineStore('student', {
             ElMessage.success('个人信息更新成功');
 
           } else {
-             console.error('更新成功，但响应数据格式不符合预期:', response);
-             ElMessage.error('更新成功但无法刷新本地数据');
+            // 尽管响应码是200，但没有获取到数据，仍然显示成功消息
+            console.warn('更新成功，但响应数据结构异常:', response);
+            ElMessage.success('个人信息已更新成功');
           }
         } else {
           console.error('更新失败，响应:', response);

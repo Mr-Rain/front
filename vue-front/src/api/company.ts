@@ -55,10 +55,21 @@ export function getCompanyProfile(): Promise<{ data: CompanyProfile }> {
  * @returns 更新结果
  */
 export function updateCompanyProfile(data: Partial<CompanyProfile>) {
+  // 确保 tags 字段是数组且不为 null
+  const processedData = { ...data };
+
+  if (processedData.tags === null || !Array.isArray(processedData.tags)) {
+    processedData.tags = ['暂无标签'];
+  } else if (processedData.tags.length === 0) {
+    processedData.tags = ['暂无标签'];
+  }
+
+  console.log('API: 发送到后端的公司数据:', processedData);
+
   return request({
     url: '/api/companies/me',
     method: 'put',
-    data,
+    data: processedData,
   });
 }
 

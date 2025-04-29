@@ -66,6 +66,9 @@
             <span class="el-dropdown-link">
               <el-avatar :size="32" :src="userStore.userInfo.avatar || defaultAvatar" class="user-avatar" />
               <span class="username">{{ userStore.userInfo.username }}</span>
+              <el-tooltip v-if="lastLoginTime" effect="dark" :content="'上次登录: ' + lastLoginTime" placement="bottom">
+                <el-icon class="login-time-icon"><Clock /></el-icon>
+              </el-tooltip>
               <el-icon class="el-icon--right"><arrow-down /></el-icon>
             </span>
             <template #dropdown>
@@ -87,13 +90,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import {
   ArrowDown,
-  Search
+  Search,
+  Clock
 } from '@element-plus/icons-vue';
 import MobileMenu from './MobileMenu.vue';
 import NotificationCenter from './NotificationCenter.vue';
@@ -107,13 +111,43 @@ const logoUrl = ref(''); // Optional: Provide URL for logo image
 const defaultAvatar = ref('https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'); // Default avatar
 const searchQuery = ref('');
 
+// 格式化上次登录时间
+const lastLoginTime = computed(() => {
+  if (!userStore.userInfo || !userStore.userInfo.lastLoginTime) {
+    return null;
+  }
+
+  try {
+    // 创建一个日期对象
+    const date = new Date(userStore.userInfo.lastLoginTime);
+
+    // 检查日期是否有效
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+
+    // 格式化为本地时间字符串（北京时间）
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  } catch (e) {
+    console.error('日期格式化错误:', e);
+    return null;
+  }
+});
+
 // 不需要计算属性，直接使用route.path
 
 // 根据用户角色获取职位列表路径
 const getJobsPath = () => {
   if (!userStore.token || !userStore.userInfo) return '/jobs';
 
-  const userType = userStore.userInfo.user_type;
+  const userType = userStore.userInfo.userType;
   if (userType === 'student') return '/student/jobs';
   if (userType === 'company') return '/company/jobs';
   if (userType === 'admin') return '/admin/jobs';
@@ -125,7 +159,7 @@ const getJobsPath = () => {
 const getCompaniesPath = () => {
   if (!userStore.token || !userStore.userInfo) return '/companies';
 
-  const userType = userStore.userInfo.user_type;
+  const userType = userStore.userInfo.userType;
   if (userType === 'student') return '/student/companies';
   if (userType === 'company') return '/company/companies';
   if (userType === 'admin') return '/admin/company-list';
@@ -177,7 +211,7 @@ const handleUserCommand = async (command: string | number | object) => {
   switch (command) {
     case 'profile':
       // Determine profile path based on user type
-      const userType = userStore.userInfo?.user_type;
+      const userType = userStore.userInfo?.userType;
       if (userType === 'student') {
         router.push('/student/profile'); // TODO: Define student profile route
       } else if (userType === 'company') {
@@ -474,6 +508,12 @@ const handleUserCommand = async (command: string | number | object) => {
     text-overflow: ellipsis;
     white-space: nowrap;
     margin-right: 4px;
+}
+
+.login-time-icon {
+    color: var(--el-color-info);
+    font-size: 14px;
+    margin: 0 6px;
 }
 
 /* 移动端菜单组件样式 */
