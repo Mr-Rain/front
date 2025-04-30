@@ -5,11 +5,11 @@
 
     <div class="left-section">
       <div class="logo-area">
-        <router-link to="/" class="logo-link">
+        <a @click="navigateToHome" class="logo-link" style="cursor: pointer;">
           <!-- Replace with your actual logo or text -->
           <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="logo-img" />
           <span v-else class="logo-text">校园招聘</span>
-        </router-link>
+        </a>
       </div>
 
       <!-- 导航链接 -->
@@ -93,6 +93,7 @@
 import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user';
+import { usePermissionStore } from '@/stores/permission';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import {
   ArrowDown,
@@ -106,6 +107,7 @@ import ThemeSwitcher from './ThemeSwitcher.vue';
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
+const permissionStore = usePermissionStore();
 
 const logoUrl = ref(''); // Optional: Provide URL for logo image
 const defaultAvatar = ref('https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'); // Default avatar
@@ -205,6 +207,29 @@ const goToLogin = () => {
 
 const goToRegister = () => {
   router.push('/register');
+};
+
+// 根据用户角色导航到首页或对应的仪表盘
+const navigateToHome = () => {
+  // 检查用户是否已登录
+  if (userStore.token && userStore.userInfo) {
+    // 已登录，根据用户角色导航到对应的仪表盘
+    const userType = userStore.userInfo.userType?.toLowerCase();
+
+    if (userType === 'student') {
+      router.push('/student/dashboard');
+    } else if (userType === 'company') {
+      router.push('/company/dashboard');
+    } else if (userType === 'admin') {
+      router.push('/admin/dashboard');
+    } else {
+      // 如果无法确定用户类型，导航到首页
+      router.push('/');
+    }
+  } else {
+    // 未登录，导航到首页
+    router.push('/');
+  }
 };
 
 const handleUserCommand = async (command: string | number | object) => {

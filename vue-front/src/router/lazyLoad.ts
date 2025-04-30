@@ -93,6 +93,9 @@ export function createLazyComponent(path: string): RouteComponent {
   else if (path === 'common/SearchResults') {
     return () => import('../views/common/SearchResults.vue');
   }
+  else if (path === 'common/CompanyDetail') {
+    return () => import('../views/common/CompanyDetail.vue');
+  }
   else if (path === 'common/ComponentDemo') {
     return () => import('../views/common/ComponentDemo.vue');
   }

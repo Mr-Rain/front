@@ -241,14 +241,13 @@ const router = createRouter({
                 name: 'company-list',
                 component: createLazyComponent('common/CompanyList'),
                 meta: { title: '企业列表' }
+            },
+            {
+                path: ':id',
+                name: 'company-detail',
+                component: createLazyComponent('common/CompanyDetail'),
+                meta: { title: '企业详情' }
             }
-            // 未来可以添加企业详情页
-            // {
-            //     path: ':id',
-            //     name: 'company-detail',
-            //     component: () => import('@/views/common/CompanyDetail.vue'),
-            //     meta: { title: '企业详情' }
-            // }
         ]
     },
 

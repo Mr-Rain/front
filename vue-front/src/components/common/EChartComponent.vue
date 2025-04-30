@@ -35,7 +35,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['chartInit', 'chartClick', 'chartReady']);
+const emit = defineEmits(['chartInit', 'chartClick', 'chartReady', 'chartMouseover', 'chartMouseout']);
 
 // 图表容器引用
 const chartContainer = ref<HTMLElement | null>(null);
@@ -45,31 +45,41 @@ let chartInstance: echarts.ECharts | null = null;
 // 初始化图表
 const initChart = () => {
   if (!chartContainer.value) return;
-  
+
   // 如果已经存在图表实例，先销毁
   if (chartInstance) {
     chartInstance.dispose();
   }
-  
+
   // 创建图表实例
   chartInstance = echarts.init(chartContainer.value, props.theme);
-  
+
   // 设置图表选项
   chartInstance.setOption(props.options);
-  
+
   // 添加点击事件监听
   chartInstance.on('click', (params) => {
     emit('chartClick', params);
   });
-  
+
+  // 添加鼠标悬停事件监听
+  chartInstance.on('mouseover', (params) => {
+    emit('chartMouseover', params);
+  });
+
+  // 添加鼠标离开事件监听
+  chartInstance.on('mouseout', (params) => {
+    emit('chartMouseout', params);
+  });
+
   // 通知图表已初始化
   emit('chartInit', chartInstance);
-  
+
   // 窗口大小变化时自动调整图表大小
   if (props.autoResize) {
     window.addEventListener('resize', handleResize);
   }
-  
+
   // 通知图表已准备好
   emit('chartReady', chartInstance);
 };
@@ -103,7 +113,7 @@ onUnmounted(() => {
     chartInstance.dispose();
     chartInstance = null;
   }
-  
+
   if (props.autoResize) {
     window.removeEventListener('resize', handleResize);
   }

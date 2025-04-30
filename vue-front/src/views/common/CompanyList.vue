@@ -96,10 +96,12 @@
         <div class="company-list">
           <div v-for="company in companyList" :key="company.id" class="company-card">
             <div class="company-logo">
-              <el-avatar :size="64" :src="company.logo || defaultLogo">{{ (company.companyName || company.company_name || '').substring(0, 1) }}</el-avatar>
+              <el-avatar :size="64" :src="company.logo || defaultLogo">
+                {{ getCompanyFirstLetter(company) }}
+              </el-avatar>
             </div>
             <div class="company-info">
-              <h3 class="company-name">{{ company.companyName || company.company_name }}</h3>
+              <h3 class="company-name">{{ getCompanyName(company) }}</h3>
               <div class="company-meta">
                 <span class="company-industry">{{ company.industry }}</span>
                 <span class="company-location">{{ company.location }}</span>
@@ -243,9 +245,8 @@ const handleCurrentChange = (val: number) => {
 };
 
 // 查看企业详情
-const viewCompany = (_id: string | number) => {
-  ElMessage.info('企业详情功能开发中');
-  // router.push(`/companies/${_id}`);
+const viewCompany = (id: string | number) => {
+  router.push(`/companies/${id}`);
 };
 
 // 查看企业职位
@@ -254,6 +255,17 @@ const viewJobs = (id: string | number) => {
     path: '/jobs',
     query: { company_id: id.toString() }
   });
+};
+
+// 获取公司名称（统一使用驼峰命名法）
+const getCompanyName = (company: any): string => {
+  return company.companyName || '未知企业';
+};
+
+// 获取公司名称首字母（用于头像显示）
+const getCompanyFirstLetter = (company: any): string => {
+  const name = getCompanyName(company);
+  return name ? name.substring(0, 1) : '?';
 };
 
 onMounted(() => {

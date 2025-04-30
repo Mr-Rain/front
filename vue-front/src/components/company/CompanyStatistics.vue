@@ -73,6 +73,9 @@
               v-if="!loading && applicationTrendData.xAxis.length > 0"
               :options="applicationTrendChartOptions"
               height="300px"
+              @chart-click="handleTrendChartClick"
+              @chart-mouseover="handleTrendChartMouseover"
+              @chart-mouseout="handleTrendChartMouseout"
             />
             <el-empty v-else-if="!loading" description="暂无趋势数据" />
           </div>
@@ -147,6 +150,25 @@
         </el-card>
       </el-col>
     </el-row>
+    <!-- 选中日期数据对话框 -->
+    <el-dialog
+      v-model="dialogVisible"
+      :title="`${selectedDate || ''} 申请数据详情`"
+      width="500px"
+      @close="handleDialogClose"
+    >
+      <div v-if="selectedDateData">
+        <el-descriptions :column="1" border>
+          <el-descriptions-item label="日期">{{ selectedDate }}</el-descriptions-item>
+          <el-descriptions-item label="申请数量">{{ selectedDateData.applications || 0 }}</el-descriptions-item>
+          <el-descriptions-item label="面试数量">{{ selectedDateData.interviews || 0 }}</el-descriptions-item>
+          <el-descriptions-item label="录用数量">{{ selectedDateData.offers || 0 }}</el-descriptions-item>
+        </el-descriptions>
+      </div>
+      <div v-else class="empty-data">
+        <el-empty description="暂无该日期的详细数据" />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -161,9 +183,71 @@ import {
   GoodsFilled
 } from '@element-plus/icons-vue';
 import type { EChartsOption } from 'echarts';
+import { ElMessage } from 'element-plus';
 import { getCompanyStatistics } from '@/api/statistics';
 
 const loading = ref(true);
+// 选中的日期数据
+const selectedDate = ref<string | null>(null);
+const selectedDateData = ref<any>(null);
+const dialogVisible = ref(false);
+// 存储从后端获取的趋势数据
+const fetchedTrendData = ref<any[]>([]);
+
+// 处理趋势图表点击事件
+const handleTrendChartClick = (params: any) => {
+  // 获取点击的日期索引
+  const dateIndex = params.dataIndex;
+  if (dateIndex >= 0 && dateIndex < applicationTrendData.xAxis.length) {
+    // 获取对应的日期
+    selectedDate.value = applicationTrendData.xAxis[dateIndex];
+
+    // 从后端数据中查找该日期的详细数据
+    const trendData = fetchedTrendData.value.find((item: any) => item.date === selectedDate.value);
+
+    if (trendData) {
+      selectedDateData.value = trendData;
+      ElMessage.success(`已选择 ${selectedDate.value} 的数据`);
+    } else {
+      selectedDateData.value = {
+        applications: applicationTrendData.values[dateIndex],
+        interviews: 0,
+        offers: 0
+      };
+      ElMessage.info(`${selectedDate.value} 的详细数据不完整`);
+    }
+
+    // 显示对话框
+    dialogVisible.value = true;
+  }
+};
+
+// 处理对话框关闭
+const handleDialogClose = () => {
+  dialogVisible.value = false;
+  selectedDate.value = null;
+  selectedDateData.value = null;
+};
+
+// 处理趋势图表鼠标悬停事件
+const handleTrendChartMouseover = (params: any) => {
+  // 获取悬停的日期索引
+  const dataIndex = params.dataIndex;
+  if (dataIndex >= 0 && dataIndex < applicationTrendData.xAxis.length) {
+    // 获取对应的日期
+    const date = applicationTrendData.xAxis[dataIndex];
+    const value = applicationTrendData.values[dataIndex];
+
+    // 可以在这里添加额外的交互效果，比如高亮显示当前数据点
+    console.log(`鼠标悬停在 ${date} 上，申请数量: ${value}`);
+  }
+};
+
+// 处理趋势图表鼠标离开事件
+const handleTrendChartMouseout = (params: any) => {
+  // 鼠标离开时的处理逻辑
+  console.log('鼠标离开图表数据点');
+};
 
 // 统计数据
 const statistics = reactive({
@@ -204,8 +288,29 @@ const applicationTrendChartOptions = computed<EChartsOption>(() => ({
   tooltip: {
     trigger: 'axis',
     axisPointer: {
-      type: 'shadow'
-    }
+      type: 'line',
+      animation: true,
+      lineStyle: {
+        color: '#409EFF',
+        width: 2
+      }
+    },
+    formatter: function(params) {
+      const dataIndex = params[0].dataIndex;
+      const date = applicationTrendData.xAxis[dataIndex];
+      const value = applicationTrendData.values[dataIndex];
+      return `<div style="padding: 8px;">
+                <div style="font-weight: bold; margin-bottom: 5px;">${date}</div>
+                <div>申请数量: <span style="font-weight: bold; color: #409EFF;">${value}</span></div>
+              </div>`;
+    },
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderColor: '#409EFF',
+    borderWidth: 1,
+    textStyle: {
+      color: '#333'
+    },
+    extraCssText: 'box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);'
   },
   grid: {
     left: '3%',
@@ -239,10 +344,23 @@ const applicationTrendChartOptions = computed<EChartsOption>(() => ({
       type: 'line',
       data: applicationTrendData.values,
       smooth: true,
-      symbol: 'emptyCircle',
+      symbol: 'circle',
       symbolSize: 8,
       itemStyle: {
-        color: '#409EFF'
+        color: '#409EFF',
+        borderColor: '#fff',
+        borderWidth: 2
+      },
+      emphasis: {
+        scale: true,
+        symbolSize: 12,
+        itemStyle: {
+          color: '#409EFF',
+          borderColor: '#fff',
+          borderWidth: 3,
+          shadowBlur: 10,
+          shadowColor: 'rgba(64, 158, 255, 0.5)'
+        }
       },
       lineStyle: {
         width: 3
@@ -398,8 +516,12 @@ const fetchCompanyStatistics = async () => {
 
       // 申请趋势数据
       if (data.applicationTrend && data.applicationTrend.length > 0) {
-        applicationTrendData.xAxis = data.applicationTrend.map(item => item.date);
-        applicationTrendData.values = data.applicationTrend.map(item => item.applications);
+        // 保存完整的趋势数据，用于点击时显示详情
+        fetchedTrendData.value = data.applicationTrend;
+
+        // 提取日期和申请数量用于图表显示
+        applicationTrendData.xAxis = data.applicationTrend.map((item: any) => item.date);
+        applicationTrendData.values = data.applicationTrend.map((item: any) => item.applications);
       }
 
       // 申请状态数据 - 需要后端提供或前端计算

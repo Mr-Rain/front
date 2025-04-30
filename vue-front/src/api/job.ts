@@ -70,6 +70,20 @@ export function searchJobs(keyword: string, params: PaginationParams): Promise<{
   });
 }
 
+/**
+ * 获取指定企业的职位列表
+ * @param companyId 企业ID
+ * @param params 查询参数
+ * @returns 职位列表
+ */
+export function getJobsByCompany(companyId: string | number, params: PaginationParams): Promise<{ data: PaginatedResponse<JobInfo> }> {
+  return request({
+    url: `/api/jobs/company/${companyId}`,
+    method: 'get',
+    params,
+  });
+}
+
 // --- 企业端API ---
 
 /**
