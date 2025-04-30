@@ -68,7 +68,7 @@ export function getApplicationStatistics(params?: any): Promise<ApiResponse<Stat
 
 /**
  * 获取企业统计数据
- * @param params 查询参数
+ * @param params 查询参数，支持time_range（week/month/year/custom）和days（自定义天数）
  * @returns 企业统计数据
  */
 export function getCompanyStatistics(params?: any): Promise<ApiResponse<StatisticsData>> {
@@ -87,7 +87,7 @@ export function getCompanyDashboardStatistics(): Promise<ApiResponse<StatisticsD
   return request({
     url: '/api/company/statistics',
     method: 'get',
-    params: { timeRange: 'week' }
+    params: { time_range: 'week' }
   });
 }
 

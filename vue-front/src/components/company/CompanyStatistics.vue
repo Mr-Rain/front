@@ -193,23 +193,45 @@ const educationData = ref<{ name: string; value: number }[]>([]);
 
 // 申请趋势图表选项
 const applicationTrendChartOptions = computed<EChartsOption>(() => ({
+  title: {
+    text: '最近15天申请趋势',
+    textStyle: {
+      fontSize: 14,
+      fontWeight: 'normal'
+    },
+    left: 'center'
+  },
   tooltip: {
     trigger: 'axis',
     axisPointer: {
       type: 'shadow'
     }
   },
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '15%',
+    top: '15%',
+    containLabel: true
+  },
   xAxis: {
     type: 'category',
     data: applicationTrendData.xAxis,
     axisLabel: {
       interval: 0,
-      rotate: 30
+      rotate: 45,
+      fontSize: 11,
+      margin: 8
     }
   },
   yAxis: {
     type: 'value',
-    minInterval: 1
+    minInterval: 1,
+    splitLine: {
+      lineStyle: {
+        type: 'dashed'
+      }
+    }
   },
   series: [
     {
@@ -217,8 +239,13 @@ const applicationTrendChartOptions = computed<EChartsOption>(() => ({
       type: 'line',
       data: applicationTrendData.values,
       smooth: true,
+      symbol: 'emptyCircle',
+      symbolSize: 8,
       itemStyle: {
         color: '#409EFF'
+      },
+      lineStyle: {
+        width: 3
       },
       areaStyle: {
         color: {
@@ -232,6 +259,12 @@ const applicationTrendChartOptions = computed<EChartsOption>(() => ({
             { offset: 1, color: 'rgba(64, 158, 255, 0.1)' }
           ]
         }
+      },
+      markPoint: {
+        data: [
+          { type: 'max', name: '最大值' },
+          { type: 'min', name: '最小值' }
+        ]
       }
     }
   ]
@@ -352,8 +385,8 @@ const educationChartOptions = computed<EChartsOption>(() => ({
 const fetchCompanyStatistics = async () => {
   loading.value = true;
   try {
-    // 调用API获取实际数据
-    const response = await getCompanyStatistics({ time_range: 'month' });
+    // 调用API获取实际数据，修改为请求最近15天的数据
+    const response = await getCompanyStatistics({ time_range: 'custom', days: 15 });
     const data = response.data;
 
     if (data && data.overview) {

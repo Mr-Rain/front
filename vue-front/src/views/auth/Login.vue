@@ -9,7 +9,7 @@
           <span>校园招聘系统 - 登录</span>
         </div>
       </template>
-      <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" label-width="80px">
+      <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" label-width="80px" @keyup.enter="handleLogin">
         <el-form-item label="用户名" prop="username">
           <el-input v-model="loginForm.username" placeholder="请输入用户名/邮箱/手机号"></el-input>
         </el-form-item>
