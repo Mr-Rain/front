@@ -144,7 +144,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://119.84.246.217:18341',
+        target: 'http://frp-put.com:18341',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path
