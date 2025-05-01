@@ -246,7 +246,8 @@ const simulateTimeoutError = async () => {
   try {
     // 创建一个模拟的超时错误
     const error = new Error('timeout of 10000ms exceeded');
-    error.code = 'ECONNABORTED';
+    // 使用类型断言绕过 TS 检查，让 errorHandler 处理
+    (error as any).code = 'ECONNABORTED';
     error.name = 'TimeoutError';
     
     throw error;

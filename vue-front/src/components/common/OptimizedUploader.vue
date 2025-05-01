@@ -276,9 +276,11 @@ const customUpload = async (options: UploadRequestOptions) => {
     xhr.upload.addEventListener('progress', (e) => {
       if (e.lengthComputable) {
         const percent = Math.round((e.loaded * 100) / e.total);
-        // 创建一个符合 UploadProgressEvent 接口的对象
-        const progressEvent = e as UploadProgressEvent;
-        progressEvent.percent = percent;
+        // 手动创建符合 UploadProgressEvent 接口的对象
+        const progressEvent: UploadProgressEvent = {
+            ...e, // 复制原始事件属性
+            percent: percent // 添加 percent 属性
+        };
         onProgress?.(progressEvent);
       }
     });

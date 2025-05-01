@@ -390,7 +390,7 @@ const fetchApplicationStatistics = async () => {
 
     // 填充实际数据
     applications.forEach(app => {
-      const applyDate = new Date(app.create_time || app.apply_time);
+      const applyDate = new Date(app.applyTime);
       if (applyDate >= sixMonthsAgo) {
         const monthName = applyDate.toLocaleDateString('zh-CN', { month: 'short' });
         dateMap.set(monthName, (dateMap.get(monthName) || 0) + 1);
@@ -403,7 +403,7 @@ const fetchApplicationStatistics = async () => {
     // 职位类型数据
     const jobTypeMap = new Map();
     applications.forEach(app => {
-      const jobType = app.job_info?.job_type || '未知';
+      const jobType = app.jobInfo?.jobType || '未知';
       jobTypeMap.set(jobType, (jobTypeMap.get(jobType) || 0) + 1);
     });
     jobTypeData.value = Array.from(jobTypeMap.entries()).map(([name, value]) => ({ name, value }));

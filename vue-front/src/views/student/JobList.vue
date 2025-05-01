@@ -61,7 +61,7 @@
             </el-form-item>
             <el-form-item label="职位类型" class="search-form-item">
               <el-select
-                v-model="listQuery.job_type"
+                v-model="listQuery.jobType"
                 placeholder="选择类型"
                 clearable
                 @change="handleFilter"
@@ -170,13 +170,13 @@ const listQuery = reactive<JobListParams>({
   pageSize: 10,
   keyword: '',
   location: '',
-  job_type: undefined,
+  jobType: undefined,
   // Initialize other filters
 });
 
 // 计算属性：是否有活跃的筛选条件
 const hasActiveFilters = computed(() => {
-  return !!listQuery.keyword || !!listQuery.location || !!listQuery.job_type;
+  return !!listQuery.keyword || !!listQuery.location || !!listQuery.jobType;
 });
 
 // 获取数据
@@ -194,7 +194,7 @@ const handleFilter = () => {
 const clearFilters = () => {
   listQuery.keyword = '';
   listQuery.location = '';
-  listQuery.job_type = undefined;
+  listQuery.jobType = undefined;
   // 重置其他筛选条件
 
   // 重新获取数据

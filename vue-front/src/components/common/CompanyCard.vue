@@ -5,7 +5,7 @@
         <el-avatar :size="60" :src="company.logo || defaultLogo" shape="square" />
       </div>
       <div class="info-section">
-        <div class="name">{{ company.company_name }}</div>
+        <div class="name">{{ company.companyName }}</div>
         <div class="details">
           <span v-if="company.industry"><el-icon><OfficeBuilding /></el-icon>{{ company.industry }}</span>
           <span v-if="company.scale"><el-icon><User /></el-icon>{{ company.scale }}</span>
@@ -16,7 +16,7 @@
              <el-tag v-for="tag in companyTags" :key="tag" size="small" type="info" effect="plain" class="tag-item">{{ tag }}</el-tag>
         </div>
         <!-- Optional: Display number of open positions -->
-        <!-- <div class="job-count">{{ company.open_jobs_count || 0 }} 个在招职位</div> -->
+        <!-- <div class="job-count">{{ company.openJobsCount || 0 }} 个在招职位</div> -->
       </div>
     </div>
   </el-card>

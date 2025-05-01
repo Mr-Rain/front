@@ -93,7 +93,7 @@ const menuItems = computed((): MenuItem[] => { // Specify return type
 
   // 获取用户类型
   const userStore = useUserStore();
-  const userType = userStore.userInfo?.user_type?.toLowerCase();
+  const userType = userStore.userInfo?.userType?.toLowerCase();
   console.log('User type from userInfo:', userType); // 调试用
 
   // 检查用户是否有学生角色（不区分大小写）

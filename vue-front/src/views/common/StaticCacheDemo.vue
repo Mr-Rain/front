@@ -166,7 +166,7 @@
 import { ref, reactive, inject, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { isServiceWorkerSupported, isCacheApiSupported, isIndexedDBSupported, isLocalStorageSupported } from '@/utils/staticCache';
-import { updateServiceWorker, swUpdateState } from '@/utils/registerSW';
+import { updateServiceWorker as triggerServiceWorkerUpdate, swUpdateState } from '@/utils/registerSW';
 
 // 获取静态资源缓存
 const staticCache = inject('staticCache') as any;
@@ -327,8 +327,8 @@ const testCachedResource = async () => {
 // 检查Service Worker更新
 const checkForUpdates = () => {
   try {
-    // 更新Service Worker
-    updateServiceWorker();
+    // 调用重命名后的导入函数
+    triggerServiceWorkerUpdate();
     
     ElMessage({
       message: '正在检查更新...',

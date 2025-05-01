@@ -14,9 +14,9 @@
         label-position="top"
         :disabled="loading"
       >
-        <el-form-item label="面试时间" prop="interview_time" required>
+        <el-form-item label="面试时间" prop="interviewTime" required>
           <el-date-picker
-            v-model="formData.interview_time"
+            v-model="formData.interviewTime"
             type="datetime"
             placeholder="选择面试时间"
             format="YYYY-MM-DD HH:mm"
@@ -26,28 +26,28 @@
           />
         </el-form-item>
 
-        <el-form-item label="面试方式" prop="interview_type" required>
-          <el-radio-group v-model="formData.interview_type">
+        <el-form-item label="面试方式" prop="interviewType" required>
+          <el-radio-group v-model="formData.interviewType">
             <el-radio label="onsite">现场面试</el-radio>
             <el-radio label="video">视频面试</el-radio>
             <el-radio label="phone">电话面试</el-radio>
           </el-radio-group>
         </el-form-item>
 
-        <el-form-item label="面试地点" prop="interview_location" :required="formData.interview_type === 'onsite'">
+        <el-form-item label="面试地点" prop="interviewLocation" :required="formData.interviewType === 'onsite'">
           <el-input 
-            v-model="formData.interview_location" 
+            v-model="formData.interviewLocation" 
             placeholder="请输入面试地点"
-            :disabled="formData.interview_type !== 'onsite'"
+            :disabled="formData.interviewType !== 'onsite'"
           />
         </el-form-item>
 
-        <el-form-item label="面试联系人" prop="interview_contact" required>
-          <el-input v-model="formData.interview_contact" placeholder="请输入面试联系人姓名" />
+        <el-form-item label="面试联系人" prop="interviewContact" required>
+          <el-input v-model="formData.interviewContact" placeholder="请输入面试联系人姓名" />
         </el-form-item>
 
-        <el-form-item label="联系方式" prop="interview_contact_info" required>
-          <el-input v-model="formData.interview_contact_info" placeholder="请输入联系方式（电话/邮箱）" />
+        <el-form-item label="联系方式" prop="interviewContactInfo" required>
+          <el-input v-model="formData.interviewContactInfo" placeholder="请输入联系方式（电话/邮箱）" />
         </el-form-item>
 
         <el-form-item label="面试说明" prop="feedback">
@@ -111,29 +111,29 @@ const loading = ref(false);
 
 // 表单数据
 const formData = reactive({
-  interview_time: '',
-  interview_type: 'onsite' as 'onsite' | 'video' | 'phone',
-  interview_location: '',
-  interview_contact: '',
-  interview_contact_info: '',
+  interviewTime: '',
+  interviewType: 'onsite' as 'onsite' | 'video' | 'phone',
+  interviewLocation: '',
+  interviewContact: '',
+  interviewContactInfo: '',
   feedback: ''
 });
 
 // 表单验证规则
 const formRules = reactive<FormRules>({
-  interview_time: [
+  interviewTime: [
     { required: true, message: '请选择面试时间', trigger: 'change' }
   ],
-  interview_type: [
+  interviewType: [
     { required: true, message: '请选择面试方式', trigger: 'change' }
   ],
-  interview_location: [
+  interviewLocation: [
     { 
       required: true, 
       message: '请输入面试地点', 
       trigger: 'blur',
       validator: (rule, value, callback) => {
-        if (formData.interview_type === 'onsite' && !value) {
+        if (formData.interviewType === 'onsite' && !value) {
           callback(new Error('请输入面试地点'));
         } else {
           callback();
@@ -141,10 +141,10 @@ const formRules = reactive<FormRules>({
       }
     }
   ],
-  interview_contact: [
+  interviewContact: [
     { required: true, message: '请输入面试联系人', trigger: 'blur' }
   ],
-  interview_contact_info: [
+  interviewContactInfo: [
     { required: true, message: '请输入联系方式', trigger: 'blur' }
   ]
 });
@@ -158,22 +158,22 @@ const disabledDate = (time: Date) => {
 const initForm = () => {
   // 如果是编辑模式且有应用数据，则填充表单
   if (props.isEditing && props.application) {
-    formData.interview_time = props.application.interview_time || '';
-    formData.interview_type = props.application.interview_type || 'onsite';
-    formData.interview_location = props.application.interview_location || '';
-    formData.interview_contact = props.application.interview_contact || '';
-    formData.interview_contact_info = props.application.interview_contact_info || '';
+    formData.interviewTime = props.application.interviewTime || '';
+    formData.interviewType = props.application.interviewType || 'onsite';
+    formData.interviewLocation = props.application.interviewLocation || '';
+    formData.interviewContact = props.application.interviewContact || '';
+    formData.interviewContactInfo = props.application.interviewContactInfo || '';
     formData.feedback = props.application.feedback || '';
   } else {
     // 新建模式，设置默认值
     const now = new Date();
     now.setHours(now.getHours() + 24); // 默认设置为明天此时
     
-    formData.interview_time = now.toISOString().slice(0, 16).replace('T', ' ');
-    formData.interview_type = 'onsite';
-    formData.interview_location = '';
-    formData.interview_contact = '';
-    formData.interview_contact_info = '';
+    formData.interviewTime = now.toISOString().slice(0, 16).replace('T', ' ');
+    formData.interviewType = 'onsite';
+    formData.interviewLocation = '';
+    formData.interviewContact = '';
+    formData.interviewContactInfo = '';
     formData.feedback = '';
   }
 };
@@ -196,11 +196,11 @@ const handleSubmit = async () => {
         // 构建提交数据
         const submitData = {
           status: 'interview' as const,
-          interview_time: formData.interview_time,
-          interview_type: formData.interview_type,
-          interview_location: formData.interview_type === 'onsite' ? formData.interview_location : '',
-          interview_contact: formData.interview_contact,
-          interview_contact_info: formData.interview_contact_info,
+          interviewTime: formData.interviewTime,
+          interviewType: formData.interviewType,
+          interviewLocation: formData.interviewType === 'onsite' ? formData.interviewLocation : '',
+          interviewContact: formData.interviewContact,
+          interviewContactInfo: formData.interviewContactInfo,
           feedback: formData.feedback
         };
         

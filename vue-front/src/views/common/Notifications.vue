@@ -102,16 +102,16 @@
                 :class="{ 'unread': notification.status === 'unread' }"
               >
                 <div class="notification-icon">
-                  <el-avatar v-if="notification.sender_avatar" :src="notification.sender_avatar" :size="40" />
-                  <el-icon v-else :size="24" :class="getNotificationIconClass(notification.type)">
-                    <component :is="getNotificationIcon(notification.type)" />
-                  </el-icon>
+                  <el-avatar
+                    :size="30"
+                    :src="notification.senderAvatar || defaultAvatar"
+                  />
                 </div>
                 <div class="notification-content" @click="handleNotificationClick(notification)">
                   <div class="notification-header">
                     <h3 class="notification-title">{{ notification.title }}</h3>
                     <div class="notification-meta">
-                      <span class="notification-time">{{ formatTime(notification.create_time) }}</span>
+                      <span class="notification-time">{{ formatTime(notification.createTime) }}</span>
                       <el-tag v-if="notification.priority === 'high'" type="danger" size="small">重要</el-tag>
                       <el-tag v-else-if="notification.priority === 'medium'" type="warning" size="small">一般</el-tag>
                       <el-tag v-else type="info" size="small">普通</el-tag>
@@ -119,8 +119,10 @@
                   </div>
                   <div class="notification-message">{{ notification.content }}</div>
                   <div class="notification-footer">
-                    <div class="notification-sender" v-if="notification.sender_name">
-                      来自: {{ notification.sender_name }}
+                    <div class="notification-sender">
+                      <el-link type="primary" class="sender-name">
+                        {{ notification.senderName || '系统' }}
+                      </el-link>
                     </div>
                     <div class="notification-actions">
                       <el-button
@@ -199,7 +201,9 @@ import { ElMessage } from 'element-plus';
 const router = useRouter();
 const notificationStore = useNotificationStore();
 
-// 状态
+// 默认头像 URL 或空字符串
+const defaultAvatar = ref(''); // 或者是一个默认头像的 URL
+
 const loading = ref(false);
 const notifications = ref<NotificationInfo[]>([]);
 const total = ref(0);

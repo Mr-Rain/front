@@ -131,7 +131,7 @@
             <!-- 教育经历部分 -->
             <div class="form-section">
               <education-experience-form
-                v-model="profileForm.educationExperiences"
+                v-model="profileForm.educationList"
                 :editable="isEditing"
               />
             </div>
@@ -139,7 +139,7 @@
             <!-- 工作经历部分 -->
             <div class="form-section">
               <work-experience-form
-                v-model="profileForm.workExperiences"
+                v-model="profileForm.workList"
                 :editable="isEditing"
               />
             </div>
@@ -238,8 +238,8 @@ const profileForm = reactive<Partial<StudentProfileCamel>>({
   expectedLocation: '', // 前端特有字段，不会保存到数据库
   experience: '', // 前端特有字段，不会保存到数据库
   introduction: '', // 使用后端字段名
-  educationExperiences: [], // 前端特有字段，不会保存到数据库
-  workExperiences: [] // 前端特有字段，不会保存到数据库
+  educationList: [], // 修改为 educationList
+  workList: [] // 修改为 workList
 });
 
 // 存储原始数据用于取消编辑
@@ -324,23 +324,23 @@ watch(() => studentStore.profile, (newProfile, oldProfile) => {
     }
 
     // 确保数组属性存在
-    if (!profileForm.educationExperiences) profileForm.educationExperiences = [];
-    else if (typeof profileForm.educationExperiences === 'string') {
+    if (!profileForm.educationList) profileForm.educationList = [];
+    else if (typeof profileForm.educationList === 'string') {
       try {
-        profileForm.educationExperiences = JSON.parse(profileForm.educationExperiences);
+        profileForm.educationList = JSON.parse(profileForm.educationList);
       } catch (e) {
-        console.error('Failed to parse educationExperiences:', e);
-        profileForm.educationExperiences = [];
+        console.error('Failed to parse educationList:', e);
+        profileForm.educationList = [];
       }
     }
 
-    if (!profileForm.workExperiences) profileForm.workExperiences = [];
-    else if (typeof profileForm.workExperiences === 'string') {
+    if (!profileForm.workList) profileForm.workList = [];
+    else if (typeof profileForm.workList === 'string') {
       try {
-        profileForm.workExperiences = JSON.parse(profileForm.workExperiences);
+        profileForm.workList = JSON.parse(profileForm.workList);
       } catch (e) {
-        console.error('Failed to parse workExperiences:', e);
-        profileForm.workExperiences = [];
+        console.error('Failed to parse workList:', e);
+        profileForm.workList = [];
       }
     }
 
@@ -472,23 +472,23 @@ const saveProfile = async () => {
           expectedSalary: profileForm.expectedSalary || '面议',
           expectedLocation: profileForm.expectedLocation || '全国',
           // 添加教育和工作经历 - 确保是数组而不是字符串
-          educationExperiences: Array.isArray(profileForm.educationExperiences)
-            ? profileForm.educationExperiences
-            : (typeof profileForm.educationExperiences === 'string'
-              ? JSON.parse(profileForm.educationExperiences)
+          educationList: Array.isArray(profileForm.educationList)
+            ? profileForm.educationList
+            : (typeof profileForm.educationList === 'string'
+              ? JSON.parse(profileForm.educationList)
               : []),
-          workExperiences: Array.isArray(profileForm.workExperiences)
-            ? profileForm.workExperiences
-            : (typeof profileForm.workExperiences === 'string'
-              ? JSON.parse(profileForm.workExperiences)
+          workList: Array.isArray(profileForm.workList)
+            ? profileForm.workList
+            : (typeof profileForm.workList === 'string'
+              ? JSON.parse(profileForm.workList)
               : [])
         };
 
         console.log('发送到后端的数据 (移除 stringify):', updateData);
 
         // --- 添加的日志 ---
-        console.log('在调用 updateProfile 前 - educationExperiences:', updateData.educationExperiences); // 应该打印数组
-        console.log('在调用 updateProfile 前 - workExperiences:', updateData.workExperiences); // 应该打印数组
+        console.log('在调用 updateProfile 前 - educationList:', updateData.educationList); // 应该打印数组
+        console.log('在调用 updateProfile 前 - workList:', updateData.workList); // 应该打印数组
         console.log('在调用 updateProfile 前 - 完整的 updateData:', JSON.stringify(updateData)); // 仍然打印 JSON 以供检查
         // --- 添加的日志结束 ---
 

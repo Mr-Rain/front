@@ -81,22 +81,22 @@
 
         <el-table-column label="申请人信息" min-width="200">
             <template #default="scope">
-                 <div><strong>{{ scope.row.student_info?.name || '-' }}</strong></div>
-                 <div class="sub-info">{{ scope.row.student_info?.school || '-' }} / {{ scope.row.student_info?.major || '-' }}</div>
+                 <div><strong>{{ scope.row.studentInfo?.name || '-' }}</strong></div>
+                 <div class="sub-info">{{ scope.row.studentInfo?.school || '-' }} / {{ scope.row.studentInfo?.major || '-' }}</div>
             </template>
         </el-table-column>
         <el-table-column label="申请职位" min-width="180">
              <template #default="scope">
-                {{ scope.row.job_info?.title || '-' }}
+                {{ scope.row.jobInfo?.title || '-' }}
              </template>
         </el-table-column>
          <el-table-column label="投递简历" width="150">
              <template #default="scope">
-                <el-link type="primary" @click="previewResume(scope.row.resume_id, scope.row.student_id)">{{ scope.row.resume_snapshot?.title || '查看简历' }}</el-link>
+                <el-link type="primary" @click="previewResume(scope.row.resumeId, scope.row.studentId)">{{ scope.row.resumeSnapshot?.title || '查看简历' }}</el-link>
              </template>
         </el-table-column>
-        <el-table-column prop="apply_time" label="申请时间" width="180">
-            <template #default="scope">{{ formatTime(scope.row.apply_time) }}</template>
+        <el-table-column prop="applyTime" label="申请时间" width="180">
+            <template #default="scope">{{ formatTime(scope.row.applyTime) }}</template>
         </el-table-column>
          <el-table-column prop="status" label="状态" width="120" align="center">
             <template #default="scope">
@@ -162,43 +162,43 @@
         <div v-else-if="applicationStore.currentApplicationDetail" class="detail-content">
              <h4>申请信息</h4>
              <el-descriptions :column="1" border size="small">
-                 <el-descriptions-item label="申请人">{{ applicationStore.currentApplicationDetail.student_info?.name }}</el-descriptions-item>
-                 <el-descriptions-item label="申请职位">{{ applicationStore.currentApplicationDetail.job_info?.title }}</el-descriptions-item>
-                 <el-descriptions-item label="申请时间">{{ formatTime(applicationStore.currentApplicationDetail.apply_time) }}</el-descriptions-item>
+                 <el-descriptions-item label="申请人">{{ applicationStore.currentApplicationDetail.studentInfo?.realName }}</el-descriptions-item>
+                 <el-descriptions-item label="申请职位">{{ applicationStore.currentApplicationDetail.jobInfo?.title }}</el-descriptions-item>
+                 <el-descriptions-item label="申请时间">{{ formatTime(applicationStore.currentApplicationDetail.applyTime) }}</el-descriptions-item>
                   <el-descriptions-item label="当前状态">
                      <el-tag :type="getStatusTagType(applicationStore.currentApplicationDetail.status)">{{ formatStatus(applicationStore.currentApplicationDetail.status) }}</el-tag>
                   </el-descriptions-item>
              </el-descriptions>
 
             <h4>简历信息</h4>
-            <el-link type="primary" @click="previewResume(applicationStore.currentApplicationDetail.resume_id, applicationStore.currentApplicationDetail.student_id)">
-                {{ applicationStore.currentApplicationDetail.resume_snapshot?.title || '点击预览简历' }}
+            <el-link type="primary" @click="previewResume(applicationStore.currentApplicationDetail.resumeId, applicationStore.currentApplicationDetail.studentId)">
+                {{ applicationStore.currentApplicationDetail.resumeSnapshot?.title || '点击预览简历' }}
             </el-link>
             <!-- Or Embed Resume Preview Component -->
              <!-- <ResumeViewer :resumeId="applicationStore.currentApplicationDetail.resume_id" /> -->
 
              <h4>面试信息</h4>
-             <div v-if="applicationStore.currentApplicationDetail.status === 'interview' || applicationStore.currentApplicationDetail.interview_time">
+             <div v-if="applicationStore.currentApplicationDetail.status === 'interview' || applicationStore.currentApplicationDetail.interviewTime">
                <el-descriptions :column="1" border size="small">
                  <el-descriptions-item label="面试时间">
-                   {{ formatTime(applicationStore.currentApplicationDetail.interview_time) || '未设置' }}
+                   {{ formatTime(applicationStore.currentApplicationDetail.interviewTime) || '未设置' }}
                  </el-descriptions-item>
                  <el-descriptions-item label="面试方式">
-                   {{ formatInterviewType(applicationStore.currentApplicationDetail.interview_type) || '未设置' }}
+                   {{ formatInterviewType(applicationStore.currentApplicationDetail.interviewType) || '未设置' }}
                  </el-descriptions-item>
-                 <el-descriptions-item v-if="applicationStore.currentApplicationDetail.interview_type === 'onsite'" label="面试地点">
-                   {{ applicationStore.currentApplicationDetail.interview_location || '未设置' }}
+                 <el-descriptions-item v-if="applicationStore.currentApplicationDetail.interviewType === 'onsite'" label="面试地点">
+                   {{ applicationStore.currentApplicationDetail.interviewLocation || '未设置' }}
                  </el-descriptions-item>
                  <el-descriptions-item label="面试联系人">
-                   {{ applicationStore.currentApplicationDetail.interview_contact || '未设置' }}
+                   {{ applicationStore.currentApplicationDetail.interviewContact || '未设置' }}
                  </el-descriptions-item>
                  <el-descriptions-item label="联系方式">
-                   {{ applicationStore.currentApplicationDetail.interview_contact_info || '未设置' }}
+                   {{ applicationStore.currentApplicationDetail.interviewContactInfo || '未设置' }}
                  </el-descriptions-item>
                </el-descriptions>
                <div class="action-buttons" style="margin-top: 10px;">
                  <el-button type="primary" size="small" @click="handleScheduleInterview(applicationStore.currentApplicationDetail)">
-                   {{ applicationStore.currentApplicationDetail.interview_time ? '修改面试安排' : '安排面试' }}
+                   {{ applicationStore.currentApplicationDetail.interviewTime ? '修改面试安排' : '安排面试' }}
                  </el-button>
                  <el-button v-if="applicationStore.currentApplicationDetail.status === 'interview'" type="success" size="small" @click="handleAddFeedback(applicationStore.currentApplicationDetail, 'interview')">
                    添加面试反馈
@@ -223,7 +223,7 @@
                  {{ applicationStore.currentApplicationDetail.feedback }}
                </div>
                <div class="feedback-time">
-                 更新时间：{{ formatTime(applicationStore.currentApplicationDetail.update_time) }}
+                 更新时间：{{ formatTime(applicationStore.currentApplicationDetail.updateTime) }}
                </div>
              </div>
              <el-empty v-else description="暂无反馈记录" :image-size="100"></el-empty>
@@ -372,7 +372,7 @@ const formatStatus = (status: ApplicationStatus | undefined): string => {
     if (!status) return '未知';
     const statusMap: Record<ApplicationStatus, string> = {
         pending: '待处理', viewed: '已查看', interview: '面试中',
-        offer: '已录用', rejected: '未录用', withdrawn: '已撤销'
+        offer: '已录用', accepted: '已录用', rejected: '未录用', withdrawn: '已撤销'
     };
     return statusMap[status] || status;
 };
@@ -536,11 +536,11 @@ const handleBatchInterviewSubmit = async (data: any) => {
     try {
         await applicationStore.batchUpdateApplicationStatus(data.applicationIds, {
             status: 'interview',
-            interview_time: data.interview_time,
-            interview_type: data.interview_type,
-            interview_location: data.interview_location,
-            interview_contact: data.interview_contact,
-            interview_contact_info: data.interview_contact_info,
+            interviewTime: data.interviewTime,
+            interviewType: data.interviewType,
+            interviewLocation: data.interviewLocation,
+            interviewContact: data.interviewContact,
+            interviewContactInfo: data.interviewContactInfo,
             feedback: data.feedback,
             rating: data.rating
         });

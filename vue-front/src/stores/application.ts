@@ -60,7 +60,17 @@ export const useApplicationStore = defineStore('application', {
       this.loadingStudentList = true;
       try {
         const response = await getStudentApplicationList(params);
-        this.studentApplications = response.data.list || response.data.records || [];
+        const rawApplications = response.data.list || response.data.records || [];
+
+        // 处理数据，确保顶层字段存在
+        this.studentApplications = rawApplications.map(app => ({
+          ...app,
+          jobTitle: app.jobTitle || app.jobInfo?.title || 'N/A',
+          companyName: app.companyName || app.jobInfo?.companyName || 'N/A',
+          // 假设 resumeInfo 或 resumeSnapshot 中有 title 字段
+          resumeTitle: app.resumeTitle || (app as any).resumeSnapshot?.title || (app as any).resumeInfo?.title || 'N/A' 
+        }));
+
         this.studentApplicationsTotal = response.data.total;
       } catch (error) {
         console.error('Failed to fetch student applications:', error);

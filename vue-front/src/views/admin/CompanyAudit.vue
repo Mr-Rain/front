@@ -51,7 +51,7 @@
       <el-table :data="companyStore.auditList" v-loading="companyStore.loadingAuditList" style="width: 100%">
         <el-table-column label="公司名称" min-width="180">
           <template #default="scope">
-            {{ scope.row.company_name || scope.row.companyName || '-' }}
+            {{ scope.row.companyName || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="行业" width="120">
@@ -68,8 +68,8 @@
             <template #default="scope">
                 <el-link
                   type="primary"
-                  @click="previewLicense(scope.row.business_license || scope.row.businessLicense)"
-                  :disabled="!(scope.row.business_license || scope.row.businessLicense)"
+                  @click="previewLicense(scope.row.businessLicense || scope.row.businessLicense)"
+                  :disabled="!(scope.row.businessLicense || scope.row.businessLicense)"
                 >
                   预览文件
                 </el-link>
@@ -77,16 +77,16 @@
         </el-table-column>
         <el-table-column label="提交时间" width="180">
              <template #default="scope">
-               {{ formatTime(scope.row.submit_time || scope.row.submitTime) }}
+               {{ formatTime(scope.row.submitTime) }}
              </template>
         </el-table-column>
         <el-table-column label="审核状态" width="120" align="center">
             <template #default="scope">
                  <el-tag
-                   :type="getStatusTagType(scope.row.audit_status || scope.row.auditStatus)"
+                   :type="getStatusTagType(scope.row.auditStatus)"
                    effect="light"
                  >
-                   {{ formatAuditStatus(scope.row.audit_status || scope.row.auditStatus) }}
+                   {{ formatAuditStatus(scope.row.auditStatus) }}
                  </el-tag>
             </template>
         </el-table-column>
@@ -119,7 +119,7 @@
     <el-dialog v-model="detailDialogVisible" title="企业审核" width="600px">
         <div v-if="currentCompany" class="detail-content">
              <el-descriptions :column="1" border size="small" style="margin-bottom: 20px;">
-                 <el-descriptions-item label="公司名称">{{ currentCompany.company_name || currentCompany.companyName || '-' }}</el-descriptions-item>
+                 <el-descriptions-item label="公司名称">{{ currentCompany.companyName || '-' }}</el-descriptions-item>
                  <el-descriptions-item label="行业">{{ currentCompany.industry || '-' }}</el-descriptions-item>
                  <el-descriptions-item label="地点">{{ currentCompany.location || '-' }}</el-descriptions-item>
                  <el-descriptions-item label="官网">
@@ -133,20 +133,20 @@
                     </el-link>
                     <span v-else>-</span>
                  </el-descriptions-item>
-                 <el-descriptions-item label="提交时间">{{ formatTime(currentCompany.submit_time || currentCompany.submitTime) }}</el-descriptions-item>
+                 <el-descriptions-item label="提交时间">{{ formatTime(currentCompany.submitTime) }}</el-descriptions-item>
                  <el-descriptions-item label="联系人">
-                    {{ currentCompany.contact_person || currentCompany.contactPerson || '-' }}
-                    <template v-if="currentCompany.contact_email || currentCompany.contactEmail || currentCompany.contact_phone || currentCompany.contactPhone">
-                        ({{ currentCompany.contact_email || currentCompany.contactEmail || '' }} / {{ currentCompany.contact_phone || currentCompany.contactPhone || '' }})
+                    {{ currentCompany.contactPerson || '-' }}
+                    <template v-if="currentCompany.contactEmail || currentCompany.contactPhone">
+                        ({{ currentCompany.contactEmail || '' }} / {{ currentCompany.contactPhone || '' }})
                     </template>
                  </el-descriptions-item>
                  <el-descriptions-item label="公司介绍">{{ currentCompany.description || '-' }}</el-descriptions-item>
              </el-descriptions>
 
             <h4>认证文件</h4>
-            <p v-if="currentCompany.business_license || currentCompany.businessLicense">
+            <p v-if="currentCompany.businessLicense || currentCompany.businessLicense">
                 <el-link type="primary" @click="previewLicense(currentCompany.businessLicense || currentCompany.businessLicense)">
-                    {{ currentCompany.business_license_name || currentCompany.businessLicenseName || '点击预览认证文件' }}
+                    {{ currentCompany.businessLicenseName || '点击预览认证文件' }}
                 </el-link>
             </p>
             <p v-else>未上传认证文件</p>

@@ -17,8 +17,8 @@
           <el-tag :type="getStatusTagType(applicationStore.currentApplicationDetail.status)" size="large">
             {{ formatStatus(applicationStore.currentApplicationDetail.status) }}
           </el-tag>
-          <span class="update-time" v-if="applicationStore.currentApplicationDetail.update_time">
-            更新于: {{ formatTime(applicationStore.currentApplicationDetail.update_time) }}
+          <span class="update-time" v-if="applicationStore.currentApplicationDetail.updateTime">
+            更新于: {{ formatTime(applicationStore.currentApplicationDetail.updateTime) }}
           </span>
         </div>
 
@@ -29,22 +29,22 @@
             <div class="info-item">
               <span class="label">职位名称:</span>
               <span class="value">
-                <el-link type="primary" @click="goToJobDetail(applicationStore.currentApplicationDetail.job_id)">
-                  {{ applicationStore.currentApplicationDetail.job_title || '未知职位' }}
+                <el-link type="primary" @click="goToJobDetail(applicationStore.currentApplicationDetail.jobId)">
+                  {{ applicationStore.currentApplicationDetail.jobTitle || '未知职位' }}
                 </el-link>
               </span>
             </div>
             <div class="info-item">
               <span class="label">公司名称:</span>
-              <span class="value">{{ applicationStore.currentApplicationDetail.company_name || '-' }}</span>
+              <span class="value">{{ applicationStore.currentApplicationDetail.companyName || '-' }}</span>
             </div>
             <div class="info-item">
               <span class="label">申请时间:</span>
-              <span class="value">{{ formatTime(applicationStore.currentApplicationDetail.application_time) }}</span>
+              <span class="value">{{ formatTime(applicationStore.currentApplicationDetail.applyTime) }}</span>
             </div>
             <div class="info-item">
               <span class="label">投递简历:</span>
-              <span class="value">{{ applicationStore.currentApplicationDetail.resume_title || '-' }}</span>
+              <span class="value">{{ applicationStore.currentApplicationDetail.resumeTitle || '-' }}</span>
             </div>
           </div>
         </div>
@@ -56,24 +56,24 @@
             <div class="interview-card">
               <div class="interview-header">
                 <el-icon><Calendar /></el-icon>
-                <span class="interview-time">{{ formatInterviewTime(applicationStore.currentApplicationDetail.interview_time) }}</span>
+                <span class="interview-time">{{ formatInterviewTime(applicationStore.currentApplicationDetail.interviewTime) }}</span>
               </div>
               <div class="interview-body">
-                <div class="info-item" v-if="applicationStore.currentApplicationDetail.interview_location">
+                <div class="info-item" v-if="applicationStore.currentApplicationDetail.interviewLocation">
                   <span class="label">面试地点:</span>
-                  <span class="value">{{ applicationStore.currentApplicationDetail.interview_location }}</span>
+                  <span class="value">{{ applicationStore.currentApplicationDetail.interviewLocation }}</span>
                 </div>
-                <div class="info-item" v-if="applicationStore.currentApplicationDetail.interview_type">
+                <div class="info-item" v-if="applicationStore.currentApplicationDetail.interviewType">
                   <span class="label">面试方式:</span>
-                  <span class="value">{{ formatInterviewType(applicationStore.currentApplicationDetail.interview_type) }}</span>
+                  <span class="value">{{ formatInterviewType(applicationStore.currentApplicationDetail.interviewType) }}</span>
                 </div>
-                <div class="info-item" v-if="applicationStore.currentApplicationDetail.interview_contact">
+                <div class="info-item" v-if="applicationStore.currentApplicationDetail.interviewContact">
                   <span class="label">联系人:</span>
-                  <span class="value">{{ applicationStore.currentApplicationDetail.interview_contact }}</span>
+                  <span class="value">{{ applicationStore.currentApplicationDetail.interviewContact }}</span>
                 </div>
-                <div class="info-item" v-if="applicationStore.currentApplicationDetail.interview_contact_info">
+                <div class="info-item" v-if="applicationStore.currentApplicationDetail.interviewContactInfo">
                   <span class="label">联系方式:</span>
-                  <span class="value">{{ applicationStore.currentApplicationDetail.interview_contact_info }}</span>
+                  <span class="value">{{ applicationStore.currentApplicationDetail.interviewContactInfo }}</span>
                 </div>
               </div>
             </div>
@@ -159,9 +159,9 @@ const showFeedbackForm = computed(() => {
 const hasInterviewInfo = computed(() => {
   const application = applicationStore.currentApplicationDetail;
   return application && (
-    application.interview_time ||
-    application.interview_location ||
-    application.interview_type
+    application.interviewTime ||
+    application.interviewLocation ||
+    application.interviewType
   );
 });
 
@@ -236,6 +236,7 @@ const formatStatus = (status: ApplicationStatus | undefined): string => {
     viewed: '已查看',
     interview: '面试中',
     offer: '已录用',
+    accepted: '已录用',
     rejected: '未录用',
     withdrawn: '已撤销'
   };

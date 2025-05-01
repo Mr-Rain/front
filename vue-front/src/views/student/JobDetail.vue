@@ -16,14 +16,14 @@
       <template #header>
         <div class="card-header">
           <h1 class="job-title">{{ jobStore.currentJob.title }}</h1>
-          <span class="salary">{{ jobStore.currentJob.salary_range }}</span>
+          <span class="salary">{{ jobStore.currentJob.salaryRange }}</span>
         </div>
         <div class="job-meta">
-          <span class="company-name">{{ jobStore.currentJob.company_name || '未知公司' }}</span>
+          <span class="company-name">{{ jobStore.currentJob.companyName || '未知公司' }}</span>
           <span class="location"><el-icon><Location /></el-icon> {{ jobStore.currentJob.location }}</span>
-          <span class="job-type"><el-icon><Briefcase /></el-icon> {{ jobStore.currentJob.job_type }}</span>
-          <span class="experience"><el-icon><DataAnalysis /></el-icon> {{ jobStore.currentJob.experience_required || '经验不限' }}</span>
-          <span class="education"><el-icon><Reading /></el-icon> {{ jobStore.currentJob.education_required || '学历不限' }}</span>
+          <span class="job-type"><el-icon><Briefcase /></el-icon> {{ jobStore.currentJob.jobType }}</span>
+          <span class="experience"><el-icon><DataAnalysis /></el-icon> {{ jobStore.currentJob.experienceRequired || '经验不限' }}</span>
+          <span class="education"><el-icon><Reading /></el-icon> {{ jobStore.currentJob.educationRequired || '学历不限' }}</span>
         </div>
       </template>
 
@@ -38,10 +38,10 @@
           <div class="requirements" v-html="jobRequirementsHtml"></div>
         </section>
 
-        <section v-if="jobStore.currentJob.company_name" class="section company-info">
+        <section v-if="jobStore.currentJob.companyName" class="section company-info">
            <h2>公司信息</h2>
-           <p><strong>{{ jobStore.currentJob.company_name }}</strong></p>
-           <el-image v-if="jobStore.currentJob.company_logo" :src="jobStore.currentJob.company_logo" fit="contain" style="width: 100px; height: 50px; margin-top: 10px;">
+           <p><strong>{{ jobStore.currentJob.companyName }}</strong></p>
+           <el-image v-if="jobStore.currentJob.companyLogo" :src="jobStore.currentJob.companyLogo" fit="contain" style="width: 100px; height: 50px; margin-top: 10px;">
              <template #error>
                <div class="image-slot"></div>
              </template>
@@ -127,7 +127,7 @@ const handleApply = async () => {
   }
 
   // 检查用户是否是学生角色
-  if (userStore.userInfo.user_type !== 'student') {
+  if (userStore.userInfo.userType !== 'student') {
     ElMessage.warning('只有学生用户才能申请职位');
     return;
   }

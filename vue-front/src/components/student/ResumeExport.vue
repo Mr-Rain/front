@@ -43,13 +43,13 @@
         </div>
       </div>
 
-      <div v-if="resumeData.education_experiences && resumeData.education_experiences.length > 0" class="resume-section">
+      <div v-if="mergedResumeData.educationList && mergedResumeData.educationList.length > 0" class="resume-section">
         <h2 class="section-title">教育经历</h2>
         <div class="section-content">
-          <div v-for="(edu, index) in resumeData.education_experiences" :key="index" class="experience-item">
+          <div v-for="(edu, index) in mergedResumeData.educationList" :key="index" class="experience-item">
             <div class="experience-header">
               <h3>{{ edu.school }}</h3>
-              <span class="experience-time">{{ formatDateRange(edu.start_date, edu.end_date) }}</span>
+              <span class="experience-time">{{ formatDateRange(edu.startDate, edu.endDate) }}</span>
             </div>
             <p><strong>{{ edu.degree }}</strong> - {{ edu.major }}</p>
             <p v-if="edu.description">{{ edu.description }}</p>
@@ -57,13 +57,13 @@
         </div>
       </div>
 
-      <div v-if="resumeData.work_experiences && resumeData.work_experiences.length > 0" class="resume-section">
+      <div v-if="mergedResumeData.workList && mergedResumeData.workList.length > 0" class="resume-section">
         <h2 class="section-title">工作经历</h2>
         <div class="section-content">
-          <div v-for="(work, index) in resumeData.work_experiences" :key="index" class="experience-item">
+          <div v-for="(work, index) in mergedResumeData.workList" :key="index" class="experience-item">
             <div class="experience-header">
-              <h3>{{ work.company }}</h3>
-              <span class="experience-time">{{ formatDateRange(work.start_date, work.end_date) }}</span>
+              <h3>{{ work.companyName }}</h3>
+              <span class="experience-time">{{ formatDateRange(work.startDate, work.endDate) }}</span>
             </div>
             <p><strong>{{ work.position }}</strong></p>
             <div v-if="work.description" class="work-description" v-html="sanitizeHTML(work.description)"></div>
@@ -71,11 +71,11 @@
         </div>
       </div>
 
-      <div v-if="resumeData.expected_salary || resumeData.expected_location" class="resume-section">
+      <div v-if="mergedResumeData.expectedSalary || mergedResumeData.expectedLocation" class="resume-section">
         <h2 class="section-title">求职意向</h2>
         <div class="section-content">
-          <p v-if="resumeData.expected_salary"><strong>期望薪资：</strong>{{ resumeData.expected_salary }}</p>
-          <p v-if="resumeData.expected_location"><strong>期望地点：</strong>{{ resumeData.expected_location }}</p>
+          <p v-if="mergedResumeData.expectedSalary"><strong>期望薪资：</strong>{{ mergedResumeData.expectedSalary }}</p>
+          <p v-if="mergedResumeData.expectedLocation"><strong>期望地点：</strong>{{ mergedResumeData.expectedLocation }}</p>
         </div>
       </div>
 
@@ -131,13 +131,28 @@ const mergedResumeData = computed(() => {
       grade: studentStore.profile.grade || '',
       bio: studentStore.profile.bio || '',
       skills: studentStore.profile.skills || [],
-      education_experiences: studentStore.profile.educationExperiences || [],
-      work_experiences: studentStore.profile.workExperiences || [],
-      expected_salary: studentStore.profile.expectedSalary || '',
-      expected_location: studentStore.profile.expectedLocation || ''
+      educationList: studentStore.profile.educationList || [],
+      workList: studentStore.profile.workList || [],
+      expectedSalary: studentStore.profile.expectedSalary || '',
+      expectedLocation: studentStore.profile.expectedLocation || ''
     };
   } else {
-    return props.resumeData;
+    return {
+      name: props.resumeData.name || '',
+      phone: props.resumeData.phone || '',
+      email: props.resumeData.email || '',
+      location: props.resumeData.expectedLocation || props.resumeData.location || '',
+      school: props.resumeData.school || '',
+      major: props.resumeData.major || '',
+      education: props.resumeData.education || '',
+      grade: props.resumeData.grade || '',
+      bio: props.resumeData.bio || '',
+      skills: props.resumeData.skills || [],
+      educationList: props.resumeData.educationList || [],
+      workList: props.resumeData.workList || [],
+      expectedSalary: props.resumeData.expectedSalary || '',
+      expectedLocation: props.resumeData.expectedLocation || ''
+    };
   }
 });
 

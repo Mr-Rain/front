@@ -37,14 +37,15 @@ export interface ApplicationInfo {
   interviewContactInfo?: string; // 联系人信息
 
   // --- 冗余信息，方便前端展示 ---
-  jobInfo?: Pick<JobInfo, 'id' | 'title' | 'companyName' | 'location' | 'salaryRange'>; // 职位简要信息
-  studentInfo?: Pick<StudentProfile, 'id' | 'name' | 'school' | 'major'>; // 学生简要信息 (企业端)
+  jobInfo?: Pick<JobInfo, 'id' | 'title' | 'companyName' | 'location' | 'salaryRange' | 'jobType'>; // 添加 jobType
+  studentInfo?: Pick<StudentProfile, 'id' | 'realName' | 'school' | 'major'>; // 使用 realName
   resumeSnapshot?: Partial<ResumeInfo>; // 申请时简历快照 (可选)
 
   // 直接展示的字段，方便前端使用
   jobTitle?: string;
   companyName?: string;
   resumeTitle?: string;
+  studentName?: string; // 添加 studentName
 }
 
 /**

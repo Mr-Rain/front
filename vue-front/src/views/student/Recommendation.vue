@@ -47,14 +47,14 @@
 
       <!-- 推荐列表 -->
       <div v-if="recommendationStore.recommendedJobs.length > 0" class="recommendation-list">
-        <div v-for="rec in recommendationStore.recommendedJobs" :key="rec.job_info.id" class="recommendation-item">
+        <div v-for="rec in recommendationStore.recommendedJobs" :key="rec.jobInfo.id" class="recommendation-item">
           <!-- 推荐分数可视化 -->
           <div class="recommendation-score-bar">
             <div class="score-label">匹配度</div>
             <el-progress
-              :percentage="(rec.recommendation_score || 0) * 100"
+              :percentage="(rec.recommendationScore || 0) * 100"
               :format="(percentage) => (percentage / 100).toFixed(2)"
-              :color="getScoreColor(rec.recommendation_score || 0)"
+              :color="getScoreColor(rec.recommendationScore || 0)"
               :stroke-width="12"
               class="score-progress"
             />
@@ -62,7 +62,7 @@
 
           <!-- 职位卡片 -->
           <JobCard
-            :job="rec.job_info"
+            :job="rec.jobInfo"
             class="job-card"
           >
             <!-- 推荐理由和操作 -->
@@ -70,10 +70,10 @@
               <div class="recommendation-info">
                 <div class="reason">
                   <el-icon><MagicStick /></el-icon>
-                  <span>推荐理由: {{ rec.recommendation_reason || '与您的技能匹配度高' }}</span>
+                  <span>推荐理由: {{ rec.recommendationReason || '与您的技能匹配度高' }}</span>
                 </div>
                 <div class="actions">
-                  <el-button link type="info" size="small" @click="handleDislike(rec.job_info.id)">
+                  <el-button link type="info" size="small" @click="handleDislike(rec.jobInfo.id)">
                     <el-icon><Close /></el-icon>
                     <span class="hide-on-mobile">不感兴趣</span>
                   </el-button>

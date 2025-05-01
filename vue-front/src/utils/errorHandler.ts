@@ -30,6 +30,7 @@ interface ApiError {
   shouldRetry?: boolean;
   retryCount?: number;
   timestamp?: number;
+  isBackendDown?: boolean;
 }
 
 // 错误处理配置
@@ -167,7 +168,8 @@ class ErrorHandler {
         }
       }
 
-      return createApiError(
+      // 先创建基础错误对象
+      const networkError = createApiError(
         ApiErrorCode.NETWORK_ERROR,
         isBackendDown ? '后端服务器未启动，部分功能将不可用' : '网络连接错误，请检查您的网络连接',
         ErrorType.NETWORK,
@@ -175,9 +177,13 @@ class ErrorHandler {
           originalError: error,
           shouldRetry: isBackendDown ? false : this.config.autoRetryNetworkError,
           retryCount: 0,
-          isBackendDown
+          // isBackendDown // 从这里移除
         }
       );
+      // 手动添加 isBackendDown 属性
+      (networkError as any).isBackendDown = isBackendDown;
+      return networkError;
+
     } else if (isTimeoutError(error)) {
       // 超时错误
       return createApiError(

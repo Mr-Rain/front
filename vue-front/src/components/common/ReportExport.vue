@@ -289,16 +289,17 @@ const handleExport = async () => {
     
     switch (exportForm.format) {
       case 'pdf':
-        await exportToPDF();
+        await triggerPDFExport();
         break;
       case 'image':
-        await exportToImage();
+        await triggerImageExport();
         break;
       case 'excel':
-        await exportToExcelFile();
+        await triggerExcelExport();
         break;
       default:
         ElMessage.warning('不支持的导出格式');
+        exporting.value = false;
         return;
     }
     
@@ -315,7 +316,7 @@ const handleExport = async () => {
 };
 
 // 导出为PDF
-const exportToPDF = async () => {
+const triggerPDFExport = async () => {
   if (!reportContainer.value) {
     throw new Error('报表容器不存在');
   }
@@ -331,8 +332,8 @@ const exportToPDF = async () => {
   }
   
   try {
-    // 导出为PDF
-    await exportResumeToPDF(reportContainer.value, exportForm.fileName, {
+    // 导出为PDF - 调用导入的辅助函数
+    await exportToPDFHelper(reportContainer.value, exportForm.fileName, {
       format: 'a4',
       orientation: exportForm.orientation as 'portrait' | 'landscape',
       margin: 10,
@@ -346,7 +347,7 @@ const exportToPDF = async () => {
 };
 
 // 导出为图片
-const exportToImage = async () => {
+const triggerImageExport = async () => {
   if (!hasCharts.value) {
     throw new Error('没有图表可导出');
   }
@@ -372,8 +373,8 @@ const exportToImage = async () => {
   await new Promise(resolve => setTimeout(resolve, 500));
   
   try {
-    // 导出为PDF（实际上是图片）
-    await exportResumeToPDF(reportContainer.value, exportForm.fileName, {
+    // 导出为PDF（模拟图片效果）
+    await exportToPDFHelper(reportContainer.value, exportForm.fileName, {
       format: 'a4',
       orientation: 'landscape',
       margin: 10,
@@ -387,7 +388,7 @@ const exportToImage = async () => {
 };
 
 // 导出为Excel
-const exportToExcelFile = async () => {
+const triggerExcelExport = async () => {
   if (!hasTableData.value) {
     throw new Error('没有表格数据可导出');
   }
@@ -419,12 +420,12 @@ const exportToExcelFile = async () => {
     });
   });
   
-  // 导出Excel
+  // 导出Excel - 调用导入的辅助函数
   exportToExcel(allData, exportForm.fileName);
 };
 
-// 导出为PDF的辅助函数
-const exportResumeToPDF = async (
+// 导出为PDF的辅助函数 - 重命名导入的函数以避免冲突
+const exportToPDFHelper = async (
   element: HTMLElement,
   fileName: string,
   options: {
@@ -435,8 +436,8 @@ const exportResumeToPDF = async (
     title?: string;
   } = {}
 ) => {
-  const { exportToPDF } = await import('@/utils/exportUtils');
-  return exportToPDF(element, fileName, options);
+  const { exportToPDF: pdfExporter } = await import('@/utils/exportUtils');
+  return pdfExporter(element, fileName, options);
 };
 
 // 初始化

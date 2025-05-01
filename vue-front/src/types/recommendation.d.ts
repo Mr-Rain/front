@@ -4,9 +4,9 @@ import type { JobInfo } from './job';
  * 推荐结果项接口
  */
 export interface RecommendedJob {
-  job_info: JobInfo; // 包含完整的职位信息
-  recommendation_score?: number; // 推荐分数 (可选, 0-1)
-  recommendation_reason?: string; // 推荐理由 (可选, 例如: 与你的技能匹配度高)
+  jobInfo: JobInfo; // 包含完整的职位信息
+  recommendationScore?: number; // 推荐分数 (可选, 0-1)
+  recommendationReason?: string; // 推荐理由 (可选, 例如: 与你的技能匹配度高)
 }
 
 /**

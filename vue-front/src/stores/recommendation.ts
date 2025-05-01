@@ -28,7 +28,7 @@ export const useRecommendationStore = defineStore('recommendation', {
     averageScore: (state) => {
       if (state.recommendedJobs.length === 0) return 0;
       const totalScore = state.recommendedJobs.reduce(
-        (sum: number, job: RecommendedJob) => sum + (job.recommendation_score || 0),
+        (sum: number, job: RecommendedJob) => sum + (job.recommendationScore || 0),
         0
       );
       return totalScore / state.recommendedJobs.length;
@@ -63,7 +63,7 @@ export const useRecommendationStore = defineStore('recommendation', {
         // 过滤掉已经不感兴趣的职位
         if (this.dislikedJobIds.length > 0) {
           this.recommendedJobs = this.recommendedJobs.filter(
-            (job: RecommendedJob) => !this.dislikedJobIds.includes(job.job_info.id)
+            (job: RecommendedJob) => !this.dislikedJobIds.includes(job.jobInfo.id)
           );
         }
       } catch (error) {
@@ -89,7 +89,7 @@ export const useRecommendationStore = defineStore('recommendation', {
 
       // 从推荐列表中移除该职位
       this.recommendedJobs = this.recommendedJobs.filter(
-        (job: RecommendedJob) => job.job_info.id !== jobId
+        (job: RecommendedJob) => job.jobInfo.id !== jobId
       );
     },
 

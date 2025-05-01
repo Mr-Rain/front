@@ -20,7 +20,7 @@
           <el-avatar :size="50" :src="userStore.userInfo.avatar || defaultAvatar" />
           <div class="user-details">
             <h3>{{ userStore.userInfo.username }}</h3>
-            <p>{{ getUserTypeText(userStore.userInfo.user_type) }}</p>
+            <p>{{ getUserTypeText(userStore.userInfo.userType) }}</p>
           </div>
         </div>
 
@@ -66,7 +66,7 @@
           </el-menu-item>
 
           <!-- 学生专属菜单 -->
-          <template v-if="userStore.userInfo?.user_type === 'student'">
+          <template v-if="userStore.userInfo?.userType === 'student'">
             <el-sub-menu index="student">
               <template #title>
                 <el-icon><User /></el-icon>
@@ -85,7 +85,7 @@
           </template>
 
           <!-- 企业专属菜单 -->
-          <template v-if="userStore.userInfo?.user_type === 'company'">
+          <template v-if="userStore.userInfo?.userType === 'company'">
             <el-sub-menu index="company">
               <template #title>
                 <el-icon><OfficeBuilding /></el-icon>
@@ -103,7 +103,7 @@
           </template>
 
           <!-- 管理员专属菜单 -->
-          <template v-if="userStore.userInfo?.user_type === 'admin'">
+          <template v-if="userStore.userInfo?.userType === 'admin'">
             <el-sub-menu index="admin">
               <template #title>
                 <el-icon><Setting /></el-icon>
@@ -217,7 +217,7 @@ const handleSearch = () => {
 const getJobsPath = () => {
   if (!userStore.token || !userStore.userInfo) return '/jobs';
 
-  const userType = userStore.userInfo.user_type;
+  const userType = userStore.userInfo.userType;
   if (userType === 'student') return '/student/jobs';
   if (userType === 'company') return '/company/jobs';
   if (userType === 'admin') return '/admin/jobs';
@@ -229,7 +229,7 @@ const getJobsPath = () => {
 const getCompaniesPath = () => {
   if (!userStore.token || !userStore.userInfo) return '/companies';
 
-  const userType = userStore.userInfo.user_type;
+  const userType = userStore.userInfo.userType;
   if (userType === 'student') return '/student/companies';
   if (userType === 'company') return '/company/companies';
   if (userType === 'admin') return '/admin/company-list';

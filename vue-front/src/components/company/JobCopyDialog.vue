@@ -126,7 +126,7 @@ const handleConfirm = async () => {
         const newJob: Partial<JobInfo> = {
           title: formData.title,
           location: formData.location,
-          job_type: props.job.job_type
+          jobType: props.job.jobType
         };
         
         // 根据选项复制其他字段
@@ -143,15 +143,15 @@ const handleConfirm = async () => {
         }
         
         if (formData.copyOptions.includes('salary')) {
-          newJob.salary_range = props.job.salary_range;
+          newJob.salaryRange = props.job.salaryRange;
         }
         
         if (formData.copyOptions.includes('education')) {
-          newJob.education_required = props.job.education_required;
+          newJob.educationRequired = props.job.educationRequired;
         }
         
         if (formData.copyOptions.includes('experience')) {
-          newJob.experience_required = props.job.experience_required;
+          newJob.experienceRequired = props.job.experienceRequired;
         }
         
         // 发送复制确认事件

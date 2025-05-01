@@ -60,7 +60,7 @@
             </el-button>
           </div>
 
-          <div v-for="(edu, index) in resumeForm.education_experiences" :key="index" class="experience-form-item">
+          <div v-for="(edu, index) in resumeForm.educationList" :key="index" class="experience-form-item">
             <div class="experience-header">
               <h3>教育经历 #{{ index + 1 }}</h3>
               <el-button type="danger" plain size="small" @click="removeEducation(index)">
@@ -69,18 +69,18 @@
               </el-button>
             </div>
 
-            <el-form-item :prop="`education_experiences.${index}.school`" :rules="{ required: true, message: '请输入学校名称', trigger: 'blur' }">
+            <el-form-item :prop="`educationList.${index}.school`" :rules="{ required: true, message: '请输入学校名称', trigger: 'blur' }">
               <el-input v-model="edu.school" placeholder="学校名称"></el-input>
             </el-form-item>
 
             <el-row :gutter="20">
               <el-col :xs="24" :sm="12">
-                <el-form-item :prop="`education_experiences.${index}.major`" :rules="{ required: true, message: '请输入专业', trigger: 'blur' }">
+                <el-form-item :prop="`educationList.${index}.major`" :rules="{ required: true, message: '请输入专业', trigger: 'blur' }">
                   <el-input v-model="edu.major" placeholder="专业"></el-input>
                 </el-form-item>
               </el-col>
               <el-col :xs="24" :sm="12">
-                <el-form-item :prop="`education_experiences.${index}.degree`" :rules="{ required: true, message: '请输入学位', trigger: 'blur' }">
+                <el-form-item :prop="`educationList.${index}.degree`" :rules="{ required: true, message: '请输入学位', trigger: 'blur' }">
                   <el-select v-model="edu.degree" placeholder="学位" style="width: 100%">
                     <el-option label="学士" value="学士"></el-option>
                     <el-option label="硕士" value="硕士"></el-option>
@@ -94,9 +94,9 @@
 
             <el-row :gutter="20">
               <el-col :xs="24" :sm="12">
-                <el-form-item :prop="`education_experiences.${index}.start_date`" :rules="{ required: true, message: '请选择开始日期', trigger: 'blur' }">
+                <el-form-item :prop="`educationList.${index}.startDate`" :rules="{ required: true, message: '请选择开始日期', trigger: 'blur' }">
                   <el-date-picker
-                    v-model="edu.start_date"
+                    v-model="edu.startDate"
                     type="month"
                     placeholder="开始日期"
                     format="YYYY-MM"
@@ -106,9 +106,9 @@
                 </el-form-item>
               </el-col>
               <el-col :xs="24" :sm="12">
-                <el-form-item :prop="`education_experiences.${index}.end_date`" :rules="{ required: true, message: '请选择结束日期', trigger: 'blur' }">
+                <el-form-item :prop="`educationList.${index}.endDate`" :rules="{ required: true, message: '请选择结束日期', trigger: 'blur' }">
                   <el-date-picker
-                    v-model="edu.end_date"
+                    v-model="edu.endDate"
                     type="month"
                     placeholder="结束日期"
                     format="YYYY-MM"
@@ -119,7 +119,7 @@
               </el-col>
             </el-row>
 
-            <el-form-item :prop="`education_experiences.${index}.description`">
+            <el-form-item :prop="`educationList.${index}.description`">
               <el-input
                 v-model="edu.description"
                 type="textarea"
@@ -129,7 +129,7 @@
             </el-form-item>
           </div>
 
-          <el-empty v-if="!resumeForm.education_experiences?.length" description="暂无教育经历，请点击添加"></el-empty>
+          <el-empty v-if="!resumeForm.educationList?.length" description="暂无教育经历，请点击添加"></el-empty>
         </div>
 
         <!-- 工作经历 -->
@@ -142,7 +142,7 @@
             </el-button>
           </div>
 
-          <div v-for="(work, index) in resumeForm.work_experiences" :key="index" class="experience-form-item">
+          <div v-for="(work, index) in resumeForm.workList" :key="index" class="experience-form-item">
             <div class="experience-header">
               <h3>工作经历 #{{ index + 1 }}</h3>
               <el-button type="danger" plain size="small" @click="removeWorkExperience(index)">
@@ -151,19 +151,19 @@
               </el-button>
             </div>
 
-            <el-form-item :prop="`work_experiences.${index}.company_name`" :rules="{ required: true, message: '请输入公司名称', trigger: 'blur' }">
-              <el-input v-model="work.company_name" placeholder="公司名称"></el-input>
+            <el-form-item :prop="`workList.${index}.companyName`" :rules="{ required: true, message: '请输入公司名称', trigger: 'blur' }">
+              <el-input v-model="work.companyName" placeholder="公司名称"></el-input>
             </el-form-item>
 
-            <el-form-item :prop="`work_experiences.${index}.position`" :rules="{ required: true, message: '请输入职位', trigger: 'blur' }">
+            <el-form-item :prop="`workList.${index}.position`" :rules="{ required: true, message: '请输入职位', trigger: 'blur' }">
               <el-input v-model="work.position" placeholder="职位"></el-input>
             </el-form-item>
 
             <el-row :gutter="20">
               <el-col :xs="24" :sm="12">
-                <el-form-item :prop="`work_experiences.${index}.start_date`" :rules="{ required: true, message: '请选择开始日期', trigger: 'blur' }">
+                <el-form-item :prop="`workList.${index}.startDate`" :rules="{ required: true, message: '请选择开始日期', trigger: 'blur' }">
                   <el-date-picker
-                    v-model="work.start_date"
+                    v-model="work.startDate"
                     type="month"
                     placeholder="开始日期"
                     format="YYYY-MM"
@@ -173,9 +173,9 @@
                 </el-form-item>
               </el-col>
               <el-col :xs="24" :sm="12">
-                <el-form-item :prop="`work_experiences.${index}.end_date`" :rules="{ required: true, message: '请选择结束日期', trigger: 'blur' }">
+                <el-form-item :prop="`workList.${index}.endDate`" :rules="{ required: true, message: '请选择结束日期', trigger: 'blur' }">
                   <el-date-picker
-                    v-model="work.end_date"
+                    v-model="work.endDate"
                     type="month"
                     placeholder="结束日期"
                     format="YYYY-MM"
@@ -186,7 +186,7 @@
               </el-col>
             </el-row>
 
-            <el-form-item :prop="`work_experiences.${index}.description`" :rules="{ required: true, message: '请输入工作内容描述', trigger: 'blur' }">
+            <el-form-item :prop="`workList.${index}.description`" :rules="{ required: true, message: '请输入工作内容描述', trigger: 'blur' }">
               <el-input
                 v-model="work.description"
                 type="textarea"
@@ -196,7 +196,7 @@
             </el-form-item>
           </div>
 
-          <el-empty v-if="!resumeForm.work_experiences?.length" description="暂无工作经历，请点击添加"></el-empty>
+          <el-empty v-if="!resumeForm.workList?.length" description="暂无工作经历，请点击添加"></el-empty>
         </div>
 
         <!-- 项目经历 -->
@@ -209,7 +209,7 @@
             </el-button>
           </div>
 
-          <div v-for="(project, index) in resumeForm.project_experiences" :key="index" class="experience-form-item">
+          <div v-for="(project, index) in resumeForm.projectList" :key="index" class="experience-form-item">
             <div class="experience-header">
               <h3>项目经历 #{{ index + 1 }}</h3>
               <el-button type="danger" plain size="small" @click="removeProjectExperience(index)">
@@ -218,19 +218,19 @@
               </el-button>
             </div>
 
-            <el-form-item :prop="`project_experiences.${index}.project_name`" :rules="{ required: true, message: '请输入项目名称', trigger: 'blur' }">
-              <el-input v-model="project.project_name" placeholder="项目名称"></el-input>
+            <el-form-item :prop="`projectList.${index}.projectName`" :rules="{ required: true, message: '请输入项目名称', trigger: 'blur' }">
+              <el-input v-model="project.projectName" placeholder="项目名称"></el-input>
             </el-form-item>
 
-            <el-form-item :prop="`project_experiences.${index}.role`" :rules="{ required: true, message: '请输入担任角色', trigger: 'blur' }">
+            <el-form-item :prop="`projectList.${index}.role`" :rules="{ required: true, message: '请输入担任角色', trigger: 'blur' }">
               <el-input v-model="project.role" placeholder="担任角色"></el-input>
             </el-form-item>
 
             <el-row :gutter="20">
               <el-col :xs="24" :sm="12">
-                <el-form-item :prop="`project_experiences.${index}.start_date`" :rules="{ required: true, message: '请选择开始日期', trigger: 'blur' }">
+                <el-form-item :prop="`projectList.${index}.startDate`" :rules="{ required: true, message: '请选择开始日期', trigger: 'blur' }">
                   <el-date-picker
-                    v-model="project.start_date"
+                    v-model="project.startDate"
                     type="month"
                     placeholder="开始日期"
                     format="YYYY-MM"
@@ -240,9 +240,9 @@
                 </el-form-item>
               </el-col>
               <el-col :xs="24" :sm="12">
-                <el-form-item :prop="`project_experiences.${index}.end_date`" :rules="{ required: true, message: '请选择结束日期', trigger: 'blur' }">
+                <el-form-item :prop="`projectList.${index}.endDate`" :rules="{ required: true, message: '请选择结束日期', trigger: 'blur' }">
                   <el-date-picker
-                    v-model="project.end_date"
+                    v-model="project.endDate"
                     type="month"
                     placeholder="结束日期"
                     format="YYYY-MM"
@@ -253,7 +253,7 @@
               </el-col>
             </el-row>
 
-            <el-form-item :prop="`project_experiences.${index}.description`" :rules="{ required: true, message: '请输入项目描述', trigger: 'blur' }">
+            <el-form-item :prop="`projectList.${index}.description`" :rules="{ required: true, message: '请输入项目描述', trigger: 'blur' }">
               <el-input
                 v-model="project.description"
                 type="textarea"
@@ -262,39 +262,55 @@
               ></el-input>
             </el-form-item>
 
-            <el-form-item :prop="`project_experiences.${index}.project_link`">
-              <el-input v-model="project.project_link" placeholder="项目链接（可选）"></el-input>
+            <el-form-item :prop="`projectList.${index}.projectLink`">
+              <el-input v-model="project.projectLink" placeholder="项目链接 (可选)"></el-input>
             </el-form-item>
           </div>
 
-          <el-empty v-if="!resumeForm.project_experiences?.length" description="暂无项目经历，请点击添加"></el-empty>
+          <el-empty v-if="!resumeForm.projectList?.length" description="暂无项目经历，请点击添加"></el-empty>
         </div>
 
-        <!-- 技能描述 -->
+        <!-- 技能特长 -->
         <div class="form-section">
-          <h2 class="section-title">专业技能</h2>
-          <el-form-item prop="skills_description">
+          <h2 class="section-title">技能特长</h2>
+          <el-form-item prop="skillsDescription">
             <el-input
-              v-model="resumeForm.skills_description"
+              v-model="resumeForm.skillsDescription"
               type="textarea"
-              :rows="6"
-              placeholder="请描述您的专业技能（支持Markdown格式）"
+              :rows="5"
+              placeholder="请详细描述您的专业技能，例如：\n- 精通 JavaScript、HTML5、CSS3\n- 熟练掌握 Vue.js 框架及其生态\n- 熟悉 Webpack、Vite 等构建工具"
             ></el-input>
-            <div class="form-tip">提示：可以使用Markdown格式，例如使用"-"或"*"创建列表</div>
           </el-form-item>
         </div>
 
         <!-- 自我评价 -->
         <div class="form-section">
           <h2 class="section-title">自我评价</h2>
-          <el-form-item prop="self_evaluation">
+          <el-form-item prop="selfEvaluation">
             <el-input
-              v-model="resumeForm.self_evaluation"
+              v-model="resumeForm.selfEvaluation"
               type="textarea"
-              :rows="6"
-              placeholder="请进行自我评价（支持Markdown格式）"
+              :rows="5"
+              placeholder="请简要进行自我评价，突出您的优势和特点"
             ></el-input>
           </el-form-item>
+        </div>
+
+        <!-- 求职期望 (可选) -->
+        <div class="form-section">
+          <h2 class="section-title">求职期望</h2>
+          <el-row :gutter="20">
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="期望薪资" prop="expectedSalary">
+                <el-input v-model="resumeForm.expectedSalary" placeholder="例如：15k-20k"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="期望地点" prop="expectedLocation">
+                <el-input v-model="resumeForm.expectedLocation" placeholder="例如：重庆、上海"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
         </div>
 
         <!-- 提交按钮 -->
@@ -311,7 +327,7 @@
 import { ref, reactive, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useResumeStore } from '@/stores/resume';
-import type { ResumeInfo, EducationExperience, WorkExperience, ProjectExperience } from '@/types/resume';
+import type { ResumeInfo, EducationExperience, WorkExperience, ProjectExperience, CreateResumePayload } from '@/types/resume';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ArrowLeft, Check, Plus, Delete } from '@element-plus/icons-vue';
@@ -334,11 +350,13 @@ const resumeForm = reactive<Partial<ResumeInfo>>({
   name: '',
   phone: '',
   email: '',
-  education_experiences: [],
-  work_experiences: [],
-  project_experiences: [],
-  skills_description: '',
-  self_evaluation: '',
+  educationList: [],
+  workList: [],
+  projectList: [],
+  skillsDescription: '',
+  selfEvaluation: '',
+  expectedSalary: '',
+  expectedLocation: '',
 });
 
 // 表单验证规则
@@ -359,11 +377,17 @@ const resumeRules = reactive<FormRules>({
     { required: true, message: '请输入邮箱地址', trigger: 'blur' },
     { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
   ],
-  skills_description: [
+  skillsDescription: [
     { required: true, message: '请描述您的专业技能', trigger: 'blur' }
   ],
-  self_evaluation: [
+  selfEvaluation: [
     { required: true, message: '请进行自我评价', trigger: 'blur' }
+  ],
+  expectedSalary: [
+    { required: true, message: '请输入期望薪资', trigger: 'blur' }
+  ],
+  expectedLocation: [
+    { required: true, message: '请输入期望地点', trigger: 'blur' }
   ]
 });
 
@@ -378,9 +402,9 @@ onMounted(async () => {
         Object.assign(resumeForm, resumeStore.currentResume);
 
         // 确保数组属性存在
-        if (!resumeForm.education_experiences) resumeForm.education_experiences = [];
-        if (!resumeForm.work_experiences) resumeForm.work_experiences = [];
-        if (!resumeForm.project_experiences) resumeForm.project_experiences = [];
+        if (!resumeForm.educationList) resumeForm.educationList = [];
+        if (!resumeForm.workList) resumeForm.workList = [];
+        if (!resumeForm.projectList) resumeForm.projectList = [];
       } else {
         ElMessage.error('找不到该简历');
         goBack();
@@ -394,98 +418,115 @@ onMounted(async () => {
     }
   } else {
     // 新建简历，初始化空数组
-    resumeForm.education_experiences = [];
-    resumeForm.work_experiences = [];
-    resumeForm.project_experiences = [];
+    resumeForm.educationList = [];
+    resumeForm.workList = [];
+    resumeForm.projectList = [];
   }
 });
 
 // 添加教育经历
 const addEducation = () => {
-  if (!resumeForm.education_experiences) resumeForm.education_experiences = [];
-  resumeForm.education_experiences.push({
+  if (!resumeForm.educationList) resumeForm.educationList = [];
+  resumeForm.educationList.push({
     school: '',
     major: '',
     degree: '',
-    start_date: '',
-    end_date: '',
+    startDate: '',
+    endDate: '',
     description: ''
   });
 };
 
 // 删除教育经历
 const removeEducation = (index: number) => {
-  if (resumeForm.education_experiences) {
-    resumeForm.education_experiences.splice(index, 1);
+  if (resumeForm.educationList) {
+    resumeForm.educationList.splice(index, 1);
   }
 };
 
 // 添加工作经历
 const addWorkExperience = () => {
-  if (!resumeForm.work_experiences) resumeForm.work_experiences = [];
-  resumeForm.work_experiences.push({
-    company_name: '',
+  if (!resumeForm.workList) resumeForm.workList = [];
+  resumeForm.workList.push({
+    companyName: '',
     position: '',
-    start_date: '',
-    end_date: '',
+    startDate: '',
+    endDate: '',
     description: ''
   });
 };
 
 // 删除工作经历
 const removeWorkExperience = (index: number) => {
-  if (resumeForm.work_experiences) {
-    resumeForm.work_experiences.splice(index, 1);
+  if (resumeForm.workList) {
+    resumeForm.workList.splice(index, 1);
   }
 };
 
 // 添加项目经历
 const addProjectExperience = () => {
-  if (!resumeForm.project_experiences) resumeForm.project_experiences = [];
-  resumeForm.project_experiences.push({
-    project_name: '',
+  if (!resumeForm.projectList) resumeForm.projectList = [];
+  resumeForm.projectList.push({
+    projectName: '',
     role: '',
-    start_date: '',
-    end_date: '',
+    startDate: '',
+    endDate: '',
     description: '',
-    project_link: ''
+    projectLink: ''
   });
 };
 
 // 删除项目经历
 const removeProjectExperience = (index: number) => {
-  if (resumeForm.project_experiences) {
-    resumeForm.project_experiences.splice(index, 1);
+  if (resumeForm.projectList) {
+    resumeForm.projectList.splice(index, 1);
   }
 };
 
 // 保存简历
-const handleSave = () => {
+const handleSave = async () => {
   if (!resumeFormRef.value) return;
-
-  resumeFormRef.value.validate(async (valid) => {
+  await resumeFormRef.value.validate(async (valid) => {
     if (valid) {
       saving.value = true;
       try {
-        if (isNewResume.value) {
-          // 创建新简历
-          await resumeStore.createResume(resumeForm);
-          ElMessage.success('简历创建成功');
-        } else {
-          // 更新现有简历
-          await resumeStore.updateResume(resumeId.toString(), resumeForm);
-          ElMessage.success('简历更新成功');
+        // 构建需要提交的数据，确保符合 CreateResumePayload 或 Partial<ResumeInfo>
+        const payload: Partial<ResumeInfo> & { title?: string } = {
+          ...resumeForm, // 包含所有表单字段
+          // 如果需要显式转换或移除不需要的字段，在这里处理
+        };
+
+        // 确保 title 存在且不为空
+        if (!payload.title?.trim()) {
+           ElMessage.error('简历标题不能为空');
+           saving.value = false;
+           return;
         }
-        // 返回简历列表页
-        router.push('/student/resume');
-      } catch (error) {
+
+        if (isNewResume.value) {
+          // 调用创建接口，需要确保类型匹配 CreateResumePayload
+          // CreateResumePayload 要求 title 是必须的
+          await resumeStore.createResume(payload as CreateResumePayload);
+        } else {
+          // 调用更新接口
+          if (resumeId) {
+            // 确保 resumeId 是 string 或 number 类型
+            const idToUpdate: string | number = typeof resumeId === 'string' ? resumeId : Number(resumeId);
+            await resumeStore.updateResume(idToUpdate, payload);
+          } else {
+            throw new Error('无法更新：缺少简历ID');
+          }
+        }
+        ElMessage.success('简历保存成功');
+        goBack(); // 保存成功后返回列表页
+      } catch (error: any) {
+        // ElMessage 已在 store 中处理
         console.error('Failed to save resume:', error);
-        ElMessage.error('保存简历失败，请稍后重试');
       } finally {
         saving.value = false;
       }
     } else {
-      ElMessage.warning('请正确填写所有必填项');
+      ElMessage.error('请检查表单填写是否完整');
     }
   });
 };
@@ -513,11 +554,13 @@ const goBack = () => {
 const isFormDirty = () => {
   // 简单实现，实际应该比较表单与原始数据
   return resumeForm.title ||
-         resumeForm.education_experiences?.length ||
-         resumeForm.work_experiences?.length ||
-         resumeForm.project_experiences?.length ||
-         resumeForm.skills_description ||
-         resumeForm.self_evaluation;
+         resumeForm.educationList?.length ||
+         resumeForm.workList?.length ||
+         resumeForm.projectList?.length ||
+         resumeForm.skillsDescription ||
+         resumeForm.selfEvaluation ||
+         resumeForm.expectedSalary ||
+         resumeForm.expectedLocation;
 };
 </script>
 

@@ -93,8 +93,8 @@
               <el-descriptions :column="2" border>
                 <el-descriptions-item label="用户名">{{ user.username }}</el-descriptions-item>
                 <el-descriptions-item label="用户类型">
-                  <el-tag :type="getUserTypeTagType(user.user_type)">
-                    {{ formatUserType(user.user_type) }}
+                  <el-tag :type="getUserTypeTagType(user.userType)">
+                    {{ formatUserType(user.userType) }}
                   </el-tag>
                 </el-descriptions-item>
                 <el-descriptions-item label="邮箱">{{ user.email || '-' }}</el-descriptions-item>
@@ -113,7 +113,7 @@
                   v-for="role in roles" 
                   :key="role.id" 
                   :label="role.id"
-                  :disabled="(role.code === 'admin' && !isAdmin) || isDefaultRole(role.code, user?.user_type)"
+                  :disabled="(role.code === 'admin' && !isAdmin) || isDefaultRole(role.code, user?.userType)"
                 >
                   {{ role.name }}
                 </el-checkbox>
@@ -313,7 +313,7 @@ watch(() => props.user, (newUser) => {
   if (newUser) {
     activeTab.value = 'userRoles';
     // 根据用户类型设置默认角色
-    setDefaultUserRoles(newUser.user_type);
+    setDefaultUserRoles(newUser.userType);
   } else {
     activeTab.value = 'roles';
   }
@@ -402,7 +402,10 @@ const getAllPermissionIds = (): string[] => {
 
 // 处理编辑角色
 const handleEditRole = (role: RoleInfo) => {
-  roleForm.value = { ...role };
+  roleForm.value = {
+    ...role,
+    description: role.description || ''
+  };
 };
 
 // 处理删除角色
@@ -476,7 +479,7 @@ const handleUserRolesChange = (roles: string[]) => {
   // 确保用户至少有一个角色
   if (roles.length === 0 && props.user) {
     ElMessage.warning('用户必须至少有一个角色');
-    setDefaultUserRoles(props.user.user_type);
+    setDefaultUserRoles(props.user.userType);
   }
 };
 

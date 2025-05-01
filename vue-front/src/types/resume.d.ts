@@ -86,9 +86,9 @@ export interface CreateResumePayload {
   name?: string;
   phone?: string;
   email?: string;
-  educationExperiences?: EducationExperience[];
-  workExperiences?: WorkExperience[];
-  projectExperiences?: ProjectExperience[];
+  educationList?: EducationExperience[];
+  workList?: WorkExperience[];
+  projectList?: ProjectExperience[];
   skillsDescription?: string;
   selfEvaluation?: string;
 }

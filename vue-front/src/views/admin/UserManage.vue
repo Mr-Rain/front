@@ -75,9 +75,9 @@
         <el-table-column prop="username" label="用户名" min-width="150"></el-table-column>
         <el-table-column prop="email" label="邮箱" min-width="180"></el-table-column>
         <el-table-column prop="phone" label="手机号" width="150"></el-table-column>
-        <el-table-column prop="user_type" label="用户类型" width="100" align="center">
+        <el-table-column prop="userType" label="用户类型" width="120" align="center">
             <template #default="scope">
-                <el-tag :type="getUserTypeTagType(scope.row.user_type) as 'success' | 'warning' | 'info' | 'primary' | 'danger'">{{ formatUserType(scope.row.user_type) }}</el-tag>
+                <el-tag :type="getTypeTagType(scope.row.userType)">{{ formatUserType(scope.row.userType) }}</el-tag>
             </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100" align="center">
@@ -173,7 +173,7 @@
                 <div class="user-info">
                   <div class="username">{{ user.username }}</div>
                   <div class="user-type">
-                    <el-tag size="small" :type="getUserTypeTagType(user.user_type) as 'success' | 'warning' | 'info' | 'primary' | 'danger'">{{ formatUserType(user.user_type) }}</el-tag>
+                    <el-tag size="small" :type="getTypeTagType(user.userType)">{{ formatUserType(user.userType) }}</el-tag>
                   </div>
                 </div>
                 <div class="user-status">
@@ -246,7 +246,7 @@ const submitting = ref(false);
 
 // 判断当前用户是否为管理员
 const isAdmin = computed(() => {
-  return userStore.userInfo?.user_type === 'admin';
+  return userStore.userInfo?.userType === 'admin';
 });
 
 // 批量操作表单
@@ -319,25 +319,23 @@ const formatTime = (timeStr: string | undefined): string => {
 };
 
 // 格式化用户类型
-const formatUserType = (type: UserType | undefined): string => {
-    if (!type) return '未知';
-    const map: Record<UserType, string> = {
-        student: '学生',
-        company: '企业',
-        admin: '管理员'
-    };
-    return map[type] || type;
+const formatUserType = (userType: UserType | undefined): string => {
+  switch (userType) {
+    case 'student': return '学生';
+    case 'company': return '企业';
+    case 'admin': return '管理员';
+    default: return '未知';
+  }
 };
 
 // 获取用户类型标签样式
-const getUserTypeTagType = (type: UserType | undefined): string => {
-    if (!type) return 'info';
-    const map: Record<UserType, string> = {
-        student: 'success',
-        company: 'primary',
-        admin: 'danger'
-    };
-    return map[type] || 'info';
+const getTypeTagType = (userType: UserType | undefined): ('primary' | 'success' | 'warning' | undefined) => {
+  switch (userType) {
+    case 'student': return 'success';
+    case 'company': return 'primary';
+    case 'admin': return 'warning';
+    default: return undefined;
+  }
 };
 
 // 查看用户详情
@@ -402,11 +400,11 @@ const handleManagePermissions = async (user?: UserInfo) => {
         } catch (error) {
             console.warn('获取用户角色失败，使用默认角色:', error);
             // 使用默认角色
-            if (user.user_type === 'admin') {
+            if (user.userType === 'admin') {
                 permissionStore.userRoles = ['admin'];
-            } else if (user.user_type === 'student') {
+            } else if (user.userType === 'student') {
                 permissionStore.userRoles = ['student'];
-            } else if (user.user_type === 'company') {
+            } else if (user.userType === 'company') {
                 permissionStore.userRoles = ['company'];
             } else {
                 permissionStore.userRoles = [];

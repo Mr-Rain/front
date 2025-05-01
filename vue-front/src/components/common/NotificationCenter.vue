@@ -39,7 +39,7 @@
                     @click="handleNotificationClick(notification)"
                   >
                     <div class="notification-icon">
-                      <el-avatar v-if="notification.sender_avatar" :src="notification.sender_avatar" :size="32" />
+                      <el-avatar v-if="notification.senderAvatar" :src="notification.senderAvatar" :size="32" />
                       <el-icon v-else :size="20" :class="getNotificationIconClass(notification.type)">
                         <component :is="getNotificationIcon(notification.type)" />
                       </el-icon>
@@ -47,7 +47,7 @@
                     <div class="notification-content">
                       <div class="notification-title-row">
                         <span class="notification-item-title">{{ notification.title }}</span>
-                        <span class="notification-time">{{ formatTime(notification.create_time) }}</span>
+                        <span class="notification-time">{{ formatTime(notification.createTime) }}</span>
                       </div>
                       <div class="notification-message">{{ notification.content }}</div>
                     </div>
@@ -67,7 +67,7 @@
                     @click="handleNotificationClick(notification)"
                   >
                     <div class="notification-icon">
-                      <el-avatar v-if="notification.sender_avatar" :src="notification.sender_avatar" :size="32" />
+                      <el-avatar v-if="notification.senderAvatar" :src="notification.senderAvatar" :size="32" />
                       <el-icon v-else :size="20" :class="getNotificationIconClass(notification.type)">
                         <component :is="getNotificationIcon(notification.type)" />
                       </el-icon>
@@ -75,7 +75,7 @@
                     <div class="notification-content">
                       <div class="notification-title-row">
                         <span class="notification-item-title">{{ notification.title }}</span>
-                        <span class="notification-time">{{ formatTime(notification.create_time) }}</span>
+                        <span class="notification-time">{{ formatTime(notification.createTime) }}</span>
                       </div>
                       <div class="notification-message">{{ notification.content }}</div>
                     </div>
@@ -399,11 +399,13 @@ const formatTime = (timeStr: string): string => {
 .notification-message {
   font-size: 12px;
   color: var(--el-text-color-regular);
+  /* autoprefixer: ignore next */
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; /* 显示两行 */
+  line-clamp: 2; /* 标准属性 */
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
 }
 
 /* 移动端适配 */

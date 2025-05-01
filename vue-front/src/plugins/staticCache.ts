@@ -62,12 +62,6 @@ export default {
               position: 'top-right',
               onClick: () => {
                 updateSW(true);
-              },
-              button: {
-                text: '刷新',
-                onClick: () => {
-                  updateSW(true);
-                }
               }
             });
           }
@@ -118,7 +112,7 @@ export default {
 };
 
 // 声明模块扩展
-declare module '@vue/runtime-core' {
+declare module 'vue' {
   interface ComponentCustomProperties {
     $staticCache: {
       clearAll: typeof clearAllCache;

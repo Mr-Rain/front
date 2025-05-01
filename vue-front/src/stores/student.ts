@@ -135,9 +135,9 @@ export const useStudentStore = defineStore('student', {
           expectedSalary: data.expectedSalary || '面议',
           expectedLocation: data.expectedLocation || '全国',
 
-          // 【修复】直接使用从 payload 接收到的数组
-          educationExperiences: data.educationExperiences || [],
-          workExperiences: data.workExperiences || []
+          // 使用驼峰命名发送给后端 (与类型定义一致)
+          educationList: data.educationList || [],
+          workList: data.workList || []
         };
 
         console.log('完整的更新数据 (移除 stringify):', completeData);
@@ -172,37 +172,37 @@ export const useStudentStore = defineStore('student', {
           }
 
           if (responseData) {
-            // 准备用于合并的数据，解析 JSON 字符串
+            // 准备用于合并的数据，兼容后端可能返回的驼峰或蛇形命名
             const parsedUpdateData = {
               ...responseData, // 先复制响应的所有字段
-              // 安全地解析 JSON，如果失败或为空，则默认为空数组
-              educationExperiences: (() => {
+              // 将后端返回的 education_experiences 或 educationList 统一处理为 educationList
+              educationList: (() => {
+                const eduData = responseData.educationList || responseData.education_experiences;
                 try {
-                  // 确保 responseData.educationExperiences 存在且是字符串
-                  return responseData.educationExperiences && typeof responseData.educationExperiences === 'string'
-                    ? JSON.parse(responseData.educationExperiences)
-                    : (Array.isArray(responseData.educationExperiences) 
-                       ? responseData.educationExperiences 
-                       : []);
+                  return eduData && typeof eduData === 'string'
+                    ? JSON.parse(eduData)
+                    : (Array.isArray(eduData) ? eduData : []);
                 } catch (e) {
-                  console.error('Failed to parse educationExperiences from response:', e);
+                  console.error('Failed to parse education experiences from response:', e);
                   return [];
                 }
               })(),
-              workExperiences: (() => {
+              // 将后端返回的 work_experiences 或 workList 统一处理为 workList
+              workList: (() => {
+                const workData = responseData.workList || responseData.work_experiences;
                 try {
-                  // 确保 responseData.workExperiences 存在且是字符串
-                  return responseData.workExperiences && typeof responseData.workExperiences === 'string'
-                    ? JSON.parse(responseData.workExperiences)
-                    : (Array.isArray(responseData.workExperiences) 
-                       ? responseData.workExperiences 
-                       : []);
+                  return workData && typeof workData === 'string'
+                    ? JSON.parse(workData)
+                    : (Array.isArray(workData) ? workData : []);
                 } catch (e) {
-                  console.error('Failed to parse workExperiences from response:', e);
+                  console.error('Failed to parse work experiences from response:', e);
                   return [];
                 }
               })()
             };
+            // 删除可能存在的旧蛇形字段
+            delete parsedUpdateData.education_experiences;
+            delete parsedUpdateData.work_experiences;
 
             if (this.profile) {
               // 合并解析后的响应数据
@@ -212,7 +212,7 @@ export const useStudentStore = defineStore('student', {
               };
             } else {
               // 如果之前没有档案数据，直接使用解析后的响应数据创建
-               this.profile = parsedUpdateData;
+               this.profile = parsedUpdateData as StudentProfileCamel;
                // 注意：这里可能需要确保基础信息 (id, username 等) 完整，
                // 假设 responseData 已经包含了所有必要的基础信息
                if (!this.profile.id) {

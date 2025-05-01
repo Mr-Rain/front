@@ -100,7 +100,7 @@ const tabs = computed<TabItem[]>(() => {
     return [...commonTabs, ...guestTabs];
   }
   
-  const userType = userStore.userInfo?.user_type;
+  const userType = userStore.userInfo?.userType;
   
   if (userType === 'student') {
     return [...commonTabs, ...studentTabs];
@@ -139,7 +139,7 @@ watch(
   () => route.path,
   () => {
     if (route.path === '/notifications') {
-      notificationStore.markAllAsRead();
+      notificationStore.markAsRead();
     }
   }
 );

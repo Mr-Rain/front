@@ -70,15 +70,15 @@
             </template>
         </el-table-column>
         <el-table-column prop="location" label="工作地点" width="150"></el-table-column>
-        <el-table-column prop="job_type" label="职位类型" width="100"></el-table-column>
+        <el-table-column prop="jobType" label="职位类型" width="100"></el-table-column>
         <el-table-column label="申请数" width="100" align="center">
             <template #default="scope">
                 <!-- TODO: Link to application list filtered by job id -->
-                <el-link type="primary" @click="goToApplicationsForJob(scope.row.id)">{{ scope.row.applications_count || 0 }}</el-link>
+                <el-link type="primary" @click="goToApplicationsForJob(scope.row.id)">{{ scope.row.applicationsCount || 0 }}</el-link>
             </template>
         </el-table-column>
-        <el-table-column prop="publish_time" label="发布时间" width="180">
-             <template #default="scope">{{ formatTime(scope.row.publish_time) }}</template>
+        <el-table-column prop="publishTime" label="发布时间" width="180">
+             <template #default="scope">{{ formatTime(scope.row.publishTime) }}</template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100" align="center">
             <template #default="scope">
@@ -273,12 +273,12 @@ const handleCopyConfirmed = async (newJobData: Partial<JobInfo>) => {
 const exportColumns = computed(() => [
   { prop: 'title', label: '职位名称' },
   { prop: 'location', label: '工作地点' },
-  { prop: 'job_type', label: '职位类型' },
-  { prop: 'applications_count', label: '申请数' },
+  { prop: 'jobType', label: '职位类型' },
+  { prop: 'applicationsCount', label: '申请数' },
   {
-    prop: 'publish_time',
+    prop: 'publishTime',
     label: '发布时间',
-    formatter: (row: any) => formatTime(row.publish_time)
+    formatter: (row: any) => formatTime(row.publishTime)
   },
   {
     prop: 'status',

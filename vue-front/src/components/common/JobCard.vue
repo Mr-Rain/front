@@ -3,20 +3,20 @@
     <div class="card-content">
       <div class="header">
         <span class="title">{{ job.title }}</span>
-        <span class="salary">{{ job.salary_range }}</span>
+        <span class="salary">{{ job.salaryRange }}</span>
       </div>
       <div class="details">
         <span><el-icon><Location /></el-icon>{{ job.location }}</span>
-        <span><el-icon><Briefcase /></el-icon>{{ job.experience_required }}</span>
-        <span><el-icon><Reading /></el-icon>{{ job.education_required }}</span>
+        <span><el-icon><Briefcase /></el-icon>{{ job.experienceRequired }}</span>
+        <span><el-icon><Reading /></el-icon>{{ job.educationRequired }}</span>
       </div>
       <div class="tags" v-if="job.tags && job.tags.length">
         <el-tag v-for="tag in job.tags" :key="tag" size="small" effect="plain" class="tag-item">{{ tag }}</el-tag>
       </div>
-      <el-divider v-if="job.company_name" />
-      <div class="company-info" v-if="job.company_name">
-        <el-avatar :size="30" :src="job.company_logo || defaultCompanyLogo" class="company-logo" />
-        <span class="company-name">{{ job.company_name }}</span>
+      <el-divider v-if="job.companyName" />
+      <div class="company-info" v-if="job.companyName">
+        <el-avatar :size="30" :src="job.companyLogo || defaultCompanyLogo" class="company-logo" />
+        <span class="company-name">{{ job.companyName }}</span>
         <!-- Add more company details like industry/scale if needed -->
       </div>
     </div>

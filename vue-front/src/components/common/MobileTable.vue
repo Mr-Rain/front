@@ -100,16 +100,24 @@
 import { ref, computed, useSlots, useAttrs } from 'vue';
 import { ElTable, ElPagination, ElEmpty } from 'element-plus';
 
+// 定义列配置接口
+interface ColumnConfig {
+  prop: string;
+  label: string;
+  hideInMobile?: boolean;
+  formatter?: (row: any, column: ColumnConfig, cellValue: any, index: number) => any;
+}
+
 // 定义组件属性
 const props = defineProps({
   // 表格数据
   data: {
-    type: Array,
+    type: Array as () => any[],
     default: () => []
   },
   // 表格列配置
   columns: {
-    type: Array,
+    type: Array as () => ColumnConfig[], // 使用具体类型
     default: () => []
   },
   // 表格标题
@@ -191,7 +199,7 @@ const isMobile = computed(() => {
 
 // 计算可见列
 const visibleColumns = computed(() => {
-  return props.columns.filter((col: any) => !col.hideInMobile);
+  return props.columns.filter((col: ColumnConfig) => !col.hideInMobile);
 });
 
 // 获取主标题
@@ -205,10 +213,10 @@ const getSubTitle = (row: any) => {
 };
 
 // 获取列值
-const getColumnValue = (row: any, column: any) => {
+const getColumnValue = (row: any, column: ColumnConfig) => {
   // 如果有格式化函数，使用格式化函数
   if (column.formatter && typeof column.formatter === 'function') {
-    return column.formatter(row, column);
+    return column.formatter(row, column, null, 0); // 修正：formatter 参数可能与预期不完全一致，暂时传入null
   }
 
   // 处理嵌套属性，如 'user.name'

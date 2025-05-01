@@ -29,8 +29,8 @@
 
         <el-row :gutter="20">
           <el-col :span="8">
-            <el-form-item label="职位类型" prop="job_type">
-              <el-select v-model="jobData.job_type" placeholder="请选择类型" style="width: 100%;">
+            <el-form-item label="职位类型" prop="jobType">
+              <el-select v-model="jobData.jobType" placeholder="请选择类型" style="width: 100%;">
                 <el-option label="全职" value="全职"></el-option>
                 <el-option label="兼职" value="兼职"></el-option>
                 <el-option label="实习" value="实习"></el-option>
@@ -38,8 +38,8 @@
             </el-form-item>
           </el-col>
            <el-col :span="8">
-            <el-form-item label="经验要求" prop="experience_required">
-                 <el-select v-model="jobData.experience_required" placeholder="请选择经验要求" style="width: 100%;">
+            <el-form-item label="经验要求" prop="experienceRequired">
+                 <el-select v-model="jobData.experienceRequired" placeholder="请选择经验要求" style="width: 100%;">
                     <el-option label="不限" value="不限"></el-option>
                     <el-option label="应届毕业生" value="应届毕业生"></el-option>
                     <el-option label="1年以下" value="1年以下"></el-option>
@@ -51,8 +51,8 @@
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="学历要求" prop="education_required">
-                 <el-select v-model="jobData.education_required" placeholder="请选择学历要求" style="width: 100%;">
+            <el-form-item label="学历要求" prop="educationRequired">
+                 <el-select v-model="jobData.educationRequired" placeholder="请选择学历要求" style="width: 100%;">
                      <el-option label="不限" value="不限"></el-option>
                      <el-option label="初中及以下" value="初中及以下"></el-option>
                      <el-option label="高中" value="高中"></el-option>
@@ -66,8 +66,8 @@
           </el-col>
         </el-row>
 
-         <el-form-item label="薪资范围" prop="salary_range">
-             <el-input v-model="jobData.salary_range" placeholder="如：10k-20k 或 15薪 等明确范围"></el-input>
+         <el-form-item label="薪资范围" prop="salaryRange">
+             <el-input v-model="jobData.salaryRange" placeholder="如：10k-20k 或 15薪 等明确范围"></el-input>
              <!-- Or use two inputs for min/max -->
          </el-form-item>
 
@@ -171,10 +171,10 @@ const commonBenefits = [
 const jobData = reactive<Partial<JobInfo>>({
     title: '',
     location: '',
-    job_type: '全职' as JobType,
-    salary_range: '',
-    experience_required: '不限',
-    education_required: '不限',
+    jobType: '全职' as JobType,
+    salaryRange: '',
+    experienceRequired: '不限',
+    educationRequired: '不限',
     description: '',
     requirements: '',
     tags: [],
@@ -184,10 +184,10 @@ const jobData = reactive<Partial<JobInfo>>({
 const jobRules = reactive<FormRules>({
   title: [{ required: true, message: '请输入职位名称', trigger: 'blur' }],
   location: [{ required: true, message: '请输入工作地点', trigger: 'blur' }],
-  job_type: [{ required: true, message: '请选择职位类型', trigger: 'change' }],
-  salary_range: [{ required: true, message: '请输入薪资范围', trigger: 'blur' }],
-  experience_required: [{ required: true, message: '请选择经验要求', trigger: 'change' }],
-  education_required: [{ required: true, message: '请选择学历要求', trigger: 'change' }],
+  jobType: [{ required: true, message: '请选择职位类型', trigger: 'change' }],
+  salaryRange: [{ required: true, message: '请输入薪资范围', trigger: 'blur' }],
+  experienceRequired: [{ required: true, message: '请选择经验要求', trigger: 'change' }],
+  educationRequired: [{ required: true, message: '请选择学历要求', trigger: 'change' }],
   description: [{ required: true, message: '请输入职位描述', trigger: 'blur' }],
   requirements: [{ required: true, message: '请输入职位要求', trigger: 'blur' }],
 });
@@ -201,8 +201,8 @@ onMounted(() => {
     } else {
         // Reset to default for new job
         Object.assign(jobData, {
-            title: '', location: '', job_type: '全职', salary_range: '',
-            experience_required: '不限', education_required: '不限',
+            title: '', location: '', jobType: '全职', salaryRange: '',
+            experienceRequired: '不限', educationRequired: '不限',
             description: '', requirements: '', tags: [], benefits: []
         });
         jobStore.clearCurrentJob(); // Clear any previous detail

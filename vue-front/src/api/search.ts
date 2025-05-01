@@ -46,33 +46,33 @@ export function globalSearch(params: SearchParams): Promise<{ data: SearchResult
     {
       id: 'job1',
       title: '前端开发工程师',
-      company_id: 'company1',
-      company_name: '示例科技',
+      companyId: 'company1',
+      companyName: '示例科技',
       location: '北京',
-      salary_range: '15k-25k',
-      job_type: '全职', // 修改为符合 JobType 类型的值
-      experience_required: '3-5年', // 修正属性名
-      education_required: '本科', // 修正属性名
+      salaryRange: '15k-25k',
+      jobType: '全职',
+      experienceRequired: '3-5年',
+      educationRequired: '本科',
       description: '负责公司产品的前端开发工作，使用Vue.js、React等技术栈。',
       requirements: '1. 熟练掌握前端技术栈；2. 良好的团队协作能力；3. 有相关项目经验。',
-      status: 'open', // 修改为符合 JobStatus 类型的值
-      publish_time: '2023-12-01T10:00:00Z',
+      status: 'open',
+      publishTime: '2023-12-01T10:00:00Z',
       tags: ['Vue.js', 'React', 'TypeScript']
     },
     {
       id: 'job2',
       title: '后端开发工程师',
-      company_id: 'company1',
-      company_name: '示例科技',
+      companyId: 'company1',
+      companyName: '示例科技',
       location: '上海',
-      salary_range: '20k-30k',
-      job_type: '全职', // 修改为符合 JobType 类型的值
-      experience_required: '3-5年', // 修正属性名
-      education_required: '本科', // 修正属性名
+      salaryRange: '20k-30k',
+      jobType: '全职',
+      experienceRequired: '3-5年',
+      educationRequired: '本科',
       description: '负责公司产品的后端开发工作，使用Node.js、Java等技术栈。',
       requirements: '1. 熟练掌握后端技术栈；2. 良好的团队协作能力；3. 有相关项目经验。',
-      status: 'open', // 修改为符合 JobStatus 类型的值
-      publish_time: '2023-12-02T10:00:00Z',
+      status: 'open',
+      publishTime: '2023-12-02T10:00:00Z',
       tags: ['Node.js', 'Java', 'Spring Boot']
     }
   ];
@@ -80,9 +80,9 @@ export function globalSearch(params: SearchParams): Promise<{ data: SearchResult
   const mockCompanies: CompanyProfile[] = [
     {
       id: 'company1',
-      username: 'company1', // 添加必需的字段
-      user_type: 'company', // 添加必需的字段
-      company_name: '示例科技',
+      username: 'company1',
+      userType: 'company',
+      companyName: '示例科技',
       logo: 'https://example.com/logo.png',
       industry: '互联网',
       scale: '500-999人',
@@ -93,9 +93,9 @@ export function globalSearch(params: SearchParams): Promise<{ data: SearchResult
     },
     {
       id: 'company2',
-      username: 'company2', // 添加必需的字段
-      user_type: 'company', // 添加必需的字段
-      company_name: '另一家公司',
+      username: 'company2',
+      userType: 'company',
+      companyName: '另一家公司',
       logo: 'https://example.com/logo2.png',
       industry: '金融科技',
       scale: '100-499人',
@@ -118,7 +118,7 @@ export function globalSearch(params: SearchParams): Promise<{ data: SearchResult
       if (type === 'all' || type === 'job') {
         jobs = mockJobs.filter(job =>
           job.title.toLowerCase().includes(keyword.toLowerCase()) ||
-          job.company_name.toLowerCase().includes(keyword.toLowerCase()) ||
+          (job.companyName && job.companyName.toLowerCase().includes(keyword.toLowerCase())) ||
           job.description.toLowerCase().includes(keyword.toLowerCase()) ||
           (job.tags && job.tags.some(tag => tag.toLowerCase().includes(keyword.toLowerCase())))
         );
@@ -126,7 +126,7 @@ export function globalSearch(params: SearchParams): Promise<{ data: SearchResult
 
       if (type === 'all' || type === 'company') {
         companies = mockCompanies.filter(company =>
-          company.company_name.toLowerCase().includes(keyword.toLowerCase()) ||
+          (company.companyName && company.companyName.toLowerCase().includes(keyword.toLowerCase())) ||
           (company.industry && company.industry.toLowerCase().includes(keyword.toLowerCase())) ||
           (company.description && company.description.toLowerCase().includes(keyword.toLowerCase()))
         );
@@ -152,7 +152,7 @@ export function globalSearch(params: SearchParams): Promise<{ data: SearchResult
 
         // 重新分类
         jobs = pagedResults.filter(item => 'title' in item) as JobInfo[];
-        companies = pagedResults.filter(item => 'company_name' in item) as CompanyProfile[];
+        companies = pagedResults.filter(item => 'companyName' in item) as CompanyProfile[];
       }
 
       resolve({

@@ -14,8 +14,8 @@
         <el-descriptions-item label="用户ID">{{ userDetail.id }}</el-descriptions-item>
         <el-descriptions-item label="用户名">{{ userDetail.username }}</el-descriptions-item>
         <el-descriptions-item label="用户类型">
-          <el-tag :type="getUserTypeTagType(userDetail.user_type || userDetail.userType)">
-            {{ formatUserType(userDetail.user_type || userDetail.userType) }}
+          <el-tag :type="getUserTypeTagType(userDetail.userType)">
+            {{ formatUserType(userDetail.userType) }}
           </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="账号状态">
@@ -25,23 +25,23 @@
         </el-descriptions-item>
         <el-descriptions-item label="邮箱">{{ userDetail.email || '-' }}</el-descriptions-item>
         <el-descriptions-item label="手机号">{{ userDetail.phone || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="注册时间">{{ formatTime(userDetail.create_time || userDetail.createTime) }}</el-descriptions-item>
+        <el-descriptions-item label="注册时间">{{ formatTime(userDetail.createTime) }}</el-descriptions-item>
       </el-descriptions>
 
       <!-- 学生特有信息 -->
-      <template v-if="(userDetail.user_type === 'student' || userDetail.userType === 'student') && studentProfile">
+      <template v-if="userDetail.userType === 'student' && studentProfile">
         <h3 class="section-title">学生信息</h3>
         <el-descriptions :column="1" border size="default">
-          <el-descriptions-item label="姓名">{{ studentProfile.real_name || (studentProfile as any).name || studentProfile.username || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="姓名">{{ studentProfile.realName || (studentProfile as any).name || studentProfile.username || '-' }}</el-descriptions-item>
           <el-descriptions-item label="学校">{{ studentProfile.school || '-' }}</el-descriptions-item>
           <el-descriptions-item label="专业">{{ studentProfile.major || '-' }}</el-descriptions-item>
           <el-descriptions-item label="学历">{{ studentProfile.education || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="毕业年份">{{ studentProfile.graduation_year || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="毕业年份">{{ studentProfile.graduationYear || '-' }}</el-descriptions-item>
         </el-descriptions>
       </template>
 
       <!-- 企业特有信息 -->
-      <template v-if="(userDetail.user_type === 'company' || userDetail.userType === 'company') && companyProfile">
+      <template v-if="userDetail.userType === 'company' && companyProfile">
         <h3 class="section-title">企业信息</h3>
         <el-descriptions :column="1" border size="default">
           <el-descriptions-item label="公司名称">{{ companyProfile.companyName || '-' }}</el-descriptions-item>
@@ -66,7 +66,7 @@
           {{ userDetail.status === 'active' ? '禁用账号' : '启用账号' }}
         </el-button>
 
-        <el-button v-if="userDetail.user_type === 'company'" type="primary" @click="handleViewCompanyDetail">
+        <el-button v-if="userDetail.userType === 'company'" type="primary" @click="handleViewCompanyDetail">
           查看企业详情
         </el-button>
       </div>
@@ -267,10 +267,10 @@ const handleStatusChange = async () => {
 const handleViewCompanyDetail = () => {
   if (!props.userDetail) return;
 
-  // 检查用户类型，支持不同的命名风格
-  const userType = props.userDetail.user_type || props.userDetail.userType;
+  // 检查用户类型，使用驼峰
+  const userType = props.userDetail.userType;
   if (typeof userType !== 'string' ||
-      (userType.toLowerCase() !== 'company' && userType.toLowerCase() !== 'company')) {
+      (userType.toLowerCase() !== 'company')) {
     return;
   }
 

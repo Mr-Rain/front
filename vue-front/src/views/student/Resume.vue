@@ -9,6 +9,10 @@
               <span class="hide-on-mobile">上传新简历</span>
               <span class="show-on-mobile">上传</span>
             </el-button>
+            <el-button type="info" :icon="Download" @click="handleExportDefaultTemplate">
+              <span class="hide-on-mobile">导出默认模板</span>
+              <span class="show-on-mobile">导出模板</span>
+            </el-button>
             <el-button type="success" @click="createNewResume">
               <el-icon><Plus /></el-icon>
               <span class="hide-on-mobile">创建简历</span>
@@ -29,9 +33,18 @@
                 </div>
               </template>
               <div class="resume-meta">
-                <p v-if="resume.fileName">文件名: {{ resume.fileName }}</p>
-                <p v-if="resume.uploadTime">上传时间: {{ formatTime(resume.uploadTime) }}</p>
-                 <!-- Add more details like file size if available -->
+                <!-- 根据简历类型显示不同信息 -->
+                <template v-if="resume.fileName"> <!-- 附件简历 -->
+                  <p>文件名: {{ resume.fileName }}</p>
+                  <p>上传时间: {{ formatTime(resume.uploadTime) }}</p>
+                </template>
+                <template v-else> <!-- 在线简历 -->
+                  <p v-if="resume.name">姓名: {{ resume.name }}</p>
+                  <p v-else>类型: 在线简历</p> <!-- 如果连姓名都没有，显示类型 -->
+                  <p v-if="resume.updateTime">更新时间: {{ formatTime(resume.updateTime) }}</p>
+                  <p v-else-if="resume.createTime">创建时间: {{ formatTime(resume.createTime) }}</p>
+                </template>
+                <!-- Add more details like file size if available -->
               </div>
               <template #footer>
                  <div class="resume-actions">
@@ -161,17 +174,20 @@ const exportResumeData = reactive({
   name: '',
   phone: '',
   email: '',
-  location: '',
-  school: '',
-  major: '',
-  education: '',
-  grade: '',
-  bio: '',
-  skills: [] as string[],
-  education_experiences: [] as any[],
-  work_experiences: [] as any[],
-  expected_salary: '',
-  expected_location: ''
+  // location: '', // 学生地址不一定在简历中，考虑从studentStore获取
+  // school: '', // 学生学校不一定在简历中
+  // major: '', // 学生专业不一定在简历中
+  // education: '', // 学历应在 educationList 中
+  // grade: '', // 年级不一定在简历中
+  bio: '', // 个人简介
+  skills: [] as string[], // 技能标签
+  educationList: [] as any[], // 教育经历
+  workList: [] as any[], // 工作经历
+  projectList: [] as any[], // 项目经历
+  skillsDescription: '', // 技能描述
+  selfEvaluation: '', // 自我评价
+  expectedSalary: '', // 期望薪资
+  expectedLocation: '' // 期望地点
 });
 
 const fetchResumes = () => {
@@ -229,83 +245,132 @@ const handleDelete = async (id: string | number) => {
 };
 
 const handlePreview = (resume: ResumeInfo) => {
-    console.log("Previewing resume:", resume);
-    // 优先检查是否有 fileBucket 和 filePath，这表明它是一个已上传的附件简历
-    // @ts-ignore // 临时的，如果 ResumeInfo 类型没有更新，暂时忽略类型检查
-    if (resume.fileBucket && resume.filePath) {
+  console.log("Previewing resume:", resume);
+
+  // 1. 处理在线简历预览
+  if (!resume.fileName && resume.id) { // 假设在线简历没有 fileName 但有 id
+    console.log("Navigating to online resume preview page:", `/student/resume/${resume.id}/preview`);
+    router.push(`/student/resume/${resume.id}/preview`);
+    return;
+  }
+
+  // 2. 处理附件简历预览
+  if (resume.fileName) {
+    const lowerFileName = resume.fileName.toLowerCase();
+    const fileExtension = lowerFileName.split('.').pop();
+
+    // 尝试获取公开可访问的 URL (重要假设: resume.fileUrl 是公开链接)
+    const publicFileUrl = resume.fileUrl; // 如果 fileUrl 不是公开链接，需要修改这里
+
+    if (!publicFileUrl) {
+        ElMessage.error('无法获取简历文件的有效链接进行预览。');
+        return;
+    }
+
+    if (fileExtension === 'pdf') {
+      // PDF 使用后端接口（如果需要认证）或直接用 fileUrl
+      // 这里我们假设如果 fileUrl 有，可以直接预览
+      console.log("Opening PDF preview URL:", publicFileUrl);
+      window.open(publicFileUrl, '_blank');
+    } else {
+      // 非 PDF 文件，仅提示用户
+      console.log(`Preview not supported for .${fileExtension}, showing message.`);
+      ElMessage.info('该文件暂不支持预览，请下载到本地后打开');
+    }
+    return;
+  }
+
+  // 如果既不是在线简历，也没有文件名，则无法处理
+  console.error("Cannot preview resume: Unknown type or missing information.", resume);
+  ElMessage.error("无法预览此简历，信息不完整。");
+};
+
+// 处理导出简历 (修改以直接下载附件简历)
+const handleExport = async (resume: ResumeInfo) => {
+  selectedResume.value = resume;
+  exporting.value = true; // 开始导出状态
+
+  try {
+    // 1. 判断简历类型
+    // @ts-ignore
+    if (resume.fileName || (resume.fileBucket && resume.filePath)) { // 附件简历
+      ElMessage.info('正在准备下载附件简历...');
+      let downloadUrl = resume.fileUrl;
+      // @ts-ignore
+      if (!downloadUrl && resume.fileBucket && resume.filePath) {
         // @ts-ignore
         const bucket = encodeURIComponent(resume.fileBucket);
         // @ts-ignore
         const path = encodeURIComponent(resume.filePath);
-        // 构造指向后端文件下载/预览接口的 URL
-        const previewUrl = `/api/files/download?bucket=${bucket}&path=${path}&disposition=inline`;
-        console.log("Opening preview URL for attachment:", previewUrl);
-        // 在新标签页打开预览链接
-        window.open(previewUrl, '_blank');
-    } else if (!resume.fileUrl && resume.id) { // 假设在线简历没有 fileUrl 但有 id
-        // 如果没有 bucket/path，但有 id，认为是旧的在线简历，跳转到在线预览路由
-        console.log("Navigating to online resume preview page:", `/student/resume/${resume.id}/preview`);
-        router.push(`/student/resume/${resume.id}/preview`);
-    } else {
-        // 处理其他无法预览的情况
-        console.error("Cannot preview resume: Missing required information (fileBucket/filePath or id).", resume);
-        ElMessage.error("无法预览此简历，缺少必要信息。");
-    }
-};
-
-// 处理导出简历
-const handleExport = async (resume: ResumeInfo) => {
-  selectedResume.value = resume;
-
-  // 设置默认文件名
-  if (studentStore.profile) {
-    exportFileName.value = `${studentStore.profile.username || 'resume'}_简历`;
-  } else {
-    exportFileName.value = `简历_${resume.id}`;
-  }
-  
-  // 如果是在线简历，需要获取完整数据
-  if (!resume.fileUrl) {
-    try {
-      await resumeStore.fetchResumeDetail(resume.id); 
-      if (resumeStore.currentResume) {
-        // 映射数据到 exportResumeData
-        Object.assign(exportResumeData, {
-            name: resumeStore.currentResume.name,
-            phone: resumeStore.currentResume.phone,
-            email: resumeStore.currentResume.email,
-            school: resumeStore.currentResume.studentSchool, // 从 currentResume 获取学校等信息
-            major: resumeStore.currentResume.studentMajor,
-            bio: resumeStore.currentResume.bio,
-            skillsDescription: resumeStore.currentResume.skillsDescription,
-            selfEvaluation: resumeStore.currentResume.selfEvaluation,
-            educationList: resumeStore.currentResume.educationList, // 使用驼峰命名
-            workList: resumeStore.currentResume.workList, // 使用驼峰命名
-            projectList: resumeStore.currentResume.projectList, // 使用驼峰命名
-            expectedSalary: resumeStore.currentResume.expectedSalary,
-            expectedLocation: resumeStore.currentResume.expectedLocation
-        });
-      } else {
-          ElMessage.error('获取简历详情失败，无法导出在线简历');
-          return;
+        downloadUrl = `/api/files/download?bucket=${bucket}&path=${path}&disposition=attachment`;
       }
-    } catch (error) {
-      ElMessage.error('获取简历详情失败，无法导出在线简历');
-      return;
-    }
-  } else {
-      // 附件简历暂时不支持导出为PDF/图片 (因为没有结构化数据)
-      ElMessage.info('附件简历可以直接下载源文件');
-      // 可以直接触发下载或打开新标签页
-      window.open(resume.fileUrl, '_blank'); // file_url -> fileUrl
-      return; // 阻止打开导出对话框
-  }
 
-  exportFormat.value = 'pdf'; // 默认 PDF
-  exportDialogVisible.value = true;
+      if (downloadUrl) {
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = resume.fileName || 'resume_attachment'; // 使用原始文件名
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        ElMessage.success('附件简历下载已开始');
+      } else {
+        ElMessage.error('无法获取附件简历的下载链接');
+      }
+      exporting.value = false; // 附件下载结束
+      return; // 直接下载，不再打开对话框
+    }
+
+    // --- 以下为在线简历的处理逻辑 ---
+    ElMessage.info('正在准备导出在线简历...');
+
+    // 2. 设置默认文件名 (在线简历)
+    if (studentStore.profile) {
+      exportFileName.value = `${studentStore.profile.username || 'resume'}_${resume.title || resume.id}_简历`;
+    } else {
+      exportFileName.value = `${resume.title || '简历'}_${resume.id}`;
+    }
+
+    // 3. 获取在线简历详情
+    if (!resume.id) {
+      ElMessage.error('在线简历缺少ID，无法导出');
+      throw new Error('Missing resume ID for online export');
+    }
+    await resumeStore.fetchResumeDetail(resume.id);
+    if (!resumeStore.currentResume) {
+      ElMessage.error('获取简历详情失败，无法导出');
+      throw new Error('Failed to fetch resume detail for export');
+    }
+
+    // 4. 填充导出数据
+    Object.assign(exportResumeData, {
+      name: resumeStore.currentResume.name,
+      phone: resumeStore.currentResume.phone,
+      email: resumeStore.currentResume.email,
+      school: resumeStore.currentResume.studentSchool,
+      major: resumeStore.currentResume.studentMajor,
+      bio: resumeStore.currentResume.bio,
+      skillsDescription: resumeStore.currentResume.skillsDescription,
+      selfEvaluation: resumeStore.currentResume.selfEvaluation,
+      educationList: resumeStore.currentResume.educationList,
+      workList: resumeStore.currentResume.workList,
+      projectList: resumeStore.currentResume.projectList,
+      expectedSalary: resumeStore.currentResume.expectedSalary,
+      expectedLocation: resumeStore.currentResume.expectedLocation
+    });
+
+    // 5. 打开导出对话框
+    exportFormat.value = 'pdf'; // 默认 PDF
+    exportDialogVisible.value = true;
+
+  } catch (error) {
+    console.error('处理导出请求失败:', error);
+    // 具体错误已在前面步骤提示
+  } finally {
+    // exporting.value = false; // 在线简历导出状态由 confirmExport 控制
+  }
 };
 
-// 确认导出
+// 确认导出 (在线简历)
 const confirmExport = async () => {
   if (!resumeExportRef.value) {
     ElMessage.error('导出组件未初始化');
@@ -371,6 +436,99 @@ const closeDialog = () => {
 // 创建新简历
 const createNewResume = () => {
     router.push('/student/resume/new/edit');
+};
+
+// 处理导出默认模板 (修改为导出实际设置的默认简历)
+const handleExportDefaultTemplate = async () => {
+  // 1. 查找默认简历
+  const defaultResume = resumeStore.resumeList.find(resume => resume.isDefault);
+
+  if (!defaultResume) {
+    ElMessage.warning('请先设置一份默认简历');
+    return;
+  }
+
+  exporting.value = true; // 开始导出状态
+  try {
+    // 2. 判断简历类型并处理
+    // @ts-ignore - 假设 ResumeInfo 可能有 fileBucket 和 filePath
+    if (defaultResume.fileName || (defaultResume.fileBucket && defaultResume.filePath)) { // 认为是附件简历
+      ElMessage.info('正在准备下载附件简历...');
+      let downloadUrl = defaultResume.fileUrl; // 优先使用 fileUrl
+      // 如果没有 fileUrl，尝试构造下载链接
+      // @ts-ignore
+      if (!downloadUrl && defaultResume.fileBucket && defaultResume.filePath) {
+          // @ts-ignore
+          const bucket = encodeURIComponent(defaultResume.fileBucket);
+          // @ts-ignore
+          const path = encodeURIComponent(defaultResume.filePath);
+          // 构造指向后端文件下载接口的 URL (注意：需要后端支持 disposition=attachment)
+          downloadUrl = `/api/files/download?bucket=${bucket}&path=${path}&disposition=attachment`;
+      }
+
+      if (downloadUrl) {
+        console.log("Initiating download for attachment resume:", downloadUrl);
+        // 使用 <a> 标签强制下载
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        // 设置下载的文件名，优先使用简历本身的 fileName
+        link.download = defaultResume.fileName || 'default_resume_attachment';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        // 注意：附件简历导出状态可能无法精确跟踪，因为下载在浏览器中进行
+        // 这里仅标记开始，并假设下载会成功
+        ElMessage.success('附件简历下载已开始');
+      } else {
+        ElMessage.error('无法获取附件简历的下载链接');
+      }
+    } else if (defaultResume.id) { // 认为是在线简历
+      ElMessage.info('正在准备导出在线简历...');
+      // 3. 获取在线简历详情
+      await resumeStore.fetchResumeDetail(defaultResume.id);
+
+      if (!resumeStore.currentResume) {
+        ElMessage.error('获取默认简历详情失败');
+        throw new Error('Failed to fetch current resume detail');
+      }
+
+      // 4. 填充导出数据
+      Object.assign(exportResumeData, {
+        name: resumeStore.currentResume.name,
+        phone: resumeStore.currentResume.phone,
+        email: resumeStore.currentResume.email,
+        school: resumeStore.currentResume.studentSchool,
+        major: resumeStore.currentResume.studentMajor,
+        bio: resumeStore.currentResume.bio,
+        skillsDescription: resumeStore.currentResume.skillsDescription,
+        selfEvaluation: resumeStore.currentResume.selfEvaluation,
+        educationList: resumeStore.currentResume.educationList,
+        workList: resumeStore.currentResume.workList,
+        projectList: resumeStore.currentResume.projectList,
+        expectedSalary: resumeStore.currentResume.expectedSalary,
+        expectedLocation: resumeStore.currentResume.expectedLocation
+        // skills 数组可能需要单独处理，如果它是从 skillsDescription 生成的
+      });
+
+      // 5. 设置文件名
+      exportFileName.value = defaultResume.title || `${exportResumeData.name || 'resume'}_简历`;
+
+      // 6. 触发导出
+      if (!resumeExportRef.value) {
+        ElMessage.error('导出组件未初始化');
+        throw new Error('Export component not initialized');
+      }
+      await resumeExportRef.value.exportResume();
+      ElMessage.success('默认简历导出成功');
+    } else {
+      ElMessage.error('无法确定默认简历的类型或缺少必要信息');
+    }
+  } catch (error) {
+    console.error('Failed to export default resume:', error);
+    // ElMessage.error('导出默认简历失败，请重试'); // 错误消息已在相应步骤中提示
+  } finally {
+    exporting.value = false; // 结束导出状态
+  }
 };
 
 </script>
