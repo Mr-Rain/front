@@ -14,7 +14,7 @@
         <el-timeline-item
           v-for="log in auditLogs"
           :key="log.id"
-          :timestamp="formatTime(log.audit_time)"
+          :timestamp="formatTime(log.auditTime)"
           :type="getTimelineItemType(log.action)"
           :hollow="log.action === 'view'"
         >
@@ -26,7 +26,7 @@
               </el-tag>
             </div>
             <div class="timeline-operator">
-              操作人: {{ log.operator_name || '系统' }}
+              操作人: {{ log.operatorName || '系统' }}
             </div>
             <div v-if="log.message" class="timeline-message">
               {{ log.message }}
@@ -46,11 +46,11 @@ import { ElMessage } from 'element-plus';
 // 审核记录类型
 interface AuditLog {
   id: string | number;
-  company_id: string | number;
+  companyId: string | number;  // 后端使用驼峰命名法
   action: 'view' | 'approve' | 'reject' | 'comment';
-  operator_id?: string | number;
-  operator_name?: string;
-  audit_time: string;
+  operatorId?: string | number;  // 后端使用驼峰命名法
+  operatorName?: string;  // 后端使用驼峰命名法
+  auditTime: string;  // 后端使用驼峰命名法
   message?: string;
 }
 

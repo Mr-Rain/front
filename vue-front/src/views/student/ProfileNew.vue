@@ -236,7 +236,6 @@ const profileForm = reactive<Partial<StudentProfileCamel>>({
   skills: ['暂无技能'],
   expectedSalary: '', // 前端特有字段，不会保存到数据库
   expectedLocation: '', // 前端特有字段，不会保存到数据库
-  experience: '', // 前端特有字段，不会保存到数据库
   introduction: '', // 使用后端字段名
   educationList: [], // 修改为 educationList
   workList: [] // 修改为 workList
@@ -324,24 +323,38 @@ watch(() => studentStore.profile, (newProfile, oldProfile) => {
     }
 
     // 确保数组属性存在
-    if (!profileForm.educationList) profileForm.educationList = [];
-    else if (typeof profileForm.educationList === 'string') {
+    // 处理educationExperiences，转换为educationList
+    if (newProfile.educationExperiences) {
       try {
-        profileForm.educationList = JSON.parse(profileForm.educationList);
+        if (typeof newProfile.educationExperiences === 'string') {
+          profileForm.educationList = JSON.parse(newProfile.educationExperiences);
+          console.log('从educationExperiences解析educationList:', profileForm.educationList);
+        } else if (Array.isArray(newProfile.educationExperiences)) {
+          profileForm.educationList = newProfile.educationExperiences;
+        }
       } catch (e) {
-        console.error('Failed to parse educationList:', e);
+        console.error('Failed to parse educationExperiences:', e);
         profileForm.educationList = [];
       }
+    } else if (!profileForm.educationList) {
+      profileForm.educationList = [];
     }
 
-    if (!profileForm.workList) profileForm.workList = [];
-    else if (typeof profileForm.workList === 'string') {
+    // 处理workExperiences，转换为workList
+    if (newProfile.workExperiences) {
       try {
-        profileForm.workList = JSON.parse(profileForm.workList);
+        if (typeof newProfile.workExperiences === 'string') {
+          profileForm.workList = JSON.parse(newProfile.workExperiences);
+          console.log('从workExperiences解析workList:', profileForm.workList);
+        } else if (Array.isArray(newProfile.workExperiences)) {
+          profileForm.workList = newProfile.workExperiences;
+        }
       } catch (e) {
-        console.error('Failed to parse workList:', e);
+        console.error('Failed to parse workExperiences:', e);
         profileForm.workList = [];
       }
+    } else if (!profileForm.workList) {
+      profileForm.workList = [];
     }
 
     // 确保skills始终是数组
@@ -471,13 +484,13 @@ const saveProfile = async () => {
           // 添加期望薪资和期望工作地点字段
           expectedSalary: profileForm.expectedSalary || '面议',
           expectedLocation: profileForm.expectedLocation || '全国',
-          // 添加教育和工作经历 - 确保是数组而不是字符串
-          educationList: Array.isArray(profileForm.educationList)
+          // 添加教育和工作经历 - 确保是数组而不是字符串，并使用正确的字段名
+          educationExperiences: Array.isArray(profileForm.educationList)
             ? profileForm.educationList
             : (typeof profileForm.educationList === 'string'
               ? JSON.parse(profileForm.educationList)
               : []),
-          workList: Array.isArray(profileForm.workList)
+          workExperiences: Array.isArray(profileForm.workList)
             ? profileForm.workList
             : (typeof profileForm.workList === 'string'
               ? JSON.parse(profileForm.workList)
@@ -487,8 +500,8 @@ const saveProfile = async () => {
         console.log('发送到后端的数据 (移除 stringify):', updateData);
 
         // --- 添加的日志 ---
-        console.log('在调用 updateProfile 前 - educationList:', updateData.educationList); // 应该打印数组
-        console.log('在调用 updateProfile 前 - workList:', updateData.workList); // 应该打印数组
+        console.log('在调用 updateProfile 前 - educationExperiences:', updateData.educationExperiences); // 应该打印数组
+        console.log('在调用 updateProfile 前 - workExperiences:', updateData.workExperiences); // 应该打印数组
         console.log('在调用 updateProfile 前 - 完整的 updateData:', JSON.stringify(updateData)); // 仍然打印 JSON 以供检查
         // --- 添加的日志结束 ---
 

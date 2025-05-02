@@ -10,7 +10,6 @@
       :on-change="handleChange"
       :on-remove="handleRemove"
       :before-upload="beforeUpload"
-      :http-request="customUpload"
       :disabled="disabled || uploading"
       :file-list="fileList"
       accept=".jpg,.jpeg,.png,.pdf"
@@ -87,8 +86,9 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { useCompanyStore } from '@/stores/company';
+import { deleteFile, getPathFromUrl, getBucketFromUrl } from '@/api/file';
 import type { UploadFile, UploadUserFile, UploadRequestOptions } from 'element-plus';
 
 // 使用Vue的编译器宏defineProps，不需要导入
@@ -127,15 +127,23 @@ const action = ''; // 实际上不会使用这个action，因为我们使用自�
 const uploading = ref(false);
 const fileList = ref<UploadUserFile[]>([]);
 const previewUrl = ref(props.modelValue || '');
+const selectedFile = ref<File | null>(null);
+const localObjectUrl = ref<string | null>(null);
 const dialogVisible = ref(false);
 
 // 监听modelValue变化
 watch(() => props.modelValue, (newValue) => {
-  previewUrl.value = newValue || '';
+  if (!selectedFile.value) {
+    previewUrl.value = newValue || '';
+    if (localObjectUrl.value) {
+      URL.revokeObjectURL(localObjectUrl.value);
+      localObjectUrl.value = null;
+    }
+  }
   if (!newValue) {
     fileList.value = [];
   }
-});
+}, { immediate: true });
 
 // 判断是否为PDF文件
 const isPdf = computed(() => {
@@ -148,19 +156,40 @@ const handleExceed = () => {
 };
 
 // 处理文件变化
-const handleChange = (file: UploadFile) => {
+const handleChange = (file: UploadFile, currentFileList: UploadUserFile[]) => {
+  if (localObjectUrl.value) {
+    URL.revokeObjectURL(localObjectUrl.value);
+    localObjectUrl.value = null;
+  }
+
   if (file.status === 'ready') {
-    fileList.value = [file];
+    if (beforeUpload(file.raw as File)) {
+      selectedFile.value = file.raw as File;
+      fileList.value = currentFileList;
+      localObjectUrl.value = URL.createObjectURL(selectedFile.value);
+      previewUrl.value = localObjectUrl.value;
+      console.log('LicenseUploader: File selected and local preview generated:', previewUrl.value);
+    } else {
+      fileList.value = currentFileList.filter(f => f.uid !== file.uid);
+      selectedFile.value = null;
+    }
   }
 };
 
 // 处理文件移除
-const handleRemove = () => {
-  fileList.value = [];
+const handleRemove = (file: UploadFile, currentFileList: UploadUserFile[]) => {
+  if (localObjectUrl.value) {
+    URL.revokeObjectURL(localObjectUrl.value);
+    localObjectUrl.value = null;
+  }
+  selectedFile.value = null;
+  previewUrl.value = '';
+  fileList.value = currentFileList;
+  emit('remove');
 };
 
 // 上传前验证
-const beforeUpload = (file: File) => {
+const beforeUpload = (file: File): boolean => {
   // 验证文件类型
   const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
   const isValidType = validTypes.includes(file.type);
@@ -179,36 +208,53 @@ const beforeUpload = (file: File) => {
   return true;
 };
 
-// 自定义上传
-const customUpload = async (options: UploadRequestOptions) => {
-  const { file } = options;
-  if (!file || !(file instanceof File)) {
-    ElMessage.error('文件上传失败');
+// 移除已上传的执照
+const removeLicense = async () => {
+  // 如果是本地预览的文件，直接清除
+  if (localObjectUrl.value) {
+    URL.revokeObjectURL(localObjectUrl.value);
+    localObjectUrl.value = null;
+    selectedFile.value = null;
+    previewUrl.value = '';
+    fileList.value = [];
+    emit('remove');
     return;
   }
 
-  uploading.value = true;
-  try {
-    const licenseUrl = await companyStore.uploadLicense(file);
-    previewUrl.value = licenseUrl;
-    emit('update:modelValue', licenseUrl);
-    emit('upload-success', licenseUrl);
-    ElMessage.success('资质文件上传成功，请点击"保存"按钮保存所有修改');
-  } catch (error) {
-    console.error('License upload failed:', error);
-    emit('upload-error', error);
-    ElMessage.error('资质文件上传失败');
-  } finally {
-    uploading.value = false;
-  }
-};
+  // 如果是已上传到服务器的文件，需要确认是否删除
+  if (props.modelValue) {
+    try {
+      await ElMessageBox.confirm(
+        '确定要删除已上传的营业执照吗？此操作需要点击保存按钮后才会生效。',
+        '删除确认',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      );
 
-// 移除已上传的执照
-const removeLicense = () => {
-  previewUrl.value = '';
-  fileList.value = [];
-  emit('update:modelValue', '');
-  emit('remove');
+      // 用户确认删除，清除本地状态
+      selectedFile.value = null;
+      previewUrl.value = '';
+      fileList.value = [];
+
+      // 发出删除事件，让父组件知道文件已被删除
+      emit('update:modelValue', '');
+      emit('remove');
+
+      ElMessage.success('营业执照已删除，点击保存按钮后生效');
+    } catch (e) {
+      // 用户取消删除，不做任何操作
+      console.log('用户取消删除营业执照');
+    }
+  } else {
+    // 没有文件，直接清除状态
+    selectedFile.value = null;
+    previewUrl.value = '';
+    fileList.value = [];
+    emit('remove');
+  }
 };
 
 // 打开PDF文件
@@ -218,14 +264,32 @@ const openPdf = () => {
   }
 };
 
+// 清除预览状态（给父组件调用）
+const clearPreview = () => {
+  if (localObjectUrl.value) {
+    URL.revokeObjectURL(localObjectUrl.value);
+    localObjectUrl.value = null;
+  }
+  previewUrl.value = props.modelValue || '';
+  fileList.value = [];
+  selectedFile.value = null;
+};
+
 // 显示帮助对话框
 const showHelpDialog = () => {
   dialogVisible.value = true;
 };
 
+// 获取待上传的文件
+const getPendingFile = (): File | null => {
+  return selectedFile.value;
+};
+
 // 暴露方法
 defineExpose({
-  showHelpDialog
+  showHelpDialog,
+  clearPreview,
+  getPendingFile
 });
 </script>
 

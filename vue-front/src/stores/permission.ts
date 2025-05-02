@@ -70,7 +70,7 @@ export const usePermissionStore = defineStore('permission', {
 
           // 使用用户类型作为角色
           const userStore = useUserStore();
-          const userType = userStore.userInfo?.user_type?.toLowerCase();
+          const userType = userStore.userInfo?.userType?.toLowerCase();
 
           if (userType) {
             this.roles = [userType as any];
@@ -114,9 +114,9 @@ export const usePermissionStore = defineStore('permission', {
         console.error('Failed to fetch user permissions:', error);
 
         // 如果是网络错误，尝试使用用户类型作为备用
-        if (error.type === 'network' || (window as any).backendDown) {
+        if ((typeof error === 'object' && error !== null && (error as any).type === 'network') || (window as any).backendDown) {
           const userStore = useUserStore();
-          const userType = userStore.userInfo?.user_type?.toLowerCase();
+          const userType = userStore.userInfo?.userType?.toLowerCase();
 
           if (userType) {
             console.log('Using user type as fallback for permissions after error');
@@ -166,7 +166,7 @@ export const usePermissionStore = defineStore('permission', {
 
         // 获取用户类型作为备用
         const userStore = useUserStore();
-        const userType = userStore.userInfo?.user_type?.toLowerCase();
+        const userType = userStore.userInfo?.userType?.toLowerCase();
 
         const checkList = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
 
@@ -252,9 +252,9 @@ export const usePermissionStore = defineStore('permission', {
         console.error('Failed to fetch roles:', error);
         // 使用默认角色列表，避免UI错误
         this.roleList = [
-          { id: 'admin', name: '管理员', description: '系统管理员' },
-          { id: 'student', name: '学生', description: '学生用户' },
-          { id: 'company', name: '企业', description: '企业用户' }
+          { id: 'admin', name: '管理员', code: 'ADMIN', description: '系统管理员' },
+          { id: 'student', name: '学生', code: 'STUDENT', description: '学生用户' },
+          { id: 'company', name: '企业', code: 'COMPANY', description: '企业用户' }
         ];
         // 不显示错误消息，避免用户体验不佳
         console.warn('使用默认角色列表');
@@ -275,11 +275,11 @@ export const usePermissionStore = defineStore('permission', {
         console.error('Failed to fetch permissions:', error);
         // 使用默认权限列表，避免UI错误
         this.permissionList = [
-          { id: 'user:view', name: '查看用户', description: '查看用户信息' },
-          { id: 'user:edit', name: '编辑用户', description: '编辑用户信息' },
-          { id: 'user:delete', name: '删除用户', description: '删除用户' },
-          { id: 'company:audit', name: '审核企业', description: '审核企业资质' },
-          { id: 'job:manage', name: '管理职位', description: '管理职位信息' }
+          { id: 'user:view', name: '查看用户', code: 'user:view', description: '查看用户信息' },
+          { id: 'user:edit', name: '编辑用户', code: 'user:edit', description: '编辑用户信息' },
+          { id: 'user:delete', name: '删除用户', code: 'user:delete', description: '删除用户' },
+          { id: 'company:audit', name: '审核企业', code: 'company:audit', description: '审核企业资质' },
+          { id: 'job:manage', name: '管理职位', code: 'job:manage', description: '管理职位信息' }
         ];
         // 不显示错误消息，避免用户体验不佳
         console.warn('使用默认权限列表');

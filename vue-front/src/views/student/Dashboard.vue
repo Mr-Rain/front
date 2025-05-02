@@ -24,16 +24,29 @@
             </div>
             <h3 class="profile-name">{{ studentStore.profile.username || '未设置姓名' }}</h3>
             <div class="profile-info">
-              <p class="info-item"><i class="el-icon"><School /></i> {{ studentStore.profile.school || '未设置学校' }}</p>
-              <p class="info-item"><i class="el-icon"><OfficeBuilding /></i> {{ studentStore.profile.major || '未设置专业' }}</p>
-              <p class="info-item"><i class="el-icon"><Collection /></i> 学历: {{ studentStore.profile.education || '未设置学历' }}</p>
-              <el-button type="primary" size="small" style="margin-top: 10px;" @click="goToProfile">完善个人信息</el-button>
+              <p class="info-item">
+                <i class="el-icon"><School /></i>
+                <span>{{ studentStore.profile.school || '未设置学校' }}</span>
+              </p>
+              <p class="info-item">
+                <i class="el-icon"><OfficeBuilding /></i>
+                <span>{{ studentStore.profile.major || '未设置专业' }}</span>
+              </p>
+              <p class="info-item">
+                <i class="el-icon"><Collection /></i>
+                <span>学历: {{ studentStore.profile.education || '未设置学历' }}</span>
+              </p>
+              <div class="button-container">
+                <el-button type="primary" size="small" style="margin-top: 10px;" @click="goToProfile">完善个人信息</el-button>
+              </div>
             </div>
           </div>
           <!-- 加载失败或无数据：显示错误消息 -->
           <div v-else class="error-message">
             无法加载学生信息
-            <el-button type="primary" size="small" style="margin-top: 10px;" @click="goToProfile">完善个人信息</el-button>
+            <div class="button-container">
+              <el-button type="primary" size="small" style="margin-top: 10px;" @click="goToProfile">完善个人信息</el-button>
+            </div>
           </div>
         </el-card>
       </el-col>
@@ -55,19 +68,26 @@
           </div>
           <!-- 加载成功且有面试记录：显示面试列表 -->
           <div v-else-if="recentInterviews.length > 0" class="interview-container">
+            <!-- 使用Element Plus栅格系统，设置合理的响应式布局 -->
             <el-row :gutter="20">
               <!-- 遍历最近的面试结果 -->
-              <el-col v-for="interview in recentInterviews" :key="interview.id" :xs="24" :sm="24" :md="12" :lg="8">
+              <el-col v-for="interview in recentInterviews"
+                     :key="interview.id"
+                     :xs="24"
+                     :sm="24"
+                     :md="12"
+                     :lg="8"
+                     class="interview-col">
                 <!-- 单个面试卡片，根据状态添加不同样式 -->
                 <el-card shadow="hover" class="interview-card" :class="{'success-card': interview.status === 'offer', 'pending-card': interview.status === 'interview', 'rejected-card': interview.status === 'rejected'}">
                   <div class="interview-header">
                     <!-- 公司 Logo 或首字母 -->
-                    <el-avatar :size="40" :src="interview.company_logo || ''" class="company-logo">
-                      {{ interview.company_name?.substring(0, 1) || 'C' }}
+                    <el-avatar :size="40" :src="interview.companyLogo" class="company-logo">
+                      {{ interview.companyName?.substring(0, 1) || 'C' }}
                     </el-avatar>
                     <div class="interview-company">
-                      <h4>{{ interview.company_name || '未知企业' }}</h4>
-                      <p>{{ interview.job_info?.title || '未知职位' }}</p>
+                      <h4>{{ interview.companyName || '未知企业' }}</h4>
+                      <p>{{ interview.jobInfo?.title || '未知职位' }}</p>
                     </div>
                     <!-- 面试状态标签 -->
                     <el-tag :type="getStatusTagType(interview.status)" class="interview-status">
@@ -77,22 +97,40 @@
                   <div class="interview-content">
                     <div class="interview-info">
                       <!-- 显示面试时间、地点、面试官信息 -->
-                      <p v-if="interview.interview_time">
+                      <!-- 所有状态都显示操作时间 -->
+                      <p v-if="interview.updateTime">
                         <el-icon><Calendar /></el-icon>
-                        面试时间: {{ formatTimestamp(interview.interview_time) }}
+                        <span>{{ interview.status === 'rejected' ? '拒绝时间: ' : '更新时间: ' }}{{ formatTimestamp(interview.updateTime) }}</span>
                       </p>
-                      <p v-if="interview.interview_location">
-                        <el-icon><Location /></el-icon>
-                        面试地点: {{ interview.interview_location }}
-                      </p>
-                      <p v-if="interview.interviewer">
-                        <el-icon><User /></el-icon>
-                        面试官: {{ interview.interviewer }}
+
+                      <!-- 只有在状态为"interview"或"offer"时才显示面试相关信息 -->
+                      <template v-if="interview.status === 'interview' || interview.status === 'offer'">
+                        <!-- 显示面试时间（如果有且与更新时间不同） -->
+                        <p v-if="'interviewTime' in interview && interview.interviewTime && interview.interviewTime !== interview.updateTime">
+                          <el-icon><Calendar /></el-icon>
+                          <span>面试时间: {{ formatTimestamp(interview.interviewTime) }}</span>
+                        </p>
+                        <!-- 显示面试地点 -->
+                        <p v-if="'interviewLocation' in interview && interview.interviewLocation">
+                          <el-icon><Location /></el-icon>
+                          <span>面试地点: {{ interview.interviewLocation }}</span>
+                        </p>
+                        <!-- 显示面试官 -->
+                        <p v-if="'interviewContact' in interview && interview.interviewContact">
+                          <el-icon><User /></el-icon>
+                          <span>面试官: {{ interview.interviewContact }}</span>
+                        </p>
+                      </template>
+
+                      <!-- 当状态为"rejected"且有反馈时，显示为"企业反馈" -->
+                      <p v-if="interview.status === 'rejected' && interview.feedback">
+                        <el-icon><InfoFilled /></el-icon>
+                        <span>企业反馈: {{ interview.feedback }}</span>
                       </p>
                     </div>
                     <!-- 显示面试反馈信息 -->
-                    <div v-if="interview.feedback" class="interview-feedback">
-                      <p class="feedback-title">面试反馈:</p>
+                    <div v-if="interview.feedback && interview.status !== 'rejected'" class="interview-feedback">
+                      <p class="feedback-title">我的反馈:</p>
                       <p class="feedback-content">{{ interview.feedback }}</p>
                     </div>
                     <!-- 查看详情按钮 -->
@@ -131,7 +169,7 @@
                 <el-timeline-item
                   v-for="app in applicationStore.studentApplications.slice(0, 5)"
                   :key="app.id"
-                  :timestamp="formatTimestamp(app.apply_time)"
+                  :timestamp="formatTimestamp(app.applyTime)"
                   placement="top"
                   class="timeline-item"
                 >
@@ -140,17 +178,19 @@
                       <p class="job-title">
                         申请职位：
                         <!-- 职位名称，点击可跳转到职位详情 -->
-                        <el-link type="primary" @click="goToJobDetail(app.job_id)">
-                          {{ app.job_info?.title || '职位信息加载中...' }}
+                        <el-link type="primary" @click="goToJobDetail(app.jobId)">
+                          {{ app.jobInfo?.title || '职位信息加载中...' }}
                         </el-link>
-                        <span class="company-name">({{ app.job_info?.company_name }})</span>
+                        <span class="company-name">({{ app.jobInfo?.companyName }})</span>
                       </p>
                       <p class="job-status">
                         <!-- 申请状态标签 -->
                         状态：<el-tag :type="getStatusTagType(app.status)" effect="plain">{{ formatStatus(app.status) }}</el-tag>
                       </p>
                       <!-- 企业反馈信息 -->
-                      <p v-if="app.feedback" class="job-feedback">企业反馈：{{ app.feedback }}</p>
+                      <p v-if="app.feedback && app.status === 'rejected'" class="job-feedback">企业反馈：{{ app.feedback }}</p>
+                      <!-- 我的反馈信息 -->
+                      <p v-else-if="app.feedback" class="job-feedback">我的反馈：{{ app.feedback }}</p>
                    </el-card>
                 </el-timeline-item>
              </el-timeline>
@@ -208,8 +248,11 @@ const applicationStore = useApplicationStore();
 onMounted(() => {
   // 获取学生个人信息
   studentStore.fetchProfile();
-  // 获取学生的申请列表（默认获取第一页，每页10条）
-  applicationStore.fetchStudentApplications({ pageSize: 10, page: 1 });
+  // 获取学生的申请列表（默认获取第一页，每页100条，确保获取所有数据）
+  applicationStore.fetchStudentApplications({ pageSize: 100, page: 1 });
+
+  // 打印获取到的数据，用于调试
+  console.log('Dashboard mounted, fetching student applications...');
 });
 
 // 定义导航函数，使用正常的 router.push 方式
@@ -306,26 +349,71 @@ const goToApplicationDetail = (applicationId: string | number) => {
 const recentInterviews = computed(() => {
   // 如果申请列表为空或未加载，返回空数组
   if (!applicationStore.studentApplications || applicationStore.studentApplications.length === 0) {
+    console.log('No applications found in store');
     return [];
   }
 
+  console.log('Raw applications data:', applicationStore.studentApplications);
+
   // 筛选出状态为 'interview', 'offer', 'rejected' 的申请记录
-  return applicationStore.studentApplications
-    .filter(app => ['interview', 'offer', 'rejected'].includes(app.status))
-    // 将筛选出的申请记录映射为面试卡片所需的数据格式
-    .map(app => ({
+  const filteredApps = applicationStore.studentApplications
+    .filter(app => ['interview', 'offer', 'rejected'].includes(app.status));
+
+  console.log('Filtered applications:', filteredApps);
+
+  // 按更新时间或面试时间排序，确保最新的在最前面
+  const sortedApps = filteredApps.sort((a, b) => {
+    // 优先使用更新时间，因为它更能反映最近的状态变化
+    const timeA = new Date(a.updateTime || a.interviewTime || a.applyTime || 0).getTime();
+    const timeB = new Date(b.updateTime || b.interviewTime || b.applyTime || 0).getTime();
+    return timeB - timeA; // 降序排列，最新的在前
+  });
+
+  console.log('Sorted applications:', sortedApps);
+
+  // 将筛选出的申请记录映射为面试卡片所需的数据格式，使用后端真实数据
+  const mappedApps = sortedApps.map(app => {
+    console.log('Mapping application:', app);
+    // 检查jobInfo是否存在
+    console.log('Job info:', app.jobInfo);
+
+    // 直接使用后端数据，保持属性名的一致性（使用驼峰命名法）
+    // 创建基础数据对象
+    const baseData = {
       id: app.id,
       status: app.status,
-      company_name: app.job_info?.company_name, // 使用可选链安全访问
-      company_logo: 'https://via.placeholder.com/40', // 暂时使用占位图作为公司 Logo
-      job_info: app.job_info, // 包含职位标题等信息
-      interview_time: app.interview_time || app.update_time, // 优先使用面试时间，否则使用更新时间
-      interview_location: app.interview_type === 'onsite' ? (app.interview_location || '公司总部') : '线上面试', // 根据面试类型确定地点
-      interviewer: app.interview_contact || '招聘负责人', // 面试联系人或默认值
-      feedback: app.feedback // 面试反馈
-    }))
-    // 只获取最新的3条面试结果
-    .slice(0, 3);
+      // 公司和职位信息
+      companyName: app.companyName || app.jobInfo?.companyName || '未知企业',
+      companyLogo: '', // 默认为空字符串，因为后端可能没有提供这个字段
+      jobInfo: {
+        title: app.jobTitle || app.jobInfo?.title || '未知职位',
+        companyName: app.companyName || app.jobInfo?.companyName || '未知企业'
+      },
+      // 所有状态都包含更新时间，用于显示操作时间
+      updateTime: app.updateTime || app.applyTime,
+      // 反馈信息
+      feedback: app.feedback
+    };
+
+    // 只有在状态为"interview"或"offer"时才添加面试相关信息
+    if (app.status === 'interview' || app.status === 'offer') {
+      return {
+        ...baseData,
+        // 面试相关信息
+        interviewTime: app.interviewTime || null,
+        interviewLocation: app.interviewLocation || (app.interviewType === 'onsite' ? '公司总部' : '线上面试'),
+        interviewContact: app.interviewContact || '招聘负责人'
+      };
+    }
+
+    // 对于其他状态（如rejected），不包含面试相关信息，但包含更新时间
+    return baseData;
+  });
+
+  console.log('Mapped applications for display:', mappedApps);
+
+  // 获取最新的6条面试结果，以便在栅格系统中美观展示
+  return mappedApps.slice(0, 6);
 });
 
 // 辅助函数：格式化 ISO 8601 时间戳为本地可读格式
@@ -348,6 +436,7 @@ const formatStatus = (status: ApplicationStatus): string => {
         viewed: '已查看',       // 企业已查看申请
         interview: '邀请面试',   // 企业已发出面试邀请
         offer: '已录用',       // 企业已发出录用通知
+        accepted: '已接受',     // 学生已接受录用
         rejected: '未通过',     // 申请未通过筛选或面试
         withdrawn: '已撤回'      // 学生主动撤回申请
     };
@@ -360,6 +449,7 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
      // 根据不同的状态返回不同的标签类型，用于视觉区分
      switch (status) {
         case 'offer': return 'success';    // 录用 - 成功
+        case 'accepted': return 'success';  // 已接受 - 成功
         case 'interview': return 'primary';  // 面试 - 主要
         case 'rejected': return 'danger';     // 未通过 - 危险
         case 'withdrawn': return 'info';     // 已撤回 - 信息
@@ -414,16 +504,21 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
 
 /* 面试结果卡片特定样式 */
 .interview-container {
-  display: flex;
-  flex-wrap: wrap; /* 允许换行 */
-  gap: 16px; /* 卡片间距 */
+  width: 100%;
+  padding: 10px;
+}
+
+/* 面试卡片列样式 */
+.interview-col {
+  margin-bottom: 20px; /* 确保卡片之间有足够的垂直间距 */
 }
 
 .interview-card {
-  margin-bottom: 16px;
+  height: 100%; /* 使卡片高度一致 */
   border-radius: 8px;
   transition: all 0.3s;
   border-left: 4px solid #909399; /* 左侧状态指示条，默认为灰色 */
+  overflow: hidden; /* 防止内容溢出 */
 }
 
 .interview-card:hover {
@@ -449,30 +544,41 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
   display: flex;
   align-items: center;
   margin-bottom: 12px;
+  flex-wrap: wrap; /* 允许在小屏幕上换行 */
 }
 
 .company-logo {
   margin-right: 12px;
+  flex-shrink: 0; /* 防止logo被压缩 */
 }
 
 .interview-company {
   flex: 1; /* 占据剩余空间 */
+  min-width: 0; /* 允许在必要时缩小 */
 }
 
 .interview-company h4 {
   margin: 0 0 4px 0;
   font-size: 16px;
   font-weight: 600;
+  white-space: nowrap; /* 防止文本换行 */
+  overflow: hidden; /* 隐藏溢出内容 */
+  text-overflow: ellipsis; /* 显示省略号 */
 }
 
 .interview-company p {
   margin: 0;
   font-size: 14px;
   color: var(--text-secondary);
+  white-space: nowrap; /* 防止文本换行 */
+  overflow: hidden; /* 隐藏溢出内容 */
+  text-overflow: ellipsis; /* 显示省略号 */
 }
 
 .interview-status {
   margin-left: auto; /* 将状态标签推到最右侧 */
+  flex-shrink: 0; /* 防止状态标签被压缩 */
+  margin-top: 4px; /* 在小屏幕上换行时提供一些间距 */
 }
 
 /* 面试卡片内容区域 */
@@ -480,29 +586,44 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
   margin-top: 12px;
 }
 
-.interview-info p {
-  margin: 8px 0;
+.interview-info {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 8px; /* 统一间距 */
+}
+
+.interview-info p {
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: flex-start; /* 顶部对齐，防止长文本时图标位置不对 */
   font-size: 14px;
+  line-height: 1.5; /* 改善行高 */
+  width: 100%; /* 确保占满容器宽度 */
 }
 
 .interview-info p .el-icon {
   margin-right: 8px;
   color: var(--text-secondary);
+  flex-shrink: 0; /* 防止图标被压缩 */
+}
+
+.interview-info p span {
+  flex: 1; /* 文本占据剩余空间 */
+  word-break: break-word; /* 允许长单词换行 */
 }
 
 /* 面试反馈样式 */
 .interview-feedback {
   margin-top: 12px;
-  padding: 8px;
+  padding: 10px;
   background-color: #f8f9fa; /* 轻微背景色 */
-  border-radius: 4px;
+  border-radius: 6px;
+  border-left: 3px solid var(--warning-color); /* 左侧边框增强视觉效果 */
 }
 
 .feedback-title {
   font-weight: 600;
-  margin: 0 0 4px 0;
+  margin: 0 0 6px 0;
   font-size: 14px;
 }
 
@@ -510,6 +631,8 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
   margin: 0;
   font-size: 14px;
   color: var(--text-secondary);
+  line-height: 1.5; /* 改善行高 */
+  word-break: break-word; /* 允许长单词换行 */
 }
 
 /* 面试卡片操作按钮区域 */
@@ -613,17 +736,22 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
 
 /* 学校、专业、学历信息样式 */
 .profile-info {
-  text-align: left;
+  text-align: center;
   padding: 5px 10px;
 }
 
 .info-item {
   display: flex;
   align-items: center;
+  justify-content: flex-start; /* 从左侧开始对齐 */
   padding: 8px 0;
   color: var(--text-regular);
   font-size: 14px;
   border-bottom: 1px solid var(--border-color); /* 分隔线 */
+  width: 100%; /* 确保宽度一致 */
+  max-width: 180px; /* 限制最大宽度 */
+  margin: 0 auto; /* 居中显示整个项目 */
+  position: relative; /* 为绝对定位的图标提供参考 */
 }
 
 .info-item:last-child {
@@ -631,9 +759,27 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
 }
 
 .info-item .el-icon {
-  margin-right: 10px;
+  position: absolute; /* 绝对定位 */
+  left: 10px; /* 距离左侧的固定距离 */
+  width: 24px; /* 固定图标宽度 */
   color: var(--primary-color);
   font-size: 18px;
+  display: flex;
+  justify-content: center; /* 图标内容居中 */
+}
+
+/* 添加文本内容样式 */
+.info-item span {
+  flex: 1;
+  text-align: left; /* 文本左对齐 */
+  margin-left: 40px; /* 为图标留出空间 */
+}
+
+/* 按钮容器样式 */
+.button-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 /* 加载占位符样式 */
@@ -643,6 +789,10 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
 
 /* 错误消息样式 */
 .error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   color: var(--danger-color);
   padding: 20px 0;
@@ -744,6 +894,11 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
     position: static; /* 取消粘性定位 */
     margin-bottom: 20px;
   }
+
+  /* 调整面试卡片在中等屏幕上的布局 */
+  .interview-card {
+    margin-bottom: 20px;
+  }
 }
 
 @media (max-width: 768px) { /* 平板屏幕 */
@@ -751,15 +906,15 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
     padding: 12px;
   }
 
-  /* 移除 Element Plus 栅格的默认间距 */
+  /* 调整 Element Plus 栅格的间距 */
   .el-row {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
+    margin-left: -5px !important;
+    margin-right: -5px !important;
   }
 
   .el-col {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    padding-left: 5px !important;
+    padding-right: 5px !important;
   }
 
   .box-card {
@@ -777,6 +932,22 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
   .avatar-container::after {
     width: 100px;
     height: 100px;
+  }
+
+  /* 调整面试卡片在平板屏幕上的布局 */
+  .interview-col {
+    margin-bottom: 15px;
+  }
+
+  .interview-header {
+    flex-wrap: wrap;
+  }
+
+  .interview-status {
+    margin-top: 8px;
+    margin-left: 0;
+    width: 100%;
+    text-align: left;
   }
 }
 
@@ -803,6 +974,28 @@ const getStatusTagType = (status: ApplicationStatus): ('primary' | 'success' | '
   .job-feedback {
     font-size: 13px;
     margin: 8px 0;
+  }
+
+  /* 调整面试卡片在手机屏幕上的布局 */
+  .interview-col {
+    margin-bottom: 12px;
+  }
+
+  .interview-company h4 {
+    font-size: 15px;
+  }
+
+  .interview-company p {
+    font-size: 13px;
+  }
+
+  .interview-info p {
+    font-size: 13px;
+  }
+
+  /* 确保按钮在小屏幕上也能正常显示 */
+  .interview-actions {
+    justify-content: center; /* 在小屏幕上居中显示按钮 */
   }
 }
 </style>

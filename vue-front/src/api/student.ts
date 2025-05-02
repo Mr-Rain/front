@@ -57,9 +57,15 @@ export function updateStudentProfile(data: Partial<StudentProfileCamel> | any) {
       educationExperiences = data.educationExperiences;
     } else if (typeof data.educationExperiences === 'string') {
       try {
-        educationExperiences = JSON.parse(data.educationExperiences);
+        // 如果是空字符串或"[]"，则设置为空数组
+        if (data.educationExperiences === '' || data.educationExperiences === '[]') {
+          educationExperiences = [];
+        } else {
+          educationExperiences = JSON.parse(data.educationExperiences);
+        }
       } catch (e) {
         console.error('Failed to parse educationExperiences:', e);
+        educationExperiences = []; // 解析失败时设置为空数组
       }
     }
   }
@@ -70,9 +76,15 @@ export function updateStudentProfile(data: Partial<StudentProfileCamel> | any) {
       workExperiences = data.workExperiences;
     } else if (typeof data.workExperiences === 'string') {
       try {
-        workExperiences = JSON.parse(data.workExperiences);
+        // 如果是空字符串或"[]"，则设置为空数组
+        if (data.workExperiences === '' || data.workExperiences === '[]') {
+          workExperiences = [];
+        } else {
+          workExperiences = JSON.parse(data.workExperiences);
+        }
       } catch (e) {
         console.error('Failed to parse workExperiences:', e);
+        workExperiences = []; // 解析失败时设置为空数组
       }
     }
   }

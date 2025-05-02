@@ -120,7 +120,7 @@ export const createImageOptimizerPlugin = (options: ImageOptimizerOptions = {}) 
 };
 
 // 声明模块扩展
-declare module '@vue/runtime-core' {
+declare module 'vue' {
   interface ComponentCustomProperties {
     $imageOptimizer: ImageOptimizer;
   }

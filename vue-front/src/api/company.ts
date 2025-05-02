@@ -84,6 +84,7 @@ export function getCompanyJobList(params: PaginationParams): Promise<{ data: Pag
     url: '/api/jobs/company/current',
     method: 'get',
     params,
+    cache: false, // 禁用缓存，确保每次都获取最新数据
   });
 }
 
@@ -168,13 +169,18 @@ export function getAdminCompanyList(params: PaginationParams): Promise<{ data: P
  */
 export function getCompanyAuditList(params: PaginationParams): Promise<{ data: PaginatedResponse<CompanyProfile> }> {
   try {
+    // 如果没有指定审核状态，默认为待审核
+    const queryParams = {
+      ...params,
+      auditStatus: params.auditStatus || 'pending'
+    };
+
+    console.log('获取企业审核列表参数:', queryParams);
+
     return request({
       url: '/api/admin/companies',
       method: 'get',
-      params: {
-        ...params,
-        auditStatus: 'pending' // 只获取待审核的企业
-      },
+      params: queryParams,
     });
   } catch (error) {
     console.error('获取企业审核列表失败:', error);
@@ -226,4 +232,16 @@ export function approveCompany(
     console.error(`企业审核操作失败(ID: ${companyId}):`, error);
     throw error; // 保持错误冒泡，便于上层处理
   }
+}
+
+/**
+ * 获取企业审核记录
+ * @param companyId 企业ID
+ * @returns 审核记录列表
+ */
+export function getCompanyAuditLogs(companyId: string | number) {
+  return request({
+    url: `/api/admin/companies/${companyId}/audit-logs`,
+    method: 'get',
+  });
 }

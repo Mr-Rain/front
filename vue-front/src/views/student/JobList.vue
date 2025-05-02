@@ -72,6 +72,18 @@
                 <el-option label="实习" value="实习"></el-option>
               </el-select>
             </el-form-item>
+            <el-form-item label="职位状态" class="search-form-item">
+              <el-select
+                v-model="listQuery.status"
+                placeholder="职位状态"
+                @change="handleFilter"
+                class="type-select"
+              >
+                <el-option label="开放中" value="open"></el-option>
+                <el-option label="已关闭" value="closed"></el-option>
+                <el-option label="所有状态" value="all"></el-option>
+              </el-select>
+            </el-form-item>
           </div>
           <div class="search-button-group">
             <el-form-item class="search-button-item">
@@ -129,7 +141,7 @@ import JobCard from '@/components/common/JobCard.vue';
 import Pagination from '@/components/common/Pagination.vue';
 import Breadcrumb from '@/components/common/Breadcrumb.vue';
 import type { JobListParams } from '@/types/job';
-import { Search, Filter, ArrowLeft } from '@element-plus/icons-vue';
+import { Search, ArrowLeft } from '@element-plus/icons-vue';
 import { onUnmounted } from 'vue';
 
 const router = useRouter();
@@ -171,17 +183,35 @@ const listQuery = reactive<JobListParams>({
   keyword: '',
   location: '',
   jobType: undefined,
-  // Initialize other filters
+  // 默认获取开放中的职位
+  status: 'open'
 });
 
 // 计算属性：是否有活跃的筛选条件
 const hasActiveFilters = computed(() => {
-  return !!listQuery.keyword || !!listQuery.location || !!listQuery.jobType;
+  return !!listQuery.keyword || !!listQuery.location || !!listQuery.jobType || listQuery.status !== 'open';
 });
 
 // 获取数据
 const fetchData = () => {
-  jobStore.fetchJobList(listQuery);
+  // 创建一个新的查询参数对象
+  const params = { ...listQuery };
+
+  // 处理职位状态参数
+  if (params.status === 'all') {
+    // 如果选择了"所有状态"，则传递空字符串作为status参数
+    params.status = '';
+    params._allStatus = true; // 添加内部标记，表示这是"所有状态"请求
+    console.log('Selected "all" status, set status to empty string, added _allStatus flag');
+  } else if (params.status) {
+    // 确保status参数是有效的JobStatus类型
+    console.log(`Selected specific status: ${params.status}`);
+    // 确保不带有_allStatus标记
+    delete params._allStatus;
+  }
+
+  console.log('Fetching jobs with params:', params);
+  jobStore.fetchJobList(params);
 };
 
 // 处理筛选
@@ -195,7 +225,8 @@ const clearFilters = () => {
   listQuery.keyword = '';
   listQuery.location = '';
   listQuery.jobType = undefined;
-  // 重置其他筛选条件
+  // 重置职位状态为"开放中"
+  listQuery.status = 'open';
 
   // 重新获取数据
   handleFilter();

@@ -60,11 +60,10 @@ export interface StudentProfile extends UserInfo {
   location?: string | null; // 地点/城市
   studentId?: string; // 用户ID，不再用作学号
   grade?: string; // 年级
-  experience?: string; // 实习或项目经历
   expectedSalary?: string; // 期望薪资
   expectedLocation?: string; // 期望工作地点
-  // educationExperiences?: EducationExperience[] | string; // 教育经历 (可能是JSON字符串或对象数组)
-  // workExperiences?: WorkExperience[] | string; // 工作/实习经历 (可能是JSON字符串或对象数组)
+  educationExperiences?: EducationExperience[] | string; // 教育经历 (可能是JSON字符串或对象数组)
+  workExperiences?: WorkExperience[] | string; // 工作/实习经历 (可能是JSON字符串或对象数组)
   educationList?: EducationExperience[]; // 改为 List
   workList?: WorkExperience[]; // 改为 List
   bio?: string; // 个人简介

@@ -165,7 +165,6 @@
                   v-model="profileData.businessLicense"
                   :disabled="!isEditing"
                   :file-name="profileData.businessLicenseName || '营业执照.pdf'"
-                  @upload-success="handleLicenseSuccess"
                 />
 
 
@@ -204,6 +203,7 @@ import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage } from 'element-plus';
 import { Edit, Check, Close, QuestionFilled } from '@element-plus/icons-vue';
 import _ from 'lodash';
+import { deleteFile, getPathFromUrl, getBucketFromUrl } from '@/api/file';
 
 // 确保 store 正确初始化
 const companyStore = useCompanyStore();
@@ -308,20 +308,59 @@ const showLicenseHelp = () => {
     }
 };
 
-// 处理营业执照上传成功
-const handleLicenseSuccess = (url: string) => {
-    profileData.businessLicense = url;
-    profileData.businessLicenseName = '营业执照';
-};
-
-
-
 const saveProfile = async () => {
   if (!profileFormRef.value) return;
   profileFormRef.value.validate(async (valid) => {
     if (valid) {
       loading.value = true;
       try {
+        // 检查是否需要删除营业执照
+        const originalLicense = originalProfileData.businessLicense || '';
+        const currentLicense = profileData.businessLicense || '';
+
+        // 如果原来有营业执照，但现在没有了，说明用户删除了营业执照
+        if (originalLicense && !currentLicense) {
+          console.log('Profile: 检测到营业执照被删除，准备从服务器删除文件');
+          try {
+            // 从URL中提取bucket和path
+            const bucket = getBucketFromUrl(originalLicense);
+            const path = getPathFromUrl(originalLicense);
+
+            if (bucket && path) {
+              // 调用删除文件API
+              await deleteFile(bucket, path);
+              console.log('Profile: 营业执照文件已从服务器删除');
+            } else {
+              console.warn('Profile: 无法从URL中提取bucket或path:', originalLicense);
+            }
+          } catch (deleteError) {
+            console.error('Profile: 删除营业执照文件失败:', deleteError);
+            // 继续保存其他信息，不阻止整个保存过程
+          }
+        }
+
+        // 检查是否有新的营业执照文件需要上传
+        const pendingFile = licenseUploaderRef.value?.getPendingFile();
+        let newLicenseUrl: string | null = null;
+
+        if (pendingFile) {
+          console.log('Profile: Found pending license file, attempting upload...');
+          try {
+            // Use the existing store action directly
+            newLicenseUrl = await companyStore.uploadLicense(pendingFile);
+            console.log('Profile: License upload successful, URL:', newLicenseUrl);
+            profileData.businessLicense = newLicenseUrl; // Assign URL after successful upload
+          } catch (uploadError) {
+            console.error('Profile: License upload failed during save:', uploadError);
+            ElMessage.error('营业执照上传失败，请重试');
+            loading.value = false; // Stop loading
+            return; // Prevent saving profile data if license upload fails
+          }
+        } else {
+          // If no new file selected, keep the existing profileData.businessLicense value
+          console.log('Profile: No pending license file found.');
+        }
+
         // Exclude readonly fields before sending
         const updateData = _.omit(profileData, ['id', 'username', 'email', 'userType', 'auditStatus', 'auditMessage']);
 
@@ -332,12 +371,15 @@ const saveProfile = async () => {
           updateData.tags = ['暂无标签'];
         }
 
-        console.log('准备提交的公司数据:', updateData);
+        console.log('准备提交的公司数据 (saveProfile):', updateData);
         await companyStore.updateProfile(updateData);
         isEditing.value = false;
+        licenseUploaderRef.value?.clearPreview(); // Clear uploader state (including selected file)
+        originalProfileData = _.cloneDeep(profileData); // Update original data baseline AFTER successful save
         ElMessage.success('公司信息更新成功');
       } catch (error) {
-         // Error handled in store
+         // Error might be from updateProfile, already handled in store
+         // Error from uploadLicense handled above
       } finally {
         loading.value = false;
       }
@@ -349,7 +391,8 @@ const saveProfile = async () => {
 
 const cancelEdit = () => {
   isEditing.value = false;
-  Object.assign(profileData, originalProfileData);
+  Object.assign(profileData, originalProfileData); // Revert data
+  licenseUploaderRef.value?.clearPreview(); // Clear the uploader's preview and selected file
   profileFormRef.value?.clearValidate();
 };
 

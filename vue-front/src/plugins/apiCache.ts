@@ -36,7 +36,7 @@ export default {
 };
 
 // 声明模块扩展
-declare module '@vue/runtime-core' {
+declare module 'vue' {
   interface ComponentCustomProperties {
     $apiCache: {
       clearAll: typeof clearAllCache;

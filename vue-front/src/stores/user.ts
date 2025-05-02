@@ -315,21 +315,21 @@ export const useUserStore = defineStore('user', {
     async batchUpdateUserStatus(ids: (string | number)[], status: UserStatus) {
         try {
             // 调用实际API
-            await request.post('/api/admin/users/batch-update-status', { ids, status });
+            const response = await request.post('/api/admin/users/batch-update-status', { ids, status });
 
-            // 更新本地数据
-            for (const id of ids) {
-                const index = this.userList.findIndex(user => user.id === id);
-                if (index !== -1) {
-                    this.userList[index].status = status;
-                }
-            }
+            // 获取更新结果
+            const result = response.data;
 
-            ElMessage.success(`成功更新 ${ids.length} 个用户的状态`);
-            return true;
+            // 刷新用户列表，确保数据是最新的
+            await this.fetchUserList({
+                page: 1,
+                pageSize: this.userList.length,
+                // 保持当前的筛选条件
+            });
+
+            return result;
         } catch (error) {
             console.error('Failed to batch update user status:', error);
-            ElMessage.error('批量更新用户状态失败');
             throw error;
         }
     },

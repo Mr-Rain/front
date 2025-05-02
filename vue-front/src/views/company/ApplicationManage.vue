@@ -36,6 +36,7 @@
                   clearable
                   filterable
                   @change="handleFilter"
+                  :filter-method="handleJobFilter"
                   class="search-select"
                 >
                   <el-option
@@ -49,7 +50,7 @@
               <el-form-item label="关键词" class="search-form-item">
                 <el-input
                   v-model="listQuery.keyword"
-                  placeholder="姓名/学校/专业"
+                  placeholder="姓名/学校/专业/职位"
                   clearable
                   @clear="handleFilter"
                 />
@@ -81,18 +82,18 @@
 
         <el-table-column label="申请人信息" min-width="200">
             <template #default="scope">
-                 <div><strong>{{ scope.row.studentInfo?.name || '-' }}</strong></div>
-                 <div class="sub-info">{{ scope.row.studentInfo?.school || '-' }} / {{ scope.row.studentInfo?.major || '-' }}</div>
+                 <div><strong>{{ scope.row.studentName || scope.row.studentInfo?.realName || '-' }}</strong></div>
+                 <div class="sub-info">{{ scope.row.studentSchool || scope.row.studentInfo?.school || '-' }} / {{ scope.row.studentMajor || scope.row.studentInfo?.major || '-' }}</div>
             </template>
         </el-table-column>
         <el-table-column label="申请职位" min-width="180">
              <template #default="scope">
-                {{ scope.row.jobInfo?.title || '-' }}
+                {{ scope.row.jobTitle || scope.row.jobInfo?.title || '-' }}
              </template>
         </el-table-column>
          <el-table-column label="投递简历" width="150">
              <template #default="scope">
-                <el-link type="primary" @click="previewResume(scope.row.resumeId, scope.row.studentId)">{{ scope.row.resumeSnapshot?.title || '查看简历' }}</el-link>
+                <el-link type="primary" @click="previewResume(scope.row.resumeId, scope.row.studentId)">{{ scope.row.resumeTitle || scope.row.resumeSnapshot?.title || '查看简历' }}</el-link>
              </template>
         </el-table-column>
         <el-table-column prop="applyTime" label="申请时间" width="180">
@@ -162,8 +163,9 @@
         <div v-else-if="applicationStore.currentApplicationDetail" class="detail-content">
              <h4>申请信息</h4>
              <el-descriptions :column="1" border size="small">
-                 <el-descriptions-item label="申请人">{{ applicationStore.currentApplicationDetail.studentInfo?.realName }}</el-descriptions-item>
-                 <el-descriptions-item label="申请职位">{{ applicationStore.currentApplicationDetail.jobInfo?.title }}</el-descriptions-item>
+                 <el-descriptions-item label="申请人">{{ applicationStore.currentApplicationDetail.studentName || applicationStore.currentApplicationDetail.studentInfo?.realName || '-' }}</el-descriptions-item>
+                 <el-descriptions-item label="学校/专业">{{ (applicationStore.currentApplicationDetail.studentSchool || applicationStore.currentApplicationDetail.studentInfo?.school || '-') + ' / ' + (applicationStore.currentApplicationDetail.studentMajor || applicationStore.currentApplicationDetail.studentInfo?.major || '-') }}</el-descriptions-item>
+                 <el-descriptions-item label="申请职位">{{ applicationStore.currentApplicationDetail.jobTitle || applicationStore.currentApplicationDetail.jobInfo?.title || '-' }}</el-descriptions-item>
                  <el-descriptions-item label="申请时间">{{ formatTime(applicationStore.currentApplicationDetail.applyTime) }}</el-descriptions-item>
                   <el-descriptions-item label="当前状态">
                      <el-tag :type="getStatusTagType(applicationStore.currentApplicationDetail.status)">{{ formatStatus(applicationStore.currentApplicationDetail.status) }}</el-tag>
@@ -172,7 +174,7 @@
 
             <h4>简历信息</h4>
             <el-link type="primary" @click="previewResume(applicationStore.currentApplicationDetail.resumeId, applicationStore.currentApplicationDetail.studentId)">
-                {{ applicationStore.currentApplicationDetail.resumeSnapshot?.title || '点击预览简历' }}
+                {{ applicationStore.currentApplicationDetail.resumeTitle || applicationStore.currentApplicationDetail.resumeSnapshot?.title || '点击预览简历' }}
             </el-link>
             <!-- Or Embed Resume Preview Component -->
              <!-- <ResumeViewer :resumeId="applicationStore.currentApplicationDetail.resume_id" /> -->
@@ -274,12 +276,12 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed, watch, nextTick } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { useApplicationStore } from '@/stores/application';
 import { useJobStore } from '@/stores/job'; // For fetching job list filter
 import type { ApplicationInfo, ApplicationStatus, UpdateApplicationStatusPayload } from '@/types/application';
-import { ElCard, ElTable, ElTableColumn, ElTag, ElButton, ElEmpty, ElMessage, ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElLink, ElDropdown, ElDropdownMenu, ElDropdownItem, ElIcon, ElDrawer, ElDescriptions, ElDescriptionsItem, ElMessageBox, ElCheckbox } from 'element-plus';
-import { Search, ArrowDown, Calendar, ChatLineRound, DocumentCopy, View, Check, Close } from '@element-plus/icons-vue';
+import { ElCard, ElTable, ElTableColumn, ElTag, ElButton, ElEmpty, ElMessage, ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElLink, ElDropdown, ElDropdownMenu, ElDropdownItem, ElIcon, ElDrawer, ElDescriptions, ElDescriptionsItem, ElMessageBox } from 'element-plus';
+import { Search, Calendar, ChatLineRound, View } from '@element-plus/icons-vue';
 import Pagination from '@/components/common/Pagination.vue';
 import BatchActionBar from '@/components/company/BatchActionBar.vue';
 import InterviewScheduler from '@/components/company/InterviewScheduler.vue';
@@ -287,7 +289,6 @@ import BatchInterviewDialog from '@/components/company/BatchInterviewDialog.vue'
 import FeedbackForm from '@/components/company/FeedbackForm.vue';
 
 const route = useRoute();
-const router = useRouter();
 const applicationStore = useApplicationStore();
 const jobStore = useJobStore(); // Inject job store
 
@@ -340,9 +341,22 @@ watch(() => route.query.jobId,
 );
 
 const fetchApplications = () => {
-    // TODO: Filter out jobId if it's empty before sending to API?
+    // 构建查询参数
     const params = { ...listQuery };
+
+    // 移除空值参数
     if (!params.jobId) delete params.jobId;
+    if (!params.status) delete params.status;
+    if (!params.keyword || params.keyword.trim() === '') delete params.keyword;
+
+    // 如果用户在职位筛选框中输入了文本，但没有选择具体职位
+    // 确保这个文本被作为关键词传递给后端
+    const jobFilterInput = document.querySelector('.search-select input') as HTMLInputElement;
+    if (jobFilterInput && jobFilterInput.value && jobFilterInput.value.trim() !== '' && !params.jobId && !params.keyword) {
+        params.keyword = jobFilterInput.value.trim();
+    }
+
+    console.log('Fetching applications with params:', params);
     applicationStore.fetchCompanyApplications(params);
 };
 
@@ -357,6 +371,17 @@ onMounted(() => {
 const handleFilter = () => {
   listQuery.page = 1;
   fetchApplications();
+};
+
+// 处理职位下拉框的筛选方法
+const handleJobFilter = (value: string) => {
+  // 将用户输入的筛选文本保存到关键词中
+  if (value && value.trim() !== '') {
+    listQuery.keyword = value.trim();
+  }
+
+  // 返回true表示所有选项都显示，因为我们只是想捕获用户输入
+  return true;
 };
 
 const formatTime = (timeStr: string | undefined): string => {

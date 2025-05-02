@@ -5,6 +5,15 @@
         <div class="card-header">
           <span>我的申请</span>
           <div class="header-actions">
+            <el-button
+              type="primary"
+              :icon="RefreshRight"
+              circle
+              size="small"
+              @click="refreshApplications"
+              :loading="applicationStore.loadingStudentList"
+              title="刷新申请列表"
+            />
             <table-export
               :data="applicationStore.studentApplications"
               :columns="exportColumns"
@@ -72,13 +81,15 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, onMounted, computed } from 'vue';
+import { reactive, onMounted, onUnmounted, computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useApplicationStore } from '@/stores/application';
 import type { ApplicationStatus } from '@/types/application'; // Assuming types/application.d.ts exists
 import { ElCard, ElTable, ElTableColumn, ElTag, ElButton, ElMessageBox, ElMessage, ElLink } from 'element-plus';
+import { RefreshRight } from '@element-plus/icons-vue';
 import Pagination from '@/components/common/Pagination.vue'; // Import pagination component
 import TableExport from '@/components/common/TableExport.vue'; // Import table export component
+import { clearCacheByTags } from '@/utils/cacheInterceptor';
 
 const router = useRouter();
 const applicationStore = useApplicationStore();
@@ -95,9 +106,50 @@ const fetchApplications = () => {
   applicationStore.fetchStudentApplications(listQuery);
 };
 
+// 手动刷新申请列表
+const refreshApplications = () => {
+  // 清除缓存，确保获取最新数据
+  clearCacheByTags(['application', 'student-applications']);
+  fetchApplications();
+  ElMessage.success('申请列表已刷新');
+};
+
+// 轮询间隔（毫秒）
+const POLL_INTERVAL = 60000; // 60秒，减少服务器负载
+const pollingTimer = ref<number | null>(null);
+
+// 开始轮询
+const startPolling = () => {
+  // 先清除可能存在的定时器
+  stopPolling();
+
+  // 设置新的定时器
+  pollingTimer.value = window.setInterval(() => {
+    console.log('Polling for new applications...');
+    // 清除缓存，确保获取最新数据
+    clearCacheByTags(['application', 'student-applications']);
+    fetchApplications();
+  }, POLL_INTERVAL);
+};
+
+// 停止轮询
+const stopPolling = () => {
+  if (pollingTimer.value !== null) {
+    clearInterval(pollingTimer.value);
+    pollingTimer.value = null;
+  }
+};
+
 onMounted(() => {
   console.log('Application component mounted, fetching applications...');
   fetchApplications();
+  // 开始轮询
+  startPolling();
+});
+
+// 组件卸载时停止轮询
+onUnmounted(() => {
+  stopPolling();
 });
 
 const formatTime = (timeStr: string | undefined): string => {

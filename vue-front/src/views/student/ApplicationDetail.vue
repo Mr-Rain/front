@@ -95,20 +95,40 @@
           </el-button>
         </div>
 
-        <!-- 面试反馈 -->
+        <!-- 已提交的反馈内容 -->
+        <div class="info-section" v-if="hasSubmittedFeedback">
+          <h2 class="section-title">{{ getFeedbackTitle }}</h2>
+          <div class="info-content">
+            <div class="feedback-display">
+              <div class="rating-display">
+                <span class="label">{{ getRatingLabel }}：</span>
+                <el-rate v-model="applicationStore.currentApplicationDetail.rating" disabled show-score></el-rate>
+              </div>
+              <div class="feedback-content" v-if="applicationStore.currentApplicationDetail.feedback">
+                <div class="label">{{ getFeedbackLabel }}：</div>
+                <div class="content">{{ applicationStore.currentApplicationDetail.feedback }}</div>
+              </div>
+              <div class="feedback-time" v-if="applicationStore.currentApplicationDetail.updateTime">
+                <small class="text-muted">提交时间：{{ formatDateTime(applicationStore.currentApplicationDetail.updateTime) }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 反馈表单 -->
         <div class="info-section" v-if="showFeedbackForm">
-          <h2 class="section-title">面试反馈</h2>
+          <h2 class="section-title">{{ getFeedbackTitle }}</h2>
           <div class="info-content">
             <el-form ref="feedbackFormRef" :model="feedbackForm" label-position="top">
-              <el-form-item label="面试评分">
+              <el-form-item :label="getRatingLabel">
                 <el-rate v-model="feedbackForm.rating" :max="5" show-score></el-rate>
               </el-form-item>
-              <el-form-item label="面试感受">
+              <el-form-item :label="getFeedbackLabel">
                 <el-input
                   v-model="feedbackForm.content"
                   type="textarea"
                   :rows="4"
-                  placeholder="请分享您的面试体验和感受..."
+                  :placeholder="getFeedbackPlaceholder"
                 ></el-input>
               </el-form-item>
               <el-form-item>
@@ -149,10 +169,20 @@ const feedbackForm = ref({
 });
 const submitting = ref(false);
 
-// 是否显示面试反馈表单
+// 是否显示反馈表单
 const showFeedbackForm = computed(() => {
-  const status = applicationStore.currentApplicationDetail?.status;
-  return status === 'interview' || status === 'offer' || status === 'rejected';
+  const application = applicationStore.currentApplicationDetail;
+  if (!application) return false;
+
+  // 检查申请状态是否允许反馈
+  const status = application.status;
+  const statusAllowsFeedback = status === 'interview' || status === 'offer' || status === 'rejected';
+
+  // 检查是否已经提交过反馈（有评分或反馈内容）
+  const hasExistingFeedback = application.rating > 0 || (application.feedback && application.feedback.trim() !== '');
+
+  // 只有状态允许且没有已存在的反馈时才显示表单
+  return statusAllowsFeedback && !hasExistingFeedback;
 });
 
 // 是否有面试信息
@@ -163,6 +193,51 @@ const hasInterviewInfo = computed(() => {
     application.interviewLocation ||
     application.interviewType
   );
+});
+
+// 根据申请状态获取反馈表单标题
+const getFeedbackTitle = computed(() => {
+  const status = applicationStore.currentApplicationDetail?.status;
+  if (status === 'interview') return '面试反馈';
+  if (status === 'offer' || status === 'accepted') return '录用反馈';
+  if (status === 'rejected') return '申请反馈';
+  return '反馈';
+});
+
+// 根据申请状态获取评分标签
+const getRatingLabel = computed(() => {
+  const status = applicationStore.currentApplicationDetail?.status;
+  if (status === 'interview') return '面试评分';
+  if (status === 'offer' || status === 'accepted') return '满意度评分';
+  if (status === 'rejected') return '企业评分';
+  return '评分';
+});
+
+// 根据申请状态获取反馈内容标签
+const getFeedbackLabel = computed(() => {
+  const status = applicationStore.currentApplicationDetail?.status;
+  if (status === 'interview') return '面试感受';
+  if (status === 'offer' || status === 'accepted') return '录用感受';
+  if (status === 'rejected') return '申请体验';
+  return '反馈内容';
+});
+
+// 根据申请状态获取反馈输入框占位符
+const getFeedbackPlaceholder = computed(() => {
+  const status = applicationStore.currentApplicationDetail?.status;
+  if (status === 'interview') return '请分享您的面试体验和感受...';
+  if (status === 'offer' || status === 'accepted') return '请分享您对录用过程的感受和建议...';
+  if (status === 'rejected') return '请分享您对该企业招聘流程的评价和建议...';
+  return '请输入您的反馈...';
+});
+
+// 是否已提交反馈
+const hasSubmittedFeedback = computed(() => {
+  const application = applicationStore.currentApplicationDetail;
+  if (!application) return false;
+
+  // 检查是否已经提交过反馈（有评分或反馈内容）
+  return application.rating > 0 || (application.feedback && application.feedback.trim() !== '');
 });
 
 onMounted(async () => {
@@ -304,7 +379,26 @@ const formatMarkdown = (content: string | undefined): string => {
   }
 };
 
-// 提交面试反馈
+// 格式化日期时间
+const formatDateTime = (timeStr: string | undefined): string => {
+  if (!timeStr) return '未知';
+  try {
+    const date = new Date(timeStr);
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  } catch (e) {
+    console.error('Failed to format date time:', e);
+    return timeStr;
+  }
+};
+
+// 提交反馈
 const submitFeedback = async () => {
   if (feedbackForm.value.rating === 0) {
     ElMessage.warning('请先进行评分');
@@ -313,15 +407,32 @@ const submitFeedback = async () => {
 
   submitting.value = true;
   try {
-    // 调用API提交面试反馈
-    // await applicationStore.submitInterviewFeedback(applicationId, feedbackForm.value);
+    // 调用store方法提交反馈
+    await applicationStore.submitInterviewFeedback(
+      applicationId,
+      feedbackForm.value.rating,
+      feedbackForm.value.content
+    );
 
-    // 模拟提交成功
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // 强制刷新申请详情，确保获取最新数据
+    applicationStore.clearCurrentApplicationDetail(); // 先清除当前详情
+    await applicationStore.fetchApplicationDetail(applicationId); // 重新获取
 
-    ElMessage.success('反馈提交成功，感谢您的分享！');
+    // 清空表单
     feedbackForm.value.rating = 0;
     feedbackForm.value.content = '';
+
+    // 根据申请状态显示不同的成功消息
+    const status = applicationStore.currentApplicationDetail?.status;
+    if (status === 'interview') {
+      ElMessage.success('面试反馈提交成功，感谢您的分享！');
+    } else if (status === 'offer' || status === 'accepted') {
+      ElMessage.success('录用反馈提交成功，感谢您的分享！');
+    } else if (status === 'rejected') {
+      ElMessage.success('申请反馈提交成功，感谢您的宝贵意见！');
+    } else {
+      ElMessage.success('反馈提交成功，感谢您的分享！');
+    }
   } catch (error) {
     console.error('Failed to submit feedback:', error);
     ElMessage.error('提交反馈失败，请稍后重试');
@@ -445,6 +556,45 @@ const submitFeedback = async () => {
 .feedback-content {
   line-height: 1.6;
   white-space: pre-line;
+}
+
+.feedback-display {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 16px;
+
+  .rating-display {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+
+    .label {
+      font-weight: bold;
+      margin-right: 8px;
+      width: auto;
+    }
+  }
+
+  .feedback-content {
+    margin-bottom: 12px;
+
+    .label {
+      font-weight: bold;
+      margin-bottom: 8px;
+      width: 100%;
+    }
+
+    .content {
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+  }
+
+  .feedback-time {
+    text-align: right;
+    color: #909399;
+    font-size: 12px;
+  }
 }
 
 .action-section {

@@ -5,6 +5,7 @@ import type {
   UpdateApplicationStatusPayload,
 } from '@/types/application';
 import type { PaginatedResponse, PaginationParams } from './company';
+import { clearCacheByUrlPrefix } from '@/utils/cacheInterceptor';
 
 /**
  * 申请筛选参数
@@ -49,6 +50,17 @@ export function applyForJob(data: ApplyJobPayload) {
  * @returns 申请列表
  */
 export function getStudentApplicationList(params?: ApplicationFilterParams): Promise<{ data: PaginatedResponse<ApplicationInfo> }> {
+  return request({
+    url: '/api/applications/me',
+    method: 'get',
+    params,
+    cache: {
+      ttl: 60 * 1000, // 缓存1分钟
+      tags: ['application', 'student-applications'],
+      forceRefresh: false
+    }
+  });
+
   // // 使用模拟数据，当后端API未实现时使用
   // console.log('API MOCK: getStudentApplicationList is using mock data.');
   //
@@ -164,14 +176,7 @@ export function getStudentApplicationList(params?: ApplicationFilterParams): Pro
   //   }
   // });
 
-  // 当后端API实现后，取消注释下面的代码
-  // /*
-  return request({
-    url: '/api/applications/me',
-    method: 'get',
-    params,
-  });
-  // */
+  // 已经在上面实现了，这里不需要重复
 }
 
 /**
@@ -230,13 +235,14 @@ export function getStudentApplicationDetail(id: string | number): Promise<{ data
   //   data: mockApplicationDetail
   // });
 
-  // 当后端API实现后，取消注释下面的代码
-  // /*
   return request({
     url: `/api/applications/${id}`,
     method: 'get',
+    cache: {
+      ttl: 30 * 1000, // 缓存30s
+      tags: ['application', `application-${id}`]
+    }
   });
-  // */
 }
 
 /**
@@ -256,47 +262,34 @@ export function withdrawApplication(id: string | number) {
   //   }
   // });
 
-  // 当后端API实现后，取消注释下面的代码
-  // /*
   return request({
     url: `/api/applications/${id}/withdraw`,
     method: 'put',
   });
-  // */
 }
 
 /**
  * (学生端) 对已完成的申请进行评价
  * @param id 申请ID
  * @param rating 评分 (1-5)
- * @param comment 评价内容 (可选)
+ * @param feedback 评价内容 (可选)
  * @returns 评价结果
  */
-export function rateApplication(id: string | number, rating: number, comment?: string) {
-  // // 使用模拟数据，当后端API未实现时使用
-  // console.log('API MOCK: rateApplication is using mock data.');
-  //
-  // // 校验评分范围
-  // if (rating < 1 || rating > 5) {
-  //   return Promise.reject({ message: '评分必须在 1 到 5 之间' });
-  // }
-  //
-  // // 返回模拟响应
-  // return Promise.resolve({
-  //   data: {
-  //     success: true,
-  //     message: '评价已提交'
-  //   }
-  // });
+export function submitInterviewFeedback(id: string | number, rating: number, feedback?: string) {
+  // 校验评分范围
+  if (rating < 1 || rating > 5) {
+    return Promise.reject({ message: '评分必须在 1 到 5 之间' });
+  }
 
-  // 当后端API实现后，取消注释下面的代码
-  // /*
   return request({
-    url: `/api/applications/${id}/rate`,
-    method: 'post',
-    data: { rating, comment },
+    url: `/api/applications/${id}/feedback`,
+    method: 'put',
+    data: { rating, feedback },
+  }).then(response => {
+    // 提交成功后清除相关缓存
+    clearCacheByUrlPrefix(`get:/api/applications/${id}`);
+    return response;
   });
-  // */
 }
 
 /**
@@ -365,12 +358,9 @@ export function getAllApplications(params?: ApplicationFilterParams): Promise<{ 
   // const mockApplications = getStudentApplicationList(params); // 注意：这里直接调用了上面的模拟函数，实际后端需要独立实现
   // return mockApplications;
 
-  // 当后端API实现后，取消注释下面的代码
-  // /*
   return request({
     url: '/api/admin/applications', // 管理员接口地址可能不同
     method: 'get',
     params,
   });
-  // */
 }

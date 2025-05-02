@@ -16,24 +16,24 @@
         <div v-if="currentStep.title" class="guide-tour__step-title">
           {{ currentStep.title }}
         </div>
-        
+
         <!-- 描述 -->
         <div v-if="currentStep.description" class="guide-tour__step-description">
           {{ currentStep.description }}
         </div>
-        
+
         <!-- 自定义内容 -->
         <div v-if="$slots[`step-${currentStepIndex}`]" class="guide-tour__step-custom">
           <slot :name="`step-${currentStepIndex}`"></slot>
         </div>
-        
+
         <!-- 步骤指示器 -->
         <div v-if="showStepIndicator && steps.length > 1" class="guide-tour__step-indicator">
           <span class="guide-tour__step-current">{{ currentStepIndex + 1 }}</span>
           <span class="guide-tour__step-separator">/</span>
           <span class="guide-tour__step-total">{{ steps.length }}</span>
         </div>
-        
+
         <!-- 操作按钮 -->
         <div class="guide-tour__step-actions">
           <el-button
@@ -43,7 +43,7 @@
           >
             {{ prevButtonText }}
           </el-button>
-          
+
           <el-button
             v-if="showSkipButton && !isLastStep"
             size="small"
@@ -51,7 +51,7 @@
           >
             {{ skipButtonText }}
           </el-button>
-          
+
           <el-button
             v-if="isLastStep"
             type="primary"
@@ -60,7 +60,7 @@
           >
             {{ finishButtonText }}
           </el-button>
-          
+
           <el-button
             v-else
             type="primary"
@@ -71,18 +71,18 @@
           </el-button>
         </div>
       </div>
-      
+
       <!-- 箭头 -->
       <div v-if="showArrow" class="guide-tour__step-arrow"></div>
     </div>
-    
+
     <!-- 遮罩层 -->
     <div
       v-if="isActive && showMask"
       class="guide-tour__mask"
       @click="handleMaskClick"
     ></div>
-    
+
     <!-- 高亮元素 -->
     <div
       v-if="isActive && currentStep && showHighlight"
@@ -96,7 +96,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 
 // 引导步骤类型
-interface GuideStep {
+export interface GuideStep {
   target: string; // 目标元素选择器
   title?: string; // 步骤标题
   description?: string; // 步骤描述
@@ -299,7 +299,7 @@ const updateTargetPosition = async () => {
 
   if (targetElement.value) {
     targetRect.value = targetElement.value.getBoundingClientRect();
-    
+
     // 滚动到目标元素
     targetElement.value.scrollIntoView({
       behavior: 'smooth',
@@ -320,22 +320,22 @@ const startTour = async () => {
 
   isActive.value = true;
   currentStepIndex.value = 0;
-  
+
   await nextTick();
   await updateTargetPosition();
-  
+
   emit('start');
 };
 
 // 完成引导
 const finishTour = () => {
   isActive.value = false;
-  
+
   // 标记为已完成
   if (props.showOnce) {
     localStorage.setItem(props.storageKey, 'true');
   }
-  
+
   emit('finish');
 };
 
@@ -352,18 +352,18 @@ const nextStep = async () => {
     await currentStep.value.afterLeave();
     emit('step-after-leave', currentStepIndex.value);
   }
-  
+
   currentStepIndex.value++;
-  
+
   // 执行进入钩子
   if (currentStep.value?.beforeEnter) {
     await currentStep.value.beforeEnter();
     emit('step-before-enter', currentStepIndex.value);
   }
-  
+
   await nextTick();
   await updateTargetPosition();
-  
+
   emit('step-change', currentStepIndex.value);
 };
 
@@ -374,18 +374,18 @@ const prevStep = async () => {
     await currentStep.value.afterLeave();
     emit('step-after-leave', currentStepIndex.value);
   }
-  
+
   currentStepIndex.value--;
-  
+
   // 执行进入钩子
   if (currentStep.value?.beforeEnter) {
     await currentStep.value.beforeEnter();
     emit('step-before-enter', currentStepIndex.value);
   }
-  
+
   await nextTick();
   await updateTargetPosition();
-  
+
   emit('step-change', currentStepIndex.value);
 };
 
@@ -434,7 +434,7 @@ onMounted(() => {
   if (props.autoStart) {
     startTour();
   }
-  
+
   if (props.updateOnResize) {
     window.addEventListener('resize', handleResize);
   }
@@ -598,11 +598,11 @@ defineExpose({
     max-width: 280px;
     padding: 12px;
   }
-  
+
   .guide-tour__step-title {
     font-size: 14px;
   }
-  
+
   .guide-tour__step-description {
     font-size: 12px;
   }

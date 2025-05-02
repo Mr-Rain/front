@@ -101,6 +101,10 @@ const dateRange = ref<[string, string][]>([]);
 const getCurrentValueAsArray = (): WorkExperienceCamel[] => {
   if (typeof props.modelValue === 'string') {
     try {
+      // 如果是空字符串或"[]"，则直接返回空数组
+      if (props.modelValue === '' || props.modelValue === '[]') {
+        return [];
+      }
       const parsedValue = JSON.parse(props.modelValue);
       return Array.isArray(parsedValue) ? parsedValue : [];
     } catch (e) {
@@ -117,6 +121,11 @@ const getCurrentValueAsArray = (): WorkExperienceCamel[] => {
 watch(() => props.modelValue, (newValue) => {
   if (typeof newValue === 'string') {
     try {
+      // 如果是空字符串或"[]"，则直接设置为空数组
+      if (newValue === '' || newValue === '[]') {
+        dateRange.value = [];
+        return;
+      }
       const parsedValue = JSON.parse(newValue);
       if (Array.isArray(parsedValue)) {
         dateRange.value = parsedValue.map((work: WorkExperienceCamel) =>

@@ -139,13 +139,13 @@ export const useNotificationStore = defineStore('notification', {
           const index = this.notifications.findIndex(n => n.id === id);
           if (index !== -1) {
             this.notifications[index].status = 'read';
-            this.notifications[index].read_time = new Date().toISOString();
+            this.notifications[index].readTime = new Date().toISOString();
           }
         } else {
           // 更新所有通知状态
           this.notifications.forEach(n => {
             n.status = 'read';
-            n.read_time = new Date().toISOString();
+            n.readTime = new Date().toISOString();
           });
         }
         

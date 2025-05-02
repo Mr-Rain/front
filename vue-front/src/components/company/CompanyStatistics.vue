@@ -196,26 +196,48 @@ const fetchedTrendData = ref<any[]>([]);
 
 // 处理趋势图表点击事件
 const handleTrendChartClick = (params: any) => {
+  console.log('点击事件原始参数:', params);
+
   // 获取点击的日期索引
-  const dateIndex = params.dataIndex;
+  let dateIndex = params.dataIndex;
+
+  // 如果点击的是标记点（markPoint），需要找到对应的实际数据点
+  if (params.componentType === 'markPoint') {
+    // 找到最大值对应的索引
+    if (params.name === '最大值') {
+      const maxValue = Math.max(...applicationTrendData.values);
+      dateIndex = applicationTrendData.values.findIndex(v => v === maxValue);
+    }
+    // 找到最小值对应的索引
+    else if (params.name === '最小值') {
+      const minValue = Math.min(...applicationTrendData.values);
+      dateIndex = applicationTrendData.values.findIndex(v => v === minValue);
+    }
+  }
+
   if (dateIndex >= 0 && dateIndex < applicationTrendData.xAxis.length) {
     // 获取对应的日期
     selectedDate.value = applicationTrendData.xAxis[dateIndex];
 
     // 从后端数据中查找该日期的详细数据
     const trendData = fetchedTrendData.value.find((item: any) => item.date === selectedDate.value);
+    console.log('后端返回的该日期数据:', trendData);
 
+    // 使用后端返回的真实数据
     if (trendData) {
       selectedDateData.value = trendData;
-      ElMessage.success(`已选择 ${selectedDate.value} 的数据`);
+      console.log('最终选中的日期数据:', selectedDateData.value);
     } else {
+      // 如果找不到对应日期的数据，使用默认值
       selectedDateData.value = {
-        applications: applicationTrendData.values[dateIndex],
+        date: selectedDate.value,
+        applications: 0,
         interviews: 0,
         offers: 0
       };
-      ElMessage.info(`${selectedDate.value} 的详细数据不完整`);
     }
+
+    ElMessage.success(`已选择 ${selectedDate.value} 的数据`);
 
     // 显示对话框
     dialogVisible.value = true;
@@ -244,7 +266,7 @@ const handleTrendChartMouseover = (params: any) => {
 };
 
 // 处理趋势图表鼠标离开事件
-const handleTrendChartMouseout = (params: any) => {
+const handleTrendChartMouseout = () => {
   // 鼠标离开时的处理逻辑
   console.log('鼠标离开图表数据点');
 };
@@ -274,9 +296,8 @@ const jobPopularityData = reactive({
 
 // 应聘者学历分布数据
 const educationData = ref<{ name: string; value: number }[]>([]);
-
 // 申请趋势图表选项
-const applicationTrendChartOptions = computed<EChartsOption>(() => ({
+const applicationTrendChartOptions = computed(() => ({
   title: {
     text: '最近15天申请趋势',
     textStyle: {
@@ -381,7 +402,13 @@ const applicationTrendChartOptions = computed<EChartsOption>(() => ({
       markPoint: {
         data: [
           { type: 'max', name: '最大值' },
-          { type: 'min', name: '最小值' }
+          ...((() => {
+            // 检查是否有多个最小值
+            const minValue = Math.min(...applicationTrendData.values);
+            const minValueCount = applicationTrendData.values.filter(v => v === minValue).length;
+            // 只有一个最小值时才显示最小值标记点
+            return minValueCount === 1 ? [{ type: 'min', name: '最小值' }] : [];
+          })())
         ]
       }
     }
@@ -516,12 +543,19 @@ const fetchCompanyStatistics = async () => {
 
       // 申请趋势数据
       if (data.applicationTrend && data.applicationTrend.length > 0) {
+        console.log('后端返回的趋势数据:', data.applicationTrend);
+
         // 保存完整的趋势数据，用于点击时显示详情
         fetchedTrendData.value = data.applicationTrend;
 
         // 提取日期和申请数量用于图表显示
         applicationTrendData.xAxis = data.applicationTrend.map((item: any) => item.date);
         applicationTrendData.values = data.applicationTrend.map((item: any) => item.applications);
+
+        // 打印处理后的数据
+        console.log('处理后的趋势数据:');
+        console.log('日期:', applicationTrendData.xAxis);
+        console.log('申请数量:', applicationTrendData.values);
       }
 
       // 申请状态数据 - 需要后端提供或前端计算

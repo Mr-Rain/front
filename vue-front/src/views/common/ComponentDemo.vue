@@ -1,7 +1,7 @@
 <template>
   <div class="component-demo">
     <h1 class="demo-title">组件演示</h1>
-    
+
     <el-tabs v-model="activeTab">
       <el-tab-pane label="页面过渡" name="transition">
         <div class="demo-section">
@@ -9,7 +9,7 @@
           <p class="section-description">
             页面过渡动画已经应用于整个应用程序。当您在不同页面之间导航时，将看到平滑的过渡效果。
           </p>
-          
+
           <div class="demo-controls">
             <el-form :model="transitionForm" label-position="top">
               <el-form-item label="过渡类型">
@@ -22,7 +22,7 @@
                   <el-option label="缩放" value="scale" />
                 </el-select>
               </el-form-item>
-              
+
               <el-form-item v-if="transitionForm.type === 'slide'" label="滑动方向">
                 <el-select v-model="transitionForm.direction">
                   <el-option label="从右侧" value="right" />
@@ -31,18 +31,18 @@
                   <el-option label="从下方" value="down" />
                 </el-select>
               </el-form-item>
-              
+
               <el-form-item label="过渡持续时间">
                 <el-slider v-model="transitionForm.duration" :min="100" :max="1000" :step="50" show-input />
               </el-form-item>
-              
+
               <el-form-item>
                 <el-button type="primary" @click="applyTransition">应用过渡</el-button>
                 <el-button @click="resetTransition">重置</el-button>
               </el-form-item>
             </el-form>
           </div>
-          
+
           <div class="demo-preview">
             <div class="preview-container">
               <page-transition
@@ -57,19 +57,19 @@
                 </div>
               </page-transition>
             </div>
-            
+
             <el-button @click="togglePreview">切换预览</el-button>
           </div>
         </div>
       </el-tab-pane>
-      
+
       <el-tab-pane label="加载状态" name="loading">
         <div class="demo-section">
           <h2 class="section-title">加载状态组件</h2>
           <p class="section-description">
             加载状态组件用于在数据加载过程中显示加载状态，提供多种加载类型和样式。
           </p>
-          
+
           <div class="demo-controls">
             <el-form :model="loadingForm" label-position="top">
               <el-form-item label="加载类型">
@@ -80,7 +80,7 @@
                   <el-option label="进度条" value="progress" />
                 </el-select>
               </el-form-item>
-              
+
               <el-form-item label="大小">
                 <el-select v-model="loadingForm.size">
                   <el-option label="小" value="small" />
@@ -88,25 +88,25 @@
                   <el-option label="大" value="large" />
                 </el-select>
               </el-form-item>
-              
+
               <el-form-item label="加载文本">
                 <el-input v-model="loadingForm.text" placeholder="请输入加载文本" />
               </el-form-item>
-              
+
               <el-form-item>
                 <el-checkbox v-model="loadingForm.overlay">显示遮罩层</el-checkbox>
               </el-form-item>
-              
+
               <el-form-item v-if="loadingForm.type === 'progress'" label="进度">
                 <el-slider v-model="loadingForm.percentage" :min="0" :max="100" show-input />
               </el-form-item>
-              
+
               <el-form-item>
                 <el-button type="primary" @click="toggleLoading">{{ isLoading ? '隐藏加载' : '显示加载' }}</el-button>
               </el-form-item>
             </el-form>
           </div>
-          
+
           <div class="demo-preview">
             <div class="preview-container">
               <loading-state
@@ -126,14 +126,14 @@
           </div>
         </div>
       </el-tab-pane>
-      
+
       <el-tab-pane label="错误状态" name="error">
         <div class="demo-section">
           <h2 class="section-title">错误状态组件</h2>
           <p class="section-description">
             错误状态组件用于在发生错误时显示错误信息，提供多种错误类型和样式。
           </p>
-          
+
           <div class="demo-controls">
             <el-form :model="errorForm" label-position="top">
               <el-form-item label="错误类型">
@@ -143,7 +143,7 @@
                   <el-option label="信息" value="info" />
                 </el-select>
               </el-form-item>
-              
+
               <el-form-item label="大小">
                 <el-select v-model="errorForm.size">
                   <el-option label="小" value="small" />
@@ -151,25 +151,25 @@
                   <el-option label="大" value="large" />
                 </el-select>
               </el-form-item>
-              
+
               <el-form-item label="标题">
                 <el-input v-model="errorForm.title" placeholder="请输入错误标题" />
               </el-form-item>
-              
+
               <el-form-item label="描述">
                 <el-input v-model="errorForm.description" type="textarea" placeholder="请输入错误描述" />
               </el-form-item>
-              
+
               <el-form-item>
                 <el-checkbox v-model="errorForm.showDetails">显示错误详情</el-checkbox>
               </el-form-item>
-              
+
               <el-form-item>
                 <el-button type="primary" @click="toggleError">{{ hasError ? '隐藏错误' : '显示错误' }}</el-button>
               </el-form-item>
             </el-form>
           </div>
-          
+
           <div class="demo-preview">
             <div class="preview-container">
               <error-state
@@ -192,35 +192,35 @@
           </div>
         </div>
       </el-tab-pane>
-      
+
       <el-tab-pane label="引导提示" name="guide">
         <div class="demo-section">
           <h2 class="section-title">引导提示组件</h2>
           <p class="section-description">
             引导提示组件用于为用户提供功能引导，帮助用户了解应用程序的功能和使用方法。
           </p>
-          
+
           <div class="demo-controls">
             <el-form :model="guideForm" label-position="top">
               <el-form-item>
                 <el-checkbox v-model="guideForm.showArrow">显示箭头</el-checkbox>
               </el-form-item>
-              
+
               <el-form-item>
                 <el-checkbox v-model="guideForm.showMask">显示遮罩层</el-checkbox>
               </el-form-item>
-              
+
               <el-form-item>
                 <el-checkbox v-model="guideForm.showHighlight">显示高亮</el-checkbox>
               </el-form-item>
-              
+
               <el-form-item>
                 <el-button type="primary" @click="startGuideTour">开始引导</el-button>
                 <el-button @click="resetGuideTour">重置引导状态</el-button>
               </el-form-item>
             </el-form>
           </div>
-          
+
           <div class="demo-preview">
             <div class="preview-container">
               <div class="guide-demo-elements">
@@ -232,7 +232,7 @@
                 </el-select>
                 <el-button id="guide-step-4" type="success">第四步</el-button>
               </div>
-              
+
               <guide-tour
                 ref="guideTour"
                 :steps="guideSteps"
@@ -300,7 +300,7 @@ const isLoading = ref(false);
 
 const toggleLoading = () => {
   isLoading.value = !isLoading.value;
-  
+
   if (isLoading.value && loadingForm.type === 'progress') {
     // 模拟进度条
     const interval = setInterval(() => {
@@ -352,7 +352,10 @@ const guideForm = reactive({
   showHighlight: true
 });
 
-const guideSteps = [
+// 导入GuideStep类型
+import type { GuideStep } from '@/components/common/GuideTour.vue';
+
+const guideSteps: GuideStep[] = [
   {
     target: '#guide-step-1',
     title: '第一步',
@@ -470,12 +473,12 @@ const resetGuideTour = () => {
   .component-demo {
     padding: 10px;
   }
-  
+
   .demo-controls,
   .preview-container {
     padding: 15px;
   }
-  
+
   .guide-demo-elements {
     flex-direction: column;
     align-items: center;

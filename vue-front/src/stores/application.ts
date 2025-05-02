@@ -12,6 +12,7 @@ import {
   getCompanyApplicationDetail,
   getStudentApplicationDetail,
   updateApplicationStatus,
+  submitInterviewFeedback,
 } from '@/api/application';
 import { ElMessage } from 'element-plus';
 
@@ -68,7 +69,7 @@ export const useApplicationStore = defineStore('application', {
           jobTitle: app.jobTitle || app.jobInfo?.title || 'N/A',
           companyName: app.companyName || app.jobInfo?.companyName || 'N/A',
           // 假设 resumeInfo 或 resumeSnapshot 中有 title 字段
-          resumeTitle: app.resumeTitle || (app as any).resumeSnapshot?.title || (app as any).resumeInfo?.title || 'N/A' 
+          resumeTitle: app.resumeTitle || (app as any).resumeSnapshot?.title || (app as any).resumeInfo?.title || 'N/A'
         }));
 
         this.studentApplicationsTotal = response.data.total;
@@ -88,7 +89,12 @@ export const useApplicationStore = defineStore('application', {
       try {
         await applyForJob(data);
         ElMessage.success('申请成功');
-        // Optionally refresh student application list
+        // 清除申请列表缓存
+        import('@/utils/apiCache').then(module => {
+          const apiCache = module.default;
+          apiCache.clearByTags(['application', 'student-applications']);
+        });
+        // 刷新学生申请列表
         await this.fetchStudentApplications();
       } catch (error) {
         console.error('Failed to apply for job:', error);
@@ -105,7 +111,12 @@ export const useApplicationStore = defineStore('application', {
       try {
         await withdrawApplication(id);
         ElMessage.success('撤回成功');
-        await this.fetchStudentApplications(); // Refresh list
+        // 清除申请列表缓存
+        import('@/utils/apiCache').then(module => {
+          const apiCache = module.default;
+          apiCache.clearByTags(['application', 'student-applications']);
+        });
+        await this.fetchStudentApplications(); // 刷新列表
       } catch (error) {
         console.error('Failed to withdraw application:', error);
         ElMessage.error('撤回申请失败');
@@ -167,12 +178,9 @@ export const useApplicationStore = defineStore('application', {
       this.submitting = true;
       try {
         // 实际API调用
-        // await updateApplicationStatus(id, data);
+        await updateApplicationStatus(id, data);
 
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // 模拟更新本地数据
+        // 更新本地数据
         const companyAppIndex = this.companyApplications.findIndex(app => app.id === id);
         if (companyAppIndex !== -1) {
           // 更新状态
@@ -243,13 +251,13 @@ export const useApplicationStore = defineStore('application', {
     async batchUpdateApplicationStatus(ids: (string | number)[], data: UpdateApplicationStatusPayload) {
       this.submitting = true;
       try {
-        // 实际API调用
-        // await batchUpdateApplicationStatus(ids, data);
+        // 实际API调用 - 这里需要后端提供批量更新接口
+        // 由于后端可能没有批量更新接口，我们这里循环调用单个更新接口
+        for (const id of ids) {
+          await updateApplicationStatus(id, data);
+        }
 
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // 模拟更新本地数据
+        // 更新本地数据
         for (const id of ids) {
           const companyAppIndex = this.companyApplications.findIndex(app => app.id === id);
           if (companyAppIndex !== -1) {
@@ -328,6 +336,36 @@ export const useApplicationStore = defineStore('application', {
         this.companyApplications = [];
         this.companyApplicationsTotal = 0;
         this.currentApplicationDetail = null;
+    },
+
+    // 提交面试反馈
+    async submitInterviewFeedback(id: string | number, rating: number, feedback?: string) {
+      this.submitting = true;
+      try {
+        const response = await submitInterviewFeedback(id, rating, feedback);
+
+        // 使用后端返回的最新数据更新本地状态
+        if (this.currentApplicationDetail?.id === id && response.data) {
+          // 完全替换为后端返回的最新数据
+          this.currentApplicationDetail = response.data;
+        }
+
+        ElMessage.success('反馈提交成功');
+        return response;
+      } catch (error: any) {
+        console.error('Failed to submit interview feedback:', error);
+
+        // 处理特定错误消息
+        if (error.response && error.response.data && error.response.data.message) {
+          ElMessage.error(error.response.data.message);
+        } else {
+          ElMessage.error('提交反馈失败，请稍后重试');
+        }
+
+        throw error;
+      } finally {
+        this.submitting = false;
+      }
     },
 
     // 获取申请统计数据

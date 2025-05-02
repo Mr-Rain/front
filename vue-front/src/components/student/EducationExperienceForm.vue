@@ -75,10 +75,17 @@
             v-model="edu.description"
             type="textarea"
             :rows="3"
-            placeholder="请描述在校期间的主要课程、成绩、活动等"
+            placeholder="请描述在校期间的主要课程、成绩、活动等（支持Markdown格式）"
           ></el-input>
+          <div class="form-tip">支持Markdown格式，如：**加粗**、*斜体*、- 列表项等</div>
         </el-form-item>
       </el-form>
+
+      <!-- Markdown预览部分 -->
+      <div v-if="edu.description && !editable" class="preview-section">
+        <div class="preview-header">Markdown预览</div>
+        <div class="markdown-preview" v-html="renderMarkdown(edu.description)"></div>
+      </div>
     </div>
   </div>
 </template>
@@ -87,6 +94,7 @@
 import { ref, watch } from 'vue';
 import type { EducationExperienceCamel } from '@/types/student';
 import { Plus, Delete } from '@element-plus/icons-vue';
+import { marked } from 'marked'; // 需要安装: pnpm add marked
 
 const props = defineProps({
   modelValue: {
@@ -108,6 +116,11 @@ const dateRange = ref<[string, string][]>([]);
 watch(() => props.modelValue, (newValue) => {
   if (typeof newValue === 'string') {
     try {
+      // 如果是空字符串或"[]"，则直接设置为空数组
+      if (newValue === '' || newValue === '[]') {
+        dateRange.value = [];
+        return;
+      }
       const parsedValue = JSON.parse(newValue);
       if (Array.isArray(parsedValue)) {
         dateRange.value = parsedValue.map((edu: EducationExperienceCamel) =>
@@ -130,6 +143,10 @@ watch(() => props.modelValue, (newValue) => {
 const getCurrentValueAsArray = (): EducationExperienceCamel[] => {
   if (typeof props.modelValue === 'string') {
     try {
+      // 如果是空字符串或"[]"，则直接返回空数组
+      if (props.modelValue === '' || props.modelValue === '[]') {
+        return [];
+      }
       const parsedValue = JSON.parse(props.modelValue);
       return Array.isArray(parsedValue) ? parsedValue : [];
     } catch (e) {
@@ -185,6 +202,19 @@ const updateDateRange = (index: number) => {
     emit('update:modelValue', updatedValue);
   }
 };
+
+// 渲染Markdown内容
+const renderMarkdown = (content: string): string => {
+  if (!content) return '';
+  try {
+    // 使用marked.parse而不是直接调用marked，并处理异步结果
+    // 由于Vue模板不支持直接使用异步函数，这里使用同步方式
+    return marked.parse(content, { async: false }) as string;
+  } catch (e) {
+    console.error('Failed to render markdown:', e);
+    return content;
+  }
+};
 </script>
 
 <style scoped>
@@ -230,6 +260,40 @@ const updateDateRange = (index: number) => {
 .empty-state {
   padding: 20px;
   text-align: center;
+}
+
+.form-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 5px;
+}
+
+.preview-section {
+  margin-top: 15px;
+  border-top: 1px dashed #dcdfe6;
+  padding-top: 15px;
+}
+
+.preview-header {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #606266;
+  margin-bottom: 10px;
+}
+
+.markdown-preview {
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ebeef5;
+}
+
+.markdown-preview :deep(ul) {
+  padding-left: 20px;
+}
+
+.markdown-preview :deep(p) {
+  margin: 8px 0;
 }
 
 /* 移动端适配 */

@@ -12,6 +12,7 @@ import {
   getCompanyList,
   getAdminCompanyList,
   approveCompany,
+  getCompanyAuditLogs,
 } from '@/api/company';
 import { getCompanyApplicationList } from '@/api/application';
 import { ElMessage } from 'element-plus';
@@ -172,43 +173,9 @@ export const useCompanyStore = defineStore('company', {
     // (Admin) 获取公司审核记录
     async fetchAuditLogs(companyId: string | number) {
       try {
-        // 实际API调用
-        // const response = await request.get(`/admin/companies/${companyId}/audit-logs`);
-        // return response.data;
-
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // 模拟审核记录数据
-        const company = this.auditList.find(company => company.id === companyId);
-        if (!company) {
-          return [];
-        }
-
-        const now = new Date();
-        const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        return [
-          {
-            id: 1,
-            company_id: companyId,
-            action: 'view',
-            operator_id: 1,
-            operator_name: 'admin',
-            audit_time: yesterday.toISOString(),
-            message: ''
-          },
-          {
-            id: 2,
-            company_id: companyId,
-            action: company.auditStatus === 'approved' ? 'approve' : (company.auditStatus === 'rejected' ? 'reject' : 'comment'),
-            operator_id: 1,
-            operator_name: 'admin',
-            audit_time: now.toISOString(),
-            message: company.auditMessage || ''
-          }
-        ];
+        // 调用真实API
+        const response = await getCompanyAuditLogs(companyId);
+        return response.data;
       } catch (error) {
         console.error(`Failed to fetch audit logs for company ${companyId}:`, error);
         ElMessage.error('获取审核记录失败');
@@ -309,6 +276,42 @@ export const useCompanyStore = defineStore('company', {
       } catch (error) {
         console.error('Failed to fetch admin company list:', error);
         ElMessage.error('获取管理员企业列表失败');
+        this.auditList = [];
+        this.auditTotal = 0;
+      } finally {
+        this.loadingAuditList = false;
+      }
+    },
+
+    // 获取所有状态的企业列表（合并显示）
+    async fetchAllStatusAuditList(pendingParams: any, approvedParams: any, rejectedParams: any) {
+      this.loadingAuditList = true;
+      try {
+        // 并行发送三个请求
+        const [pendingResponse, approvedResponse, rejectedResponse] = await Promise.all([
+          getCompanyAuditList(pendingParams),
+          getCompanyAuditList(approvedParams),
+          getCompanyAuditList(rejectedParams)
+        ]);
+
+        // 合并结果
+        const pendingList = pendingResponse.data.list || pendingResponse.data.records || [];
+        const approvedList = approvedResponse.data.list || approvedResponse.data.records || [];
+        const rejectedList = rejectedResponse.data.list || rejectedResponse.data.records || [];
+
+        // 合并三种状态的企业列表
+        this.auditList = [...pendingList, ...approvedList, ...rejectedList];
+
+        // 计算总数
+        this.auditTotal =
+          (pendingResponse.data.total || 0) +
+          (approvedResponse.data.total || 0) +
+          (rejectedResponse.data.total || 0);
+
+        console.log('合并后的企业列表:', this.auditList);
+      } catch (error) {
+        console.error('Failed to fetch all status company list:', error);
+        ElMessage.error('获取企业列表失败');
         this.auditList = [];
         this.auditTotal = 0;
       } finally {

@@ -453,6 +453,13 @@ const handleSaveUserRoles = async (data: UserRoleUpdatePayload) => {
 
 // 更新用户状态
 const handleUpdateStatus = async (id: string | number, status: UserStatus) => {
+    // 检查是否为管理员用户
+    const user = userStore.userList.find(u => u.id === id);
+    if (user && user.userType === 'admin') {
+        ElMessage.warning('不能修改管理员用户的状态');
+        return;
+    }
+
     submitting.value = true;
     try {
         await userStore.updateUserStatus(id, status);
@@ -462,8 +469,16 @@ const handleUpdateStatus = async (id: string | number, status: UserStatus) => {
         if (currentUserDetail.value && currentUserDetail.value.id === id) {
             currentUserDetail.value.status = status;
         }
-    } catch (error) {
-        ElMessage.error('更新用户状态失败');
+
+        // 刷新用户列表
+        fetchUsers();
+    } catch (error: any) {
+        console.error('更新用户状态失败:', error);
+        if (error.response && error.response.data && error.response.data.message) {
+            ElMessage.error(`更新用户状态失败: ${error.response.data.message}`);
+        } else {
+            ElMessage.error('更新用户状态失败，请稍后重试');
+        }
     } finally {
         submitting.value = false;
     }
@@ -473,6 +488,13 @@ const handleUpdateStatus = async (id: string | number, status: UserStatus) => {
 const handleBatchAction = () => {
     if (selectedUsers.value.length === 0) {
         ElMessage.warning('请选择要操作的用户');
+        return;
+    }
+
+    // 检查是否包含管理员用户
+    const hasAdmin = selectedUsers.value.some(user => user.userType === 'admin');
+    if (hasAdmin) {
+        ElMessage.warning('不能对管理员用户执行批量操作，请取消选择管理员用户');
         return;
     }
 
@@ -486,13 +508,33 @@ const handleBatchSubmit = async () => {
         return;
     }
 
+    // 再次检查是否包含管理员用户
+    const hasAdmin = selectedUsers.value.some(user => user.userType === 'admin');
+    if (hasAdmin) {
+        ElMessage.warning('不能对管理员用户执行批量操作，请取消选择管理员用户');
+        return;
+    }
+
     const ids = selectedUsers.value.map(user => user.id);
     const status = batchForm.action;
 
     submitting.value = true;
     try {
-        await userStore.batchUpdateUserStatus(ids, status);
-        ElMessage.success(`成功${status === 'active' ? '启用' : '禁用'} ${ids.length} 个用户账号`);
+        const result = await userStore.batchUpdateUserStatus(ids, status);
+
+        if (result && result.updatedCount !== undefined) {
+            if (result.updatedCount === ids.length) {
+                ElMessage.success(`成功${status === 'active' ? '启用' : '禁用'} ${result.updatedCount} 个用户账号`);
+            } else {
+                ElMessage.warning(`操作部分完成：${result.updatedCount}/${ids.length} 个用户账号已${status === 'active' ? '启用' : '禁用'}`);
+            }
+
+            // 刷新用户列表
+            fetchUsers();
+        } else {
+            ElMessage.success(`成功${status === 'active' ? '启用' : '禁用'} ${ids.length} 个用户账号`);
+        }
+
         batchDialogVisible.value = false;
 
         // 清除选中状态
@@ -500,8 +542,13 @@ const handleBatchSubmit = async () => {
         if (table) {
             (table as HTMLElement).click();
         }
-    } catch (error) {
-        ElMessage.error('批量操作失败');
+    } catch (error: any) {
+        console.error('批量操作失败:', error);
+        if (error.response && error.response.data && error.response.data.message) {
+            ElMessage.error(`批量操作失败: ${error.response.data.message}`);
+        } else {
+            ElMessage.error('批量操作失败，请稍后重试');
+        }
     } finally {
         submitting.value = false;
     }

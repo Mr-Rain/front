@@ -51,6 +51,7 @@
                   placeholder="职位名称"
                   clearable
                   @clear="handleFilter"
+                  @keyup.enter="handleFilter"
                 />
               </el-form-item>
             </div>
@@ -137,6 +138,7 @@ import Pagination from '@/components/common/Pagination.vue';
 import TableExport from '@/components/common/TableExport.vue'; // Import table export component
 import JobStatistics from '@/components/company/JobStatistics.vue'; // Import job statistics component
 import JobCopyDialog from '@/components/company/JobCopyDialog.vue'; // Import job copy dialog
+import { clearCacheByUrlPrefix } from '@/utils/cacheInterceptor'; // Import cache clearing function
 
 const router = useRouter();
 const jobStore = useJobStore();
@@ -155,8 +157,29 @@ const listQuery = reactive({
 });
 
 const fetchJobs = () => {
-    // Assuming fetchCompanyJobList exists and accepts query parameters
-    jobStore.fetchCompanyJobList(listQuery);
+    // 构建查询参数
+    const params = { ...listQuery };
+
+    // 处理状态参数
+    if (params.status === undefined) {
+        // 如果未设置状态，默认查询所有状态
+        delete params.status;
+    }
+
+    // 移除空关键词
+    if (!params.keyword || params.keyword.trim() === '') {
+        delete params.keyword;
+    }
+
+    console.log('Fetching jobs with params:', params);
+    // 调用store方法获取职位列表
+    jobStore.fetchCompanyJobList({
+        ...params,
+        _t: new Date().getTime() // 添加时间戳，确保不使用缓存
+    });
+
+    // 清除其他可能的缓存
+    clearCacheByUrlPrefix('/api/jobs');
 };
 
 // 统计数据
@@ -182,14 +205,54 @@ const jobStatistics = computed(() => {
 });
 
 onMounted(() => {
+    // 从URL查询参数中获取筛选条件
+    const urlParams = new URLSearchParams(window.location.search);
+    const statusParam = urlParams.get('status');
+    const keywordParam = urlParams.get('keyword');
+
+    // 应用URL参数到筛选条件
+    if (statusParam) {
+        listQuery.status = statusParam as JobStatus;
+    }
+    if (keywordParam) {
+        listQuery.keyword = keywordParam;
+    }
+
+    // 获取职位列表
     fetchJobs();
+
     // 获取申请统计数据
     applicationStore.fetchApplicationStatistics();
 });
 
 const handleFilter = () => {
   listQuery.page = 1;
+
+  // 更新URL参数，但不触发页面刷新
+  const url = new URL(window.location.href);
+
+  // 清除现有的查询参数
+  url.searchParams.delete('status');
+  url.searchParams.delete('keyword');
+
+  // 添加新的查询参数
+  if (listQuery.status) {
+    url.searchParams.set('status', listQuery.status);
+  }
+  if (listQuery.keyword && listQuery.keyword.trim() !== '') {
+    url.searchParams.set('keyword', listQuery.keyword.trim());
+  }
+
+  // 更新URL，但不刷新页面
+  window.history.pushState({}, '', url.toString());
+
+  // 清除相关缓存
+  clearCacheByUrlPrefix('/api/jobs');
+
+  // 获取职位列表
   fetchJobs();
+
+  console.log('Filtering with params:', listQuery);
 };
 
 const formatTime = (timeStr: string | undefined): string => {
@@ -217,32 +280,44 @@ const goToApplicationsForJob = (jobId: string | number) => {
 
 const handleCloseJob = async (id: string | number) => {
     console.log(`Closing job ${id}`);
-    // TODO: Call store action to update job status to 'closed'
     try {
         await jobStore.updateJobStatus(id, 'closed');
         ElMessage.success('职位已关闭');
-        // fetchJobs(); // Refresh handled by store?
-    } catch(e) { ElMessage.error('操作失败'); }
+
+        // 清除缓存并重新获取数据
+        clearCacheByUrlPrefix('/api/jobs');
+        fetchJobs();
+    } catch(e) {
+        ElMessage.error('操作失败');
+    }
 };
 
 const handleOpenJob = async (id: string | number) => {
-     console.log(`Opening job ${id}`);
-    // TODO: Call store action to update job status to 'open'
-     try {
+    console.log(`Opening job ${id}`);
+    try {
         await jobStore.updateJobStatus(id, 'open');
         ElMessage.success('职位已开启招聘');
-        // fetchJobs(); // Refresh handled by store?
-    } catch(e) { ElMessage.error('操作失败'); }
+
+        // 清除缓存并重新获取数据
+        clearCacheByUrlPrefix('/api/jobs');
+        fetchJobs();
+    } catch(e) {
+        ElMessage.error('操作失败');
+    }
 };
 
 const handleDeleteJob = async (id: string | number) => {
     console.log(`Deleting job ${id}`);
-    // TODO: Call store action to delete job
-     try {
+    try {
         await jobStore.deleteJob(id);
         ElMessage.success('职位已删除');
-        // fetchJobs(); // Refresh handled by store?
-    } catch(e) { ElMessage.error('删除失败'); }
+
+        // 清除缓存并重新获取数据
+        clearCacheByUrlPrefix('/api/jobs');
+        fetchJobs();
+    } catch(e) {
+        ElMessage.error('删除失败');
+    }
 };
 
 // 复制职位相关方法
@@ -259,7 +334,9 @@ const handleCopyConfirmed = async (newJobData: Partial<JobInfo>) => {
     try {
         // 创建新职位
         await jobStore.createJob(newJobData);
-        // 刷新列表
+
+        // 清除缓存并刷新列表
+        clearCacheByUrlPrefix('/api/jobs');
         fetchJobs();
     } catch (error) {
         console.error('Failed to create copied job:', error);

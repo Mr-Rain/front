@@ -51,7 +51,7 @@
       <el-table :data="companyStore.auditList" v-loading="companyStore.loadingAuditList" style="width: 100%">
         <el-table-column label="公司名称" min-width="180">
           <template #default="scope">
-            {{ scope.row.companyName || '-' }}
+            {{ scope.row.company_name || scope.row.companyName || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="行业" width="120">
@@ -68,8 +68,8 @@
             <template #default="scope">
                 <el-link
                   type="primary"
-                  @click="previewLicense(scope.row.businessLicense || scope.row.businessLicense)"
-                  :disabled="!(scope.row.businessLicense || scope.row.businessLicense)"
+                  @click="previewLicense(scope.row.businessLicense)"
+                  :disabled="!scope.row.businessLicense"
                 >
                   预览文件
                 </el-link>
@@ -77,7 +77,7 @@
         </el-table-column>
         <el-table-column label="提交时间" width="180">
              <template #default="scope">
-               {{ formatTime(scope.row.submitTime) }}
+               {{ formatTime(scope.row.submitTime, scope.row.createTime) }}
              </template>
         </el-table-column>
         <el-table-column label="审核状态" width="120" align="center">
@@ -99,7 +99,7 @@
           </template>
         </el-table-column>
          <template #empty>
-            <el-empty description="暂无待审核的企业"></el-empty>
+            <el-empty :description="getEmptyDescription()"></el-empty>
          </template>
       </el-table>
 
@@ -133,7 +133,7 @@
                     </el-link>
                     <span v-else>-</span>
                  </el-descriptions-item>
-                 <el-descriptions-item label="提交时间">{{ formatTime(currentCompany.submitTime) }}</el-descriptions-item>
+                 <el-descriptions-item label="提交时间">{{ formatTime(currentCompany.submitTime, currentCompany.createTime) }}</el-descriptions-item>
                  <el-descriptions-item label="联系人">
                     {{ currentCompany.contactPerson || '-' }}
                     <template v-if="currentCompany.contactEmail || currentCompany.contactPhone">
@@ -144,8 +144,8 @@
              </el-descriptions>
 
             <h4>认证文件</h4>
-            <p v-if="currentCompany.businessLicense || currentCompany.businessLicense">
-                <el-link type="primary" @click="previewLicense(currentCompany.businessLicense || currentCompany.businessLicense)">
+            <p v-if="currentCompany.businessLicense">
+                <el-link type="primary" @click="previewLicense(currentCompany.businessLicense)">
                     {{ currentCompany.businessLicenseName || '点击预览认证文件' }}
                 </el-link>
             </p>
@@ -208,6 +208,8 @@ const listQuery = reactive({
     keyword: ''
 });
 
+// 初始化完成后，确保默认加载待审核的企业
+
 // 监听审核状态变化，重新获取数据
 watch(() => listQuery.auditStatus, () => {
     fetchAuditList();
@@ -221,10 +223,30 @@ const auditData = reactive<AuditPayload>({
     message: ''
 });
 
-const fetchAuditList = () => {
-    // TODO: Ensure companyStore has fetchAuditList action
+const fetchAuditList = async () => {
     console.log("Fetching audit list with query:", listQuery);
-    companyStore.fetchAuditList(listQuery);
+
+    // 确保传递正确的审核状态参数
+    const params = { ...listQuery };
+
+    // 如果选择了"所有状态"（即清除了选择），则分别获取所有状态的企业并合并
+    if (params.auditStatus === undefined || params.auditStatus === null) {
+        try {
+            // 分别获取三种状态的企业
+            const pendingParams = { ...params, auditStatus: 'pending' };
+            const approvedParams = { ...params, auditStatus: 'approved' };
+            const rejectedParams = { ...params, auditStatus: 'rejected' };
+
+            // 并行发送请求
+            await companyStore.fetchAllStatusAuditList(pendingParams, approvedParams, rejectedParams);
+        } catch (error) {
+            console.error('获取所有状态企业失败:', error);
+            ElMessage.error('获取企业列表失败');
+        }
+    } else {
+        // 正常获取指定状态的企业
+        companyStore.fetchAuditList(params);
+    }
 };
 
 onMounted(() => {
@@ -236,8 +258,11 @@ const handleFilter = () => {
   fetchAuditList();
 };
 
-const formatTime = (timeStr: string | undefined): string => {
+const formatTime = (timeStr: string | undefined, fallbackTimeStr?: string): string => {
+  // 如果主时间为空但有备用时间，则使用备用时间
+  if (!timeStr && fallbackTimeStr) return formatTime(fallbackTimeStr);
   if (!timeStr) return '-';
+
   try {
     // 创建一个日期对象
     const date = new Date(timeStr);
@@ -344,6 +369,19 @@ const handleViewAuditLogs = async () => {
         loadingAuditLogs.value = false;
     }
 }
+
+// 根据当前筛选条件获取空状态描述文本
+const getEmptyDescription = (): string => {
+    if (listQuery.auditStatus === 'pending') {
+        return '暂无待审核的企业';
+    } else if (listQuery.auditStatus === 'approved') {
+        return '暂无已通过审核的企业';
+    } else if (listQuery.auditStatus === 'rejected') {
+        return '暂无未通过审核的企业';
+    } else {
+        return '暂无符合条件的企业';
+    }
+};
 
 const handleAuditSubmit = async () => {
     if (!auditFormRef.value || !currentCompany.value) return;

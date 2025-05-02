@@ -7,9 +7,9 @@ import type { CompanyProfile } from './company'; // 可以引入简化版的 Com
 type JobType = '全职' | '兼职' | '实习';
 
 /**
- * 职位状态：开放、关闭、已删除
+ * 职位状态：开放、关闭、已删除、全部、空字符串(表示所有状态)
  */
-type JobStatus = 'open' | 'closed' | 'deleted';
+type JobStatus = 'open' | 'closed' | 'deleted' | 'all' | '';
 
 /**
  * 职位信息接口
@@ -33,9 +33,9 @@ export interface JobInfo {
   publishTime?: string; // 发布时间 (ISO 8601 格式)
   status?: JobStatus; // 职位状态
   // 可能需要的其他字段
-  // views?: number; // 浏览量
-  // applicationsCount?: number; // 申请人数
-  // companyProfile?: Partial<CompanyProfile>; // 完整的公司信息 (可选，用于职位详情页)
+  views?: number; // 浏览量
+  applicationsCount?: number; // 申请人数
+  companyProfile?: Partial<CompanyProfile>; // 完整的公司信息 (可选，用于职位详情页)
 }
 
 /**
@@ -54,4 +54,6 @@ export interface JobListParams {
   pageSize?: number; // 每页数量
   sortBy?: string; // 排序字段 (如 publishTime)
   order?: 'asc' | 'desc'; // 排序方式
+  status?: JobStatus; // 职位状态筛选
+  _allStatus?: boolean; // 内部标记，表示是否是"所有状态"请求
 }

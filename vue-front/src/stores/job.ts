@@ -46,9 +46,46 @@ export const useJobStore = defineStore('job', {
     async fetchJobList(params: JobListParams) {
       this.loadingList = true;
       try {
+        console.log('Fetching job list with params:', params);
         const response = await getJobList(params);
-        this.jobList = response.data.list || response.data.records || [];
-        this.jobTotal = response.data.total;
+        console.log('API response:', response.data);
+
+        let jobList = response.data.list || response.data.records || [];
+        console.log('Raw job list:', jobList);
+
+        // 检查是否是从"所有状态"选项来的请求
+        const isAllStatusRequest = params.hasOwnProperty('_allStatus') && params._allStatus === true;
+
+        // 检查每个职位的状态，并记录日志
+        console.log('原始职位列表:');
+        jobList.forEach(job => {
+          console.log(`Job ID: ${job.id}, Title: ${job.title}, Status: ${job.status}`);
+        });
+
+        // 如果指定了status参数且不为空，在前端再次过滤确保状态匹配
+        if (params.status && params.status !== 'all') {
+          console.log(`Filtering jobs by status: ${params.status}`);
+          const originalCount = jobList.length;
+          jobList = jobList.filter(job => job.status === params.status);
+          console.log(`Filtered ${originalCount - jobList.length} jobs, ${jobList.length} remaining`);
+        }
+        // 如果status参数为空字符串或_allStatus为true，显示所有状态的职位
+        else if (params.status === '' || isAllStatusRequest) {
+          console.log('All status request, showing all jobs regardless of status');
+          // 不进行过滤，显示所有状态的职位
+        }
+        // 如果没有指定status参数且不是"所有状态"请求，则在前端过滤掉已关闭的职位
+        else {
+          console.log('No status specified and not "all status" request, filtering closed jobs in frontend');
+          const originalCount = jobList.length;
+          jobList = jobList.filter(job => job.status === 'open');
+          console.log(`Filtered ${originalCount - jobList.length} jobs, ${jobList.length} remaining`);
+        }
+
+        this.jobList = jobList;
+        this.jobTotal = params.status ? response.data.total : jobList.length;
+        console.log('Final job list:', this.jobList);
+        console.log('Total jobs:', this.jobTotal);
       } catch (error) {
         console.error('Failed to fetch job list:', error);
         this.jobList = [];
@@ -87,8 +124,26 @@ export const useJobStore = defineStore('job', {
     async fetchCompanyJobList(params: any = {}) {
         this.loadingCompanyList = true;
         try {
-            const response = await getCompanyJobList(params);
-            this.companyJobList = response.data.list || response.data.records || [];
+            // 添加时间戳参数，避免使用缓存
+            const timestamp = new Date().getTime();
+            const response = await getCompanyJobList({
+                ...params,
+                _t: timestamp // 添加时间戳参数
+            });
+
+            console.log('Company job list response:', response.data);
+
+            // 获取职位列表
+            let jobList = response.data.list || response.data.records || [];
+
+            // 记录原始职位状态
+            console.log('原始职位列表状态:');
+            jobList.forEach(job => {
+                console.log(`Job ID: ${job.id}, Title: ${job.title}, Status: ${job.status}`);
+            });
+
+            // 不在前端进行额外的状态筛选，完全依赖后端返回的数据
+            this.companyJobList = jobList;
             this.companyJobTotal = response.data.total;
         } catch (error) {
             console.error('Failed to fetch company job list:', error);

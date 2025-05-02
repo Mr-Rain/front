@@ -2,7 +2,17 @@
   <el-card shadow="hover" class="job-card" @click="handleClick">
     <div class="card-content">
       <div class="header">
-        <span class="title">{{ job.title }}</span>
+        <div class="title-container">
+          <span class="title">{{ job.title }}</span>
+          <el-tag
+            v-if="job.status"
+            :type="job.status === 'open' ? 'success' : 'info'"
+            size="small"
+            class="status-tag"
+          >
+            {{ job.status === 'open' ? '招聘中' : job.status === 'closed' ? '已关闭' : '草稿' }}
+          </el-tag>
+        </div>
         <span class="salary">{{ job.salaryRange }}</span>
       </div>
       <div class="details">
@@ -72,14 +82,26 @@ const handleClick = () => {
   gap: 10px; /* 添加间距，确保标题和薪资之间有足够空间 */
 }
 
+.title-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
 .title {
   font-size: 16px;
   font-weight: bold;
   color: #303133;
   /* Allow title to wrap */
   word-break: break-word;
-  flex: 1; /* 让标题占据剩余空间 */
-  min-width: 0; /* 确保flex项可以正确缩小 */
+  width: 100%;
+}
+
+.status-tag {
+  align-self: flex-start;
+  margin-top: 2px;
 }
 
 .salary {

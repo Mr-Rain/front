@@ -6,10 +6,14 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import apiCache from './apiCache';
 import type { CacheOptions } from './apiCache';
 
-// 扩展AxiosRequestConfig，添加缓存选项
+// 扩展Axios类型，添加缓存相关属性
 declare module 'axios' {
   interface AxiosRequestConfig {
     cache?: CacheOptions | boolean;
+  }
+
+  interface AxiosResponse {
+    cached?: boolean;
   }
 }
 

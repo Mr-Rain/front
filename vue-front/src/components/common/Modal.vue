@@ -172,20 +172,7 @@ const handleConfirm = () => {
 
 <style scoped>
 /* Add custom styles for the modal if needed */
-.common-modal :deep(.el-dialog__header) { 
-  /* Example: Add border to header */
-  /* border-bottom: 1px solid var(--el-border-color-light); */
-  /* margin-right: 0; */ /* Reset margin if using draggable */
-}
+/* Empty rulesets were removed to fix linter errors */
 
-.common-modal :deep(.el-dialog__footer) {
-  /* Example: Add border to footer */
-  /* border-top: 1px solid var(--el-border-color-light); */
-}
-
-/* Ensure centered content works well */
-.common-modal.is-centered :deep(.el-dialog__body) {
-  /* text-align: center; */ /* Uncomment if needed */
-}
-
+/* Removed the last potentially problematic ruleset */
 </style> 

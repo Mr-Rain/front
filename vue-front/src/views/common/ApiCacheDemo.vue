@@ -7,28 +7,28 @@
           <p class="subtitle">展示API数据缓存功能</p>
         </div>
       </template>
-      
+
       <el-tabs v-model="activeTab">
         <!-- 基本缓存示例 -->
         <el-tab-pane label="基本缓存" name="basic">
           <div class="section">
             <h3>基本缓存功能</h3>
             <p>演示API请求缓存的基本功能</p>
-            
+
             <div class="demo-buttons">
               <el-button type="primary" @click="fetchDataWithCache">
                 使用缓存获取数据
               </el-button>
-              
+
               <el-button type="warning" @click="fetchDataWithoutCache">
                 不使用缓存获取数据
               </el-button>
-              
+
               <el-button type="danger" @click="clearCache">
                 清除缓存
               </el-button>
             </div>
-            
+
             <div class="request-info">
               <p>
                 <strong>请求次数:</strong> {{ requestCount }}
@@ -40,20 +40,20 @@
                 <strong>响应时间:</strong> {{ responseTime }}ms
               </p>
             </div>
-            
+
             <div v-if="data" class="response-display">
               <h4>响应数据 {{ data.cached ? '(来自缓存)' : '' }}</h4>
               <pre>{{ JSON.stringify(data, null, 2) }}</pre>
             </div>
           </div>
         </el-tab-pane>
-        
+
         <!-- 缓存配置示例 -->
         <el-tab-pane label="缓存配置" name="config">
           <div class="section">
             <h3>缓存配置选项</h3>
             <p>演示不同的缓存配置选项</p>
-            
+
             <el-form :model="cacheOptions" label-width="180px" class="cache-form">
               <el-form-item label="缓存时间 (TTL)">
                 <el-slider
@@ -64,7 +64,7 @@
                   :format-tooltip="formatTtl"
                 />
               </el-form-item>
-              
+
               <el-form-item label="缓存标签">
                 <el-select
                   v-model="cacheOptions.tags"
@@ -78,49 +78,49 @@
                   <el-option label="demo" value="demo" />
                 </el-select>
               </el-form-item>
-              
+
               <el-form-item label="强制刷新">
                 <el-switch v-model="cacheOptions.forceRefresh" />
               </el-form-item>
-              
+
               <el-form-item label="后台刷新">
                 <el-switch v-model="cacheOptions.backgroundRefresh" />
               </el-form-item>
             </el-form>
-            
+
             <div class="demo-buttons">
               <el-button type="primary" @click="fetchDataWithOptions">
                 使用自定义选项获取数据
               </el-button>
-              
+
               <el-button type="warning" @click="clearCacheByTag">
                 清除指定标签缓存
               </el-button>
             </div>
-            
+
             <div v-if="configData" class="response-display">
               <h4>响应数据 {{ configData.cached ? '(来自缓存)' : '' }}</h4>
               <pre>{{ JSON.stringify(configData, null, 2) }}</pre>
             </div>
           </div>
         </el-tab-pane>
-        
+
         <!-- 缓存统计示例 -->
         <el-tab-pane label="缓存统计" name="stats">
           <div class="section">
             <h3>缓存统计信息</h3>
             <p>查看当前缓存的统计信息</p>
-            
+
             <div class="demo-buttons">
               <el-button type="primary" @click="refreshStats">
                 刷新统计信息
               </el-button>
-              
+
               <el-button type="danger" @click="clearAllCache">
                 清除所有缓存
               </el-button>
             </div>
-            
+
             <div class="stats-display">
               <el-descriptions title="缓存统计" :column="1" border>
                 <el-descriptions-item label="缓存项数量">
@@ -175,10 +175,10 @@ const formatTtl = (val: number) => {
 const mockApiRequest = async (): Promise<any> => {
   // 增加请求计数
   requestCount.value++;
-  
+
   // 模拟网络延迟
   await new Promise(resolve => setTimeout(resolve, 500));
-  
+
   // 返回模拟数据
   return {
     id: Math.floor(Math.random() * 1000),
@@ -192,33 +192,33 @@ const mockApiRequest = async (): Promise<any> => {
 const fetchDataWithCache = async () => {
   try {
     const startTime = Date.now();
-    
+
     // 创建一个带缓存的请求配置
     const response = await axios.get('/api/demo', {
       // 由于没有实际的API，我们使用模拟数据
-      adapter: async () => {
+      adapter: async (config) => {
         const result = await mockApiRequest();
         return {
           data: result,
           status: 200,
           statusText: 'OK',
           headers: {},
-          config: {}
+          config: config
         };
       },
       // 启用缓存
       cache: true
     });
-    
+
     // 计算响应时间
     responseTime.value = Date.now() - startTime;
-    
+
     // 更新数据
     data.value = {
       ...response.data,
       cached: response.cached
     };
-    
+
     // 如果是缓存命中，增加计数
     if (response.cached) {
       cacheHits.value++;
@@ -232,27 +232,27 @@ const fetchDataWithCache = async () => {
 const fetchDataWithoutCache = async () => {
   try {
     const startTime = Date.now();
-    
+
     // 创建一个不带缓存的请求配置
     const response = await axios.get('/api/demo', {
       // 由于没有实际的API，我们使用模拟数据
-      adapter: async () => {
+      adapter: async (config) => {
         const result = await mockApiRequest();
         return {
           data: result,
           status: 200,
           statusText: 'OK',
           headers: {},
-          config: {}
+          config: config
         };
       },
       // 禁用缓存
       cache: false
     });
-    
+
     // 计算响应时间
     responseTime.value = Date.now() - startTime;
-    
+
     // 更新数据
     data.value = {
       ...response.data,
@@ -267,39 +267,39 @@ const fetchDataWithoutCache = async () => {
 const fetchDataWithOptions = async () => {
   try {
     const startTime = Date.now();
-    
+
     // 创建一个带自定义缓存选项的请求配置
     const response = await axios.get('/api/demo/config', {
       // 由于没有实际的API，我们使用模拟数据
-      adapter: async () => {
+      adapter: async (config) => {
         const result = await mockApiRequest();
         return {
           data: result,
           status: 200,
           statusText: 'OK',
           headers: {},
-          config: {}
+          config: config
         };
       },
       // 使用自定义缓存选项
       cache: { ...cacheOptions }
     });
-    
+
     // 计算响应时间
     responseTime.value = Date.now() - startTime;
-    
+
     // 更新数据
     configData.value = {
       ...response.data,
       cached: response.cached,
       cacheOptions: { ...cacheOptions }
     };
-    
+
     // 如果是缓存命中，增加计数
     if (response.cached) {
       cacheHits.value++;
     }
-    
+
     // 刷新统计信息
     refreshStats();
   } catch (error) {
@@ -439,7 +439,7 @@ refreshStats();
   .demo-buttons {
     flex-direction: column;
   }
-  
+
   .demo-buttons .el-button {
     width: 100%;
   }

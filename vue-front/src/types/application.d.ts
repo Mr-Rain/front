@@ -45,7 +45,9 @@ export interface ApplicationInfo {
   jobTitle?: string;
   companyName?: string;
   resumeTitle?: string;
-  studentName?: string; // 添加 studentName
+  studentName?: string; // 学生姓名
+  studentSchool?: string; // 学生学校
+  studentMajor?: string; // 学生专业
 }
 
 /**
