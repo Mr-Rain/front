@@ -85,9 +85,13 @@
       </div>
 
       <!-- 空状态 -->
-      <el-empty v-else description="暂无为你推荐的职位，可以先完善简历信息哦">
+      <el-empty v-else description="暂无为你推荐的职位">
+        <div class="empty-reason">您已申请了所有可用职位，暂无新的推荐。</div>
         <template #extra>
-          <el-button type="primary" @click="goToResume">完善简历</el-button>
+          <div class="empty-actions">
+            <el-button type="primary" @click="goToSettings">更新推荐设置</el-button>
+            <el-button @click="goToResume">完善简历</el-button>
+          </div>
         </template>
       </el-empty>
     </el-card>
@@ -152,7 +156,7 @@ const getScoreColor = (score: number): string => {
   return '#909399'; // 低匹配度 - 灰色
 };
 
-// 处理“不感兴趣”操作
+// 处理"不感兴趣"操作
 const handleDislike = async (jobId: string | number) => {
   console.log(`不感兴趣职位 ${jobId}`);
   try {
@@ -256,6 +260,17 @@ onMounted(() => {
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid var(--el-border-color-lighter);
+}
+
+.empty-reason {
+  margin: 10px 0;
+  color: var(--el-text-color-secondary);
+  font-size: 14px;
+}
+
+.empty-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .reason {

@@ -24,6 +24,11 @@ export function getSystemOverview(): Promise<ApiResponse<StatisticsData>> {
   return request({
     url: '/api/admin/stats',
     method: 'get',
+    cache: {
+      ttl: 5 * 60 * 1000, // 5分钟缓存
+      tags: ['admin-stats', 'dashboard'],
+      backgroundRefresh: true // 返回缓存数据的同时在后台刷新
+    }
   });
 }
 

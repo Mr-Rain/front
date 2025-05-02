@@ -18,65 +18,6 @@
           </div>
         </el-col>
       </el-row>
-
-      <!-- 概览统计数据 -->
-      <el-row :gutter="20" style="margin-top: 20px;">
-        <el-col :span="6">
-          <el-card shadow="hover" class="stat-card">
-            <div class="stat-content">
-              <div class="stat-icon user-icon">
-                <el-icon><User /></el-icon>
-              </div>
-              <div class="stat-info">
-                <div class="stat-title">注册用户总数</div>
-                <div class="stat-value">{{ stats.totalUsers || 0 }}</div>
-              </div>
-            </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card shadow="hover" class="stat-card">
-            <div class="stat-content">
-              <div class="stat-icon company-icon">
-                <el-icon><OfficeBuilding /></el-icon>
-              </div>
-              <div class="stat-info">
-                <div class="stat-title">入驻企业总数</div>
-                <div class="stat-value">{{ stats.totalCompanies || 0 }}</div>
-              </div>
-            </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card shadow="hover" class="stat-card">
-            <div class="stat-content">
-              <div class="stat-icon job-icon">
-                <el-icon><Briefcase /></el-icon>
-              </div>
-              <div class="stat-info">
-                <div class="stat-title">发布职位总数</div>
-                <div class="stat-value">{{ stats.totalJobs || 0 }}</div>
-              </div>
-            </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card shadow="hover" class="stat-card">
-            <div class="stat-content">
-              <div class="stat-icon pending-icon">
-                <el-icon><Warning /></el-icon>
-              </div>
-              <div class="stat-info">
-                <div class="stat-title">待审核企业</div>
-                <div class="stat-value">
-                  {{ stats.pendingCompanies || 0 }}
-                  <el-button v-if="stats.pendingCompanies > 0" type="primary" link @click="goToAudit" style="margin-left: 5px;">去审核</el-button>
-                </div>
-              </div>
-            </div>
-          </el-card>
-        </el-col>
-      </el-row>
     </el-card>
 
     <!-- 数据统计部分 -->
@@ -95,18 +36,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
-import { getSystemOverview } from '@/api/statistics';
 import AdminStatistics from '@/components/admin/AdminStatistics.vue';
-import {
-  User,
-  OfficeBuilding,
-  Briefcase,
-  Warning,
-  InfoFilled
-} from '@element-plus/icons-vue';
+import { InfoFilled } from '@element-plus/icons-vue';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -127,56 +61,8 @@ const currentDate = computed(() => {
   });
 });
 
-// 统计数据
-const stats = reactive({
-    totalUsers: 0,
-    totalCompanies: 0,
-    totalJobs: 0,
-    pendingCompanies: 0
-});
-
-onMounted(async () => {
-    // 从API获取实际数据
-    try {
-        // 使用封装的request工具
-        const result = await getSystemOverview();
-        console.log('Dashboard API返回数据:', result);
-
-        // 检查返回的数据结构
-        if (result && result.data) {
-            const data = result.data;
-            // 用户统计
-            if (data.userStats) {
-                stats.totalUsers = data.userStats.totalUsers || 0;
-                stats.totalCompanies = data.userStats.companyUsers || 0;
-            }
-
-            // 职位统计
-            if (data.jobStats) {
-                stats.totalJobs = data.jobStats.totalJobs || 0;
-            }
-
-            // 待审核企业数量 - 需要单独查询或从其他数据中获取
-            // 这里假设后端返回的数据中包含了待审核企业数量
-            stats.pendingCompanies = data.pendingCompanies || 0;
-        }
-    } catch (error) {
-        console.error('获取管理员统计数据失败:', error);
-    }
-
-    // 注释掉的模拟数据，保留作为参考
-    /*
-    setTimeout(() => {
-      stats.totalUsers = 1250;
-      stats.totalCompanies = 85;
-      stats.totalJobs = 320;
-      stats.pendingCompanies = 15;
-    }, 500);
-    */
-});
-
 const goToAudit = () => {
-    router.push({ name: 'admin-company-audit' }); // 企业审核路由
+  router.push({ name: 'admin-company-audit' }); // 企业审核路由
 };
 
 </script>
@@ -232,70 +118,7 @@ const goToAudit = () => {
   margin-top: 15px;
 }
 
-.stat-card {
-  height: 100%;
-  transition: all 0.3s;
-}
 
-.stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.stat-content {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-}
-
-.stat-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-right: 15px;
-}
-
-.stat-icon .el-icon {
-  font-size: 30px;
-  color: white;
-}
-
-.user-icon {
-  background-color: var(--el-color-primary);
-}
-
-.company-icon {
-  background-color: var(--el-color-success);
-}
-
-.job-icon {
-  background-color: var(--el-color-info);
-}
-
-.pending-icon {
-  background-color: var(--el-color-warning);
-}
-
-.stat-info {
-  flex: 1;
-}
-
-.stat-title {
-  font-size: 14px;
-  color: var(--el-text-color-secondary);
-  margin-bottom: 5px;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-  display: flex;
-  align-items: center;
-}
 
 .statistics-card {
   margin-bottom: 20px;

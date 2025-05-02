@@ -163,13 +163,84 @@ const scenarioRecommendations: Record<string, RecommendedJob[]> = {
 
 // (学生端) 获取个性化推荐职位列表
 export function getRecommendedJobs(params?: any): Promise<{ data: RecommendationResponse }> {
-  // 实际API调用（预留）
-  // return request({
-  //   url: '/api/student/recommendations',
-  //   method: 'get',
-  //   params, // 可能包含分页、场景等参数
-  // });
+  // 实际API调用
+  return request({
+    url: '/api/recommendations',
+    method: 'get',
+    params: {
+      // 将前端的scenario参数映射到后端的recommendationType参数
+      recommendationType: params?.scenario || 'default',
+      page: params?.page || 1,
+      pageSize: params?.pageSize || 10
+    }
+  }).then(response => {
+    // 将后端返回的数据格式转换为前端期望的格式
+    // 检查response.data是否存在且包含list属性
+    if (response.data && Array.isArray(response.data)) {
+      // 如果response.data是数组，直接使用
+      const recommendations = response.data.map((item: any) => ({
+        jobInfo: {
+          id: item.jobId,
+          title: item.jobTitle,
+          companyId: item.companyId,
+          companyName: item.companyName,
+          companyLogo: item.companyLogo,
+          location: item.jobLocation,
+          salaryRange: item.salaryRange,
+          status: 'open' // 默认状态
+        },
+        recommendationScore: item.score,
+        recommendationReason: item.reason
+      }));
 
+      return {
+        data: {
+          list: recommendations
+        }
+      };
+    } else if (response.data && response.data.list && Array.isArray(response.data.list)) {
+      // 如果response.data包含list属性且是数组
+      const recommendations = response.data.list.map((item: any) => ({
+        jobInfo: {
+          id: item.jobId,
+          title: item.jobTitle,
+          companyId: item.companyId,
+          companyName: item.companyName,
+          companyLogo: item.companyLogo,
+          location: item.jobLocation,
+          salaryRange: item.salaryRange,
+          status: 'open' // 默认状态
+        },
+        recommendationScore: item.score,
+        recommendationReason: item.reason
+      }));
+
+      return {
+        data: {
+          list: recommendations
+        }
+      };
+    } else {
+      // 如果数据结构不符合预期，返回空数组
+      console.warn('Unexpected response format:', response.data);
+      return {
+        data: {
+          list: []
+        }
+      };
+    }
+  }).catch(error => {
+    console.error('Failed to fetch recommended jobs:', error);
+    // 出错时返回空数组
+    return {
+      data: {
+        list: []
+      }
+    };
+  });
+
+  // 保留模拟数据代码，以便在API不可用时可以快速切换回来
+  /*
   // ---- Mock Data Start ----
   console.warn('API MOCK: getRecommendedJobs is using mock data.');
 
@@ -195,45 +266,63 @@ export function getRecommendedJobs(params?: any): Promise<{ data: Recommendation
     }, 800); // 模拟网络延迟
   });
   // ---- Mock Data End ----
+  */
 }
 
 // 获取推荐场景列表
 export function getRecommendationScenarios(): Promise<{ data: { scenarios: Array<{id: string, name: string}> } }> {
-  // 实际API调用（预留）
-  // return request({
-  //   url: '/api/student/recommendation-scenarios',
-  //   method: 'get'
-  // });
+  // 实际API调用
+  return request({
+    url: '/api/recommendations/scenarios',
+    method: 'get'
+  }).then(response => {
+    // 如果后端返回的数据格式与前端期望的不一致，进行转换
+    if (response.data && Array.isArray(response.data)) {
+      return {
+        data: {
+          scenarios: response.data.map((item: any) => ({
+            id: item.code || item.id,
+            name: item.name
+          }))
+        }
+      };
+    }
 
-  // 模拟数据
-  const mockScenarios = [
-    { id: 'default', name: '智能推荐' },
-    { id: 'skill-based', name: '基于技能' },
-    { id: 'history-based', name: '基于浏览历史' }
-  ];
+    // 如果后端已经返回了正确的格式，直接返回
+    return response;
+  }).catch(error => {
+    console.error('Failed to fetch recommendation scenarios:', error);
 
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ data: { scenarios: mockScenarios } });
-    }, 500);
+    // 出错时返回默认场景
+    const defaultScenarios = [
+      { id: 'default', name: '智能推荐' },
+      { id: 'skill-based', name: '基于技能' },
+      { id: 'history-based', name: '基于浏览历史' }
+    ];
+
+    return {
+      data: {
+        scenarios: defaultScenarios
+      }
+    };
   });
 }
 
 // 反馈推荐结果
 export function feedbackRecommendation(data: { job_id: string | number, feedback_type: 'like' | 'dislike', reason?: string }): Promise<{ success: boolean }> {
-  // 实际API调用（预留）
-  // return request({
-  //   url: '/api/student/recommendation-feedback',
-  //   method: 'post',
-  //   data
-  // });
-
-  // 模拟数据
-  console.log('Recommendation feedback:', data);
-
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ success: true });
-    }, 300);
+  // 实际API调用
+  return request({
+    url: '/api/recommendations/feedback',
+    method: 'post',
+    data: {
+      jobId: data.job_id,
+      feedbackType: data.feedback_type,
+      feedbackText: data.reason || ''
+    }
+  }).then(() => {
+    return { success: true };
+  }).catch(error => {
+    console.error('Failed to submit recommendation feedback:', error);
+    return { success: false };
   });
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-statistics">
+  <div class="admin-statistics" ref="statsContainer">
     <el-row :gutter="20">
       <!-- 数据概览卡片 -->
       <el-col :xs="24" :sm="12" :md="6" :lg="6">
@@ -45,11 +45,11 @@
         <el-card shadow="hover" class="statistics-summary-card">
           <div class="summary-content">
             <div class="summary-icon application-icon">
-              <el-icon><Document /></el-icon>
+              <el-icon><Warning /></el-icon>
             </div>
             <div class="summary-info">
-              <div class="summary-title">申请数量</div>
-              <div class="summary-value">{{ statistics.totalApplications }}</div>
+              <div class="summary-title">待审核企业</div>
+              <div class="summary-value">{{ statistics.pendingCompanies }}</div>
             </div>
           </div>
         </el-card>
@@ -175,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import EChartComponent from '@/components/common/EChartComponent.vue';
 import { getSystemOverview } from '@/api/statistics';
 import {
@@ -183,7 +183,7 @@ import {
   User,
   OfficeBuilding,
   Briefcase,
-  Document
+  Warning
 } from '@element-plus/icons-vue';
 import type { EChartsOption } from 'echarts';
 
@@ -194,7 +194,7 @@ const statistics = reactive({
   totalUsers: 0,
   totalCompanies: 0,
   totalJobs: 0,
-  totalApplications: 0
+  pendingCompanies: 0
 });
 
 // 用户增长数据
@@ -399,7 +399,7 @@ const activityChartOptions = computed<EChartsOption>(() => ({
 const fetchAdminStatistics = async () => {
   loading.value = true;
   try {
-    // 从API获取实际数据，使用封装的request工具
+    // 从API获取实际数据，使用封装的request工具，添加缓存配置
     const result = await getSystemOverview();
     console.log('API返回数据:', result);
 
@@ -417,8 +417,11 @@ const fetchAdminStatistics = async () => {
         statistics.totalJobs = data.jobStats.totalJobs || 0;
       }
 
-      if (data.applicationStats) {
-        statistics.totalApplications = data.applicationStats.totalApplications || 0;
+      // 待审核企业数量
+      if (data.pendingCompanies !== undefined) {
+        statistics.pendingCompanies = data.pendingCompanies || 0;
+      } else if (data.companyAuditStats && data.companyAuditStats.pending !== undefined) {
+        statistics.pendingCompanies = data.companyAuditStats.pending || 0;
       }
 
       // 用户类型数据
@@ -601,8 +604,45 @@ const fetchAdminStatistics = async () => {
   }
 };
 
+// 使用IntersectionObserver实现懒加载
+let observer: IntersectionObserver | null = null;
+const statsContainer = ref<HTMLElement | null>(null);
+
 onMounted(() => {
-  fetchAdminStatistics();
+  // 创建一个观察器，当组件进入视口时才加载数据
+  if ('IntersectionObserver' in window) {
+    observer = new IntersectionObserver((entries) => {
+      // 如果组件进入视口
+      if (entries[0].isIntersecting) {
+        fetchAdminStatistics();
+        // 停止观察
+        if (observer && entries[0].target) {
+          observer.unobserve(entries[0].target);
+          observer.disconnect();
+          observer = null;
+        }
+      }
+    }, { threshold: 0.1 }); // 当10%的组件可见时触发
+
+    // 开始观察组件
+    if (statsContainer.value) {
+      observer.observe(statsContainer.value);
+    } else {
+      // 如果找不到元素，直接加载数据
+      fetchAdminStatistics();
+    }
+  } else {
+    // 如果浏览器不支持IntersectionObserver，直接加载数据
+    fetchAdminStatistics();
+  }
+});
+
+// 组件卸载时清理观察器
+onUnmounted(() => {
+  if (observer) {
+    observer.disconnect();
+    observer = null;
+  }
 });
 </script>
 
@@ -687,7 +727,7 @@ onMounted(() => {
 }
 
 .application-icon {
-  background-color: #F56C6C;
+  background-color: #F56C6C; /* 使用红色表示需要注意的待审核企业 */
 }
 
 .summary-info {

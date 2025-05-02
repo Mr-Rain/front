@@ -51,37 +51,40 @@ const initChart = () => {
     chartInstance.dispose();
   }
 
-  // 创建图表实例
-  chartInstance = echarts.init(chartContainer.value, props.theme);
+  // 使用requestAnimationFrame延迟创建图表实例，提高性能
+  requestAnimationFrame(() => {
+    // 创建图表实例
+    chartInstance = echarts.init(chartContainer.value, props.theme);
 
-  // 设置图表选项
-  chartInstance.setOption(props.options);
+    // 设置图表选项
+    chartInstance.setOption(props.options, true); // 添加第二个参数true，不合并之前的选项，提高性能
 
-  // 添加点击事件监听
-  chartInstance.on('click', (params) => {
-    emit('chartClick', params);
+    // 添加点击事件监听
+    chartInstance.on('click', (params) => {
+      emit('chartClick', params);
+    });
+
+    // 添加鼠标悬停事件监听
+    chartInstance.on('mouseover', (params) => {
+      emit('chartMouseover', params);
+    });
+
+    // 添加鼠标离开事件监听
+    chartInstance.on('mouseout', (params) => {
+      emit('chartMouseout', params);
+    });
+
+    // 通知图表已初始化
+    emit('chartInit', chartInstance);
+
+    // 窗口大小变化时自动调整图表大小
+    if (props.autoResize) {
+      window.addEventListener('resize', handleResize);
+    }
+
+    // 通知图表已准备好
+    emit('chartReady', chartInstance);
   });
-
-  // 添加鼠标悬停事件监听
-  chartInstance.on('mouseover', (params) => {
-    emit('chartMouseover', params);
-  });
-
-  // 添加鼠标离开事件监听
-  chartInstance.on('mouseout', (params) => {
-    emit('chartMouseout', params);
-  });
-
-  // 通知图表已初始化
-  emit('chartInit', chartInstance);
-
-  // 窗口大小变化时自动调整图表大小
-  if (props.autoResize) {
-    window.addEventListener('resize', handleResize);
-  }
-
-  // 通知图表已准备好
-  emit('chartReady', chartInstance);
 };
 
 // 处理窗口大小变化
@@ -96,10 +99,18 @@ watch(
   () => props.options,
   (newOptions) => {
     if (chartInstance) {
-      chartInstance.setOption(newOptions);
+      // 使用防抖函数延迟更新图表，避免频繁更新
+      const updateChart = () => {
+        if (chartInstance) {
+          chartInstance.setOption(newOptions, true); // 不合并之前的选项，提高性能
+        }
+      };
+
+      // 使用requestAnimationFrame优化渲染性能
+      requestAnimationFrame(updateChart);
     }
   },
-  { deep: true }
+  { deep: true, flush: 'post' } // 使用post模式，等待DOM更新后再执行
 );
 
 // 组件挂载时初始化图表
