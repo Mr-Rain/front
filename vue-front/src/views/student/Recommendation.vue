@@ -26,6 +26,12 @@
               <span class="hide-on-mobile">刷新推荐</span>
             </el-button>
 
+            <!-- 重新生成推荐按钮 -->
+            <el-button type="success" link @click="regenerateRecommendations" :loading="regenerating">
+              <el-icon><RefreshRight /></el-icon>
+              <span class="hide-on-mobile">重新生成推荐</span>
+            </el-button>
+
             <!-- 设置按钮 -->
             <el-button type="primary" link @click="goToSettings">
               <el-icon><Setting /></el-icon>
@@ -102,18 +108,19 @@
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRecommendationStore } from '@/stores/recommendation';
-import { getRecommendationScenarios } from '@/api/recommendation';
+import { getRecommendationScenarios, regenerateRecommendations as regenerateRecommendationsApi } from '@/api/recommendation';
 import JobCard from '@/components/common/JobCard.vue';
 import {
   ElCard, ElEmpty, ElIcon, ElTooltip, ElButton,
   ElProgress, ElMessage, ElSelect, ElOption
 } from 'element-plus';
 import {
-  MagicStick, Refresh, InfoFilled, Close, Setting
+  MagicStick, Refresh, RefreshRight, InfoFilled, Close, Setting
 } from '@element-plus/icons-vue';
 
 const router = useRouter();
 const recommendationStore = useRecommendationStore();
+const regenerating = ref(false);
 
 // 推荐场景相关变量
 const currentScenario = ref('default');
@@ -177,6 +184,27 @@ const goToResume = () => {
 // 跳转到推荐设置页面
 const goToSettings = () => {
   router.push('/student/recommendations/settings');
+};
+
+// 重新生成推荐
+const regenerateRecommendations = async () => {
+  try {
+    regenerating.value = true;
+    // 导入的函数名与本地函数名冲突，使用导入的函数需要重命名
+    const result = await regenerateRecommendationsApi();
+    if (result.success) {
+      ElMessage.success('推荐已重新生成');
+      // 重新获取推荐列表
+      fetchRecommendations();
+    } else {
+      ElMessage.error('重新生成推荐失败');
+    }
+  } catch (error) {
+    console.error('Failed to regenerate recommendations:', error);
+    ElMessage.error('重新生成推荐失败');
+  } finally {
+    regenerating.value = false;
+  }
 };
 
 onMounted(() => {

@@ -274,8 +274,19 @@ const goToEditJob = (id: string | number) => {
 };
 
 const goToApplicationsForJob = (jobId: string | number) => {
+    // 查找职位信息
+    const job = jobStore.companyJobList.find(job => job.id === jobId);
+    const jobTitle = job?.title || `职位ID: ${jobId}`;
+
+    // 将职位ID和职位名称存储到localStorage
+    localStorage.setItem('selectedJobId', String(jobId));
+    localStorage.setItem('selectedJobTitle', jobTitle);
+
     // Navigate to application manage page with filter
-    router.push({ name: 'company-application-manage', query: { jobId: jobId } });
+    router.push({
+        name: 'company-application-manage',
+        query: { jobId: jobId }
+    });
 };
 
 const handleCloseJob = async (id: string | number) => {

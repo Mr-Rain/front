@@ -390,7 +390,7 @@ watch(route, (to, from) => {
     console.log('Time parameter detected, refreshing data...');
 
     // 重新获取个人信息
-    studentStore.fetchProfile().then(profile => {
+    studentStore.fetchProfile(true).then(profile => {
       console.log('Profile data refreshed successfully via route watch:', profile);
       ElMessage.success('个人信息已更新');
     }).catch(error => {
@@ -410,7 +410,7 @@ onMounted(() => {
   setTimeout(() => {
     // 无论是否已加载，都重新获取个人信息，确保数据最新
     console.log('Fetching profile data on mount...');
-    studentStore.fetchProfile().then(profile => {
+    studentStore.fetchProfile(true).then(profile => {
       console.log('Profile data fetched successfully on mount:', profile);
 
       // 如果有时间戳参数，显示提示信息
@@ -427,7 +427,7 @@ onMounted(() => {
 // 强制刷新数据
 const forceRefreshData = () => {
   console.log('强制刷新个人信息数据');
-  studentStore.fetchProfile().then(profile => {
+  studentStore.fetchProfile(true).then(profile => {
     console.log('个人信息数据已强制刷新:', profile);
     ElMessage.success('个人信息数据已刷新');
   }).catch(error => {
@@ -508,8 +508,11 @@ const saveProfile = async () => {
         // 调用store action更新个人信息
         await studentStore.updateProfile(updateData);
 
-        // 不再需要强制刷新数据，updateProfile已经更新了store中的数据
-        // await studentStore.fetchProfile();
+        // 清除API缓存，确保下次获取数据时是最新的
+        import('@/utils/cacheInterceptor').then(({ clearCacheByTags }) => {
+          clearCacheByTags(['student', 'profile']);
+          console.log('已清除学生个人信息相关缓存');
+        });
 
         isEditing.value = false;
         // 移除重复的成功提示，updateProfile方法内部已经显示了成功提示

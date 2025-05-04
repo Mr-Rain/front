@@ -10,7 +10,15 @@
               </el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-value">{{ stat.value }}</div>
+              <div class="stat-value">
+                <!-- 如果是申请数量，添加链接 -->
+                <template v-if="stat.type === 'applications'">
+                  <el-link type="primary" @click="goToApplications">{{ stat.value }}</el-link>
+                </template>
+                <template v-else>
+                  {{ stat.value }}
+                </template>
+              </div>
               <div class="stat-label">{{ stat.label }}</div>
             </div>
           </div>
@@ -18,7 +26,7 @@
             <span :class="['trend', stat.trend > 0 ? 'up' : stat.trend < 0 ? 'down' : '']">
               <el-icon v-if="stat.trend > 0"><ArrowUp /></el-icon>
               <el-icon v-else-if="stat.trend < 0"><ArrowDown /></el-icon>
-              {{ Math.abs(stat.trend) }}% 
+              {{ Math.abs(stat.trend) }}%
               {{ stat.trend > 0 ? '增长' : stat.trend < 0 ? '下降' : '持平' }}
             </span>
             <span class="period">较上月</span>
@@ -31,14 +39,17 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { 
-  Briefcase, 
-  View, 
-  User, 
-  Bell, 
-  ArrowUp, 
-  ArrowDown 
+import { useRouter } from 'vue-router';
+import {
+  Briefcase,
+  View,
+  User,
+  Bell,
+  ArrowUp,
+  ArrowDown
 } from '@element-plus/icons-vue';
+
+const router = useRouter();
 
 // 定义组件属性
 const props = defineProps({
@@ -74,6 +85,12 @@ const props = defineProps({
   }
 });
 
+// 跳转到申请管理页面
+const goToApplications = () => {
+  // 跳转到申请管理页面，不带筛选条件
+  router.push({ name: 'company-application-manage' });
+};
+
 // 计算统计数据
 const statistics = computed(() => [
   {
@@ -81,28 +98,32 @@ const statistics = computed(() => [
     value: props.totalJobs,
     icon: Briefcase,
     class: 'jobs-card',
-    trend: props.trends.totalJobs
+    trend: props.trends.totalJobs,
+    type: 'jobs'
   },
   {
     label: '招聘中',
     value: props.activeJobs,
     icon: Bell,
     class: 'active-card',
-    trend: props.trends.activeJobs
+    trend: props.trends.activeJobs,
+    type: 'active'
   },
   {
     label: '收到申请',
     value: props.totalApplications,
     icon: User,
     class: 'applications-card',
-    trend: props.trends.totalApplications
+    trend: props.trends.totalApplications,
+    type: 'applications'
   },
   {
     label: '待处理',
     value: props.pendingApplications,
     icon: Bell,
     class: 'pending-card',
-    trend: props.trends.pendingApplications
+    trend: props.trends.pendingApplications,
+    type: 'pending'
   }
 ]);
 </script>

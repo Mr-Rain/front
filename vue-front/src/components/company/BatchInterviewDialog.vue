@@ -39,7 +39,7 @@
             type="datetime"
             placeholder="选择面试时间"
             format="YYYY-MM-DD HH:mm"
-            value-format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DDTHH:mm:ss+08:00"
             :disabled-date="disabledDate"
             style="width: 100%"
           />
@@ -47,9 +47,9 @@
 
         <el-form-item label="面试方式" prop="interviewType" required>
           <el-radio-group v-model="formData.interviewType">
-            <el-radio label="onsite">现场面试</el-radio>
-            <el-radio label="video">视频面试</el-radio>
-            <el-radio label="phone">电话面试</el-radio>
+            <el-radio value="onsite">现场面试</el-radio>
+            <el-radio value="video">视频面试</el-radio>
+            <el-radio value="phone">电话面试</el-radio>
           </el-radio-group>
         </el-form-item>
 
@@ -78,9 +78,9 @@
           />
         </el-form-item>
 
-        <el-form-item label="面试说明" prop="feedback">
+        <el-form-item label="面试说明" prop="interviewNotes">
           <el-input
-            v-model="formData.feedback"
+            v-model="formData.interviewNotes"
             type="textarea"
             :rows="4"
             placeholder="请输入面试说明，如面试流程、需要准备的材料等"
@@ -140,6 +140,7 @@ const formData = reactive({
   interviewLocation: '',
   interviewContact: '',
   interviewContactInfo: '',
+  interviewNotes: '',
   feedback: '',
   rating: 3
 });
@@ -185,11 +186,12 @@ const initForm = () => {
   const now = new Date();
   now.setHours(now.getHours() + 24); // 默认设置为明天此时
 
-  formData.interviewTime = now.toISOString().slice(0, 16).replace('T', ' ');
+  formData.interviewTime = now.toISOString().replace(/\.\d+Z$/, '+08:00');
   formData.interviewType = 'onsite';
   formData.interviewLocation = '';
   formData.interviewContact = '';
   formData.interviewContactInfo = '';
+  formData.interviewNotes = '';
   formData.feedback = '';
   formData.rating = 3;
 };
@@ -209,14 +211,14 @@ const handleSubmit = async () => {
       loading.value = true;
 
       try {
-        // 构建提交数据
+        // 构建提交数据 - 不再包含状态字段，使用专门的面试安排API
         const submitData = {
-          status: 'interview' as const,
           interviewTime: formData.interviewTime,
           interviewType: formData.interviewType,
           interviewLocation: formData.interviewType === 'onsite' ? formData.interviewLocation : '',
           interviewContact: formData.interviewContact,
           interviewContactInfo: formData.interviewContactInfo,
+          interviewNotes: formData.interviewNotes,
           feedback: formData.feedback,
           rating: formData.rating,
           applicationIds: props.applications.map(app => app.id)

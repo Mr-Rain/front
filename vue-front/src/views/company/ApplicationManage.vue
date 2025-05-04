@@ -39,6 +39,14 @@
                   :filter-method="handleJobFilter"
                   class="search-select"
                 >
+                  <!-- 如果有选中的职位名称，则显示该名称 -->
+                  <el-option
+                    v-if="selectedJobTitle && listQuery.jobId"
+                    :key="listQuery.jobId"
+                    :label="selectedJobTitle"
+                    :value="listQuery.jobId"
+                  ></el-option>
+                  <!-- 显示所有职位 -->
                   <el-option
                     v-for="job in jobStore.companyJobList"
                     :key="job.id"
@@ -116,7 +124,7 @@
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item @click="handleScheduleInterview(scope.row)" :disabled="!canProgress(scope.row.status)">
+                  <el-dropdown-item @click="handleScheduleInterview(scope.row)" :disabled="!canScheduleInterview(scope.row.status)">
                     安排面试
                   </el-dropdown-item>
                   <el-dropdown-item @click="handleAddFeedback(scope.row, 'interview')" :disabled="scope.row.status !== 'interview'">
@@ -199,7 +207,12 @@
                  </el-descriptions-item>
                </el-descriptions>
                <div class="action-buttons" style="margin-top: 10px;">
-                 <el-button type="primary" size="small" @click="handleScheduleInterview(applicationStore.currentApplicationDetail)">
+                 <el-button
+                   type="primary"
+                   size="small"
+                   @click="handleScheduleInterview(applicationStore.currentApplicationDetail)"
+                   :disabled="!canScheduleInterview(applicationStore.currentApplicationDetail?.status)"
+                 >
                    {{ applicationStore.currentApplicationDetail.interviewTime ? '修改面试安排' : '安排面试' }}
                  </el-button>
                  <el-button v-if="applicationStore.currentApplicationDetail.status === 'interview'" type="success" size="small" @click="handleAddFeedback(applicationStore.currentApplicationDetail, 'interview')">
@@ -324,22 +337,7 @@ const getFeedbackTitle = computed(() => {
   }
 });
 
-// Watch for route query changes (e.g., coming from JobManage link)
-watch(() => route.query.jobId,
-    (newJobId) => {
-        if (newJobId && typeof newJobId === 'string') {
-            listQuery.jobId = newJobId;
-            listQuery.page = 1; // Reset page when filter changes
-            fetchApplications();
-        } else if (!newJobId && listQuery.jobId) {
-             // Clear filter if route query is removed
-            listQuery.jobId = undefined;
-            fetchApplications();
-        }
-    },
-    { immediate: true } // Run on initial load too
-);
-
+// 定义获取申请列表的函数
 const fetchApplications = () => {
     // 构建查询参数
     const params = { ...listQuery };
@@ -359,6 +357,44 @@ const fetchApplications = () => {
     console.log('Fetching applications with params:', params);
     applicationStore.fetchCompanyApplications(params);
 };
+
+// 创建一个ref来存储选中的职位名称
+const selectedJobTitle = ref<string | null>(null);
+
+// Watch for route query changes (e.g., coming from JobManage link)
+watch(() => route.query.jobId,
+    async (newJobId) => {
+        if (newJobId && typeof newJobId === 'string') {
+            // 确保职位列表已加载
+            if (jobStore.companyJobList.length === 0) {
+                await jobStore.fetchCompanyJobList({ pageSize: 1000 });
+            }
+
+            // 从localStorage中获取职位名称
+            const storedJobId = localStorage.getItem('selectedJobId');
+            const storedJobTitle = localStorage.getItem('selectedJobTitle');
+
+            // 如果localStorage中的jobId与当前jobId匹配，则使用localStorage中的职位名称
+            if (storedJobId === newJobId && storedJobTitle) {
+                selectedJobTitle.value = storedJobTitle;
+            } else {
+                // 否则，尝试从职位列表中查找职位名称
+                const job = jobStore.companyJobList.find(job => String(job.id) === newJobId);
+                selectedJobTitle.value = job?.title || `职位ID: ${newJobId}`;
+            }
+
+            listQuery.jobId = newJobId;
+            listQuery.page = 1; // Reset page when filter changes
+            fetchApplications();
+        } else if (!newJobId && listQuery.jobId) {
+             // Clear filter if route query is removed
+            listQuery.jobId = undefined;
+            selectedJobTitle.value = null;
+            fetchApplications();
+        }
+    },
+    { immediate: true } // Run on initial load too
+);
 
 onMounted(() => {
    // Fetch initial data - handled by watch now
@@ -405,6 +441,7 @@ const formatStatus = (status: ApplicationStatus | undefined): string => {
 const getStatusTagType = (status: ApplicationStatus | undefined): ('primary' | 'success' | 'info' | 'warning' | 'danger' | undefined) => {
     switch (status) {
         case 'offer': return 'success';
+        case 'accepted': return 'success'; // 添加'accepted'状态
         case 'interview': return 'primary';
         case 'rejected': return 'danger';
         case 'withdrawn': return 'info';
@@ -426,7 +463,12 @@ const formatInterviewType = (type: 'onsite' | 'video' | 'phone' | undefined): st
 
 // Check if status can be updated (e.g., cannot reject an offered application directly)
 const canProgress = (status: ApplicationStatus | undefined): boolean => {
-    return status !== 'offer' && status !== 'rejected' && status !== 'withdrawn';
+    return status !== 'offer' && status !== 'accepted' && status !== 'rejected' && status !== 'withdrawn';
+};
+
+// 检查是否可以安排面试（已确定状态不允许修改面试信息）
+const canScheduleInterview = (status: ApplicationStatus | undefined): boolean => {
+    return status === 'pending' || status === 'viewed' || status === 'interview';
 };
 
 const handleViewDetail = (id: string | number) => {
@@ -488,6 +530,21 @@ const handleBatchAction = async (data: { action: ApplicationStatus; items: Appli
     }
 
     if (action === 'interview') {
+        // 过滤掉已确定状态的申请
+        const validItems = items.filter(item => canScheduleInterview(item.status));
+
+        if (validItems.length === 0) {
+            ElMessage.warning('选中的申请中没有可以安排面试的申请（已录用或未录用状态的申请不能安排面试）');
+            return;
+        }
+
+        if (validItems.length < items.length) {
+            ElMessage.warning(`选中的${items.length}条申请中，只有${validItems.length}条可以安排面试（已录用或未录用状态的申请不能安排面试）`);
+        }
+
+        // 更新选中的申请列表
+        multipleSelection.value = validItems;
+
         // 打开批量面试安排对话框
         batchInterviewDialogVisible.value = true;
         nextTick(() => {
@@ -501,6 +558,7 @@ const handleBatchAction = async (data: { action: ApplicationStatus; items: Appli
                 confirmMessage = `确定将选中的 ${items.length} 条申请标记为已查看吗？`;
                 break;
             case 'offer':
+            case 'accepted':
                 confirmMessage = `确定向选中的 ${items.length} 名候选人发放Offer吗？`;
                 break;
             case 'rejected':
@@ -518,7 +576,12 @@ const handleBatchAction = async (data: { action: ApplicationStatus; items: Appli
             });
 
             // 执行批量更新
-            const payload: UpdateApplicationStatusPayload = { status: action };
+            let status = action;
+            // 如果是offer状态，转换为accepted状态
+            if (status === 'offer') {
+                status = 'accepted';
+            }
+            const payload: UpdateApplicationStatusPayload = { status };
             const applicationIds = items.map(item => item.id);
 
             try {
@@ -538,19 +601,54 @@ const handleBatchAction = async (data: { action: ApplicationStatus; items: Appli
 // 面试安排相关方法
 const handleScheduleInterview = (application: ApplicationInfo) => {
     selectedApplication.value = application;
-    interviewDialogVisible.value = true;
-    nextTick(() => {
-        interviewSchedulerRef.value?.initForm();
-    });
+
+    // 检查申请状态
+    if (application.status === 'interview') {
+        // 如果已经是面试状态，显示提示
+        ElMessageBox.confirm(
+            '该申请已经安排过面试，您可以更新面试信息。',
+            '更新面试信息',
+            {
+                confirmButtonText: '更新',
+                cancelButtonText: '取消',
+                type: 'info'
+            }
+        ).then(() => {
+            // 用户确认更新
+            interviewDialogVisible.value = true;
+            nextTick(() => {
+                interviewSchedulerRef.value?.initForm(true); // 传入true表示是更新模式
+            });
+        }).catch(() => {
+            // 用户取消
+            ElMessage({
+                type: 'info',
+                message: '已取消更新面试信息'
+            });
+        });
+    } else {
+        // 如果不是面试状态，直接打开对话框
+        interviewDialogVisible.value = true;
+        nextTick(() => {
+            interviewSchedulerRef.value?.initForm(false); // 传入false表示是新安排模式
+        });
+    }
 };
 
 const handleInterviewSubmit = async (data: any) => {
     if (!selectedApplication.value) return;
 
     try {
-        await applicationStore.updateApplicationStatus(selectedApplication.value.id, data);
-        ElMessage.success('面试安排成功');
-        interviewDialogVisible.value = false;
+        // 直接使用API调用，而不是通过store
+        import('@/api/application').then(async (module) => {
+            const { scheduleInterview } = module;
+            await scheduleInterview(selectedApplication.value.id, data);
+            ElMessage.success('面试安排成功');
+            interviewDialogVisible.value = false;
+
+            // 刷新申请列表
+            applicationStore.fetchCompanyApplications();
+        });
     } catch (error) {
         console.error('Failed to schedule interview:', error);
         ElMessage.error('面试安排失败');
@@ -559,19 +657,31 @@ const handleInterviewSubmit = async (data: any) => {
 
 const handleBatchInterviewSubmit = async (data: any) => {
     try {
-        await applicationStore.batchUpdateApplicationStatus(data.applicationIds, {
-            status: 'interview',
-            interviewTime: data.interviewTime,
-            interviewType: data.interviewType,
-            interviewLocation: data.interviewLocation,
-            interviewContact: data.interviewContact,
-            interviewContactInfo: data.interviewContactInfo,
-            feedback: data.feedback,
-            rating: data.rating
+        // 直接使用API调用，而不是通过store
+        import('@/api/application').then(async (module) => {
+            const { scheduleInterview } = module;
+
+            // 为每个申请单独调用面试安排API
+            const promises = data.applicationIds.map((id: string | number) =>
+                scheduleInterview(id, {
+                    interviewTime: data.interviewTime,
+                    interviewType: data.interviewType,
+                    interviewLocation: data.interviewLocation,
+                    interviewContact: data.interviewContact,
+                    interviewContactInfo: data.interviewContactInfo,
+                    feedback: data.feedback
+                })
+            );
+
+            await Promise.all(promises);
+
+            ElMessage.success(`成功为 ${data.applicationIds.length} 名候选人安排面试`);
+            batchInterviewDialogVisible.value = false;
+            handleClearSelection();
+
+            // 刷新申请列表
+            applicationStore.fetchCompanyApplications();
         });
-        ElMessage.success(`成功为 ${data.applicationIds.length} 名候选人安排面试`);
-        batchInterviewDialogVisible.value = false;
-        handleClearSelection();
     } catch (error) {
         console.error('Failed to batch schedule interviews:', error);
         ElMessage.error('批量安排面试失败');
@@ -594,24 +704,37 @@ const handleFeedbackSubmit = async (data: any) => {
         // 根据反馈类型设置状态
         if (feedbackType.value === 'interview' && data.result) {
             if (data.result === 'pass') {
-                status = 'offer';
+                status = 'accepted'; // 使用'accepted'而不是'offer'
             } else if (data.result === 'fail') {
                 status = 'rejected';
             }
         } else if (feedbackType.value === 'rejection') {
             status = 'rejected';
         } else if (feedbackType.value === 'offer') {
-            status = 'offer';
+            status = 'accepted'; // 使用'accepted'而不是'offer'
         }
 
-        await applicationStore.updateApplicationStatus(selectedApplication.value.id, {
-            status: status || selectedApplication.value.status,
-            feedback: data.content,
-            rating: data.rating
-        });
+        // 如果需要更新状态，使用updateApplicationStatus
+        if (status && status !== selectedApplication.value.status) {
+            await applicationStore.updateApplicationStatus(selectedApplication.value.id, {
+                status: status,
+                feedback: data.content,
+                rating: data.rating
+            });
+        } else {
+            // 如果只是提交反馈，使用submitCompanyFeedback
+            await applicationStore.submitCompanyFeedback(
+                selectedApplication.value.id,
+                data.content,
+                data.rating
+            );
+        }
 
         ElMessage.success('反馈提交成功');
         feedbackDialogVisible.value = false;
+
+        // 刷新申请列表
+        await applicationStore.fetchCompanyApplications();
     } catch (error) {
         console.error('Failed to submit feedback:', error);
         ElMessage.error('反馈提交失败');

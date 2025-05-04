@@ -36,11 +36,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import AdminStatistics from '@/components/admin/AdminStatistics.vue';
 import { InfoFilled } from '@element-plus/icons-vue';
+import { clearCacheByTags } from '@/utils/cacheInterceptor';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -64,6 +65,35 @@ const currentDate = computed(() => {
 const goToAudit = () => {
   router.push({ name: 'admin-company-audit' }); // 企业审核路由
 };
+
+// 上次清除缓存的时间
+let lastCacheClearTime = 0;
+
+// 在组件挂载时，检查是否需要清除缓存
+onMounted(() => {
+  const now = Date.now();
+  // 如果距离上次清除缓存超过30秒，则清除缓存
+  if (now - lastCacheClearTime > 30 * 1000) {
+    console.log('Dashboard组件挂载，清除缓存');
+    clearCacheByTags(['admin-stats', 'dashboard']);
+    lastCacheClearTime = now;
+  } else {
+    console.log('Dashboard组件挂载，使用缓存数据，距离上次清除缓存:', Math.round((now - lastCacheClearTime) / 1000), '秒');
+  }
+});
+
+// 在组件被keep-alive激活时，检查是否需要清除缓存
+onActivated(() => {
+  const now = Date.now();
+  // 如果距离上次清除缓存超过30秒，则清除缓存
+  if (now - lastCacheClearTime > 30 * 1000) {
+    console.log('Dashboard组件激活，清除缓存');
+    clearCacheByTags(['admin-stats', 'dashboard']);
+    lastCacheClearTime = now;
+  } else {
+    console.log('Dashboard组件激活，使用缓存数据，距离上次清除缓存:', Math.round((now - lastCacheClearTime) / 1000), '秒');
+  }
+});
 
 </script>
 

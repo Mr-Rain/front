@@ -39,6 +39,10 @@ export function getStudentProfile(): Promise<{ data: StudentProfileCamel }> {
   return request({
     url: '/api/students/me',
     method: 'get',
+    cache: {
+      ttl: 5 * 60 * 1000, // 5分钟缓存
+      tags: ['student', 'profile'] // 添加标签，便于清除缓存
+    }
   });
 }
 

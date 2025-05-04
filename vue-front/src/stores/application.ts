@@ -13,6 +13,8 @@ import {
   getStudentApplicationDetail,
   updateApplicationStatus,
   submitInterviewFeedback,
+  scheduleInterview,
+  submitCompanyFeedback,
 } from '@/api/application';
 import { ElMessage } from 'element-plus';
 
@@ -254,7 +256,14 @@ export const useApplicationStore = defineStore('application', {
         // 实际API调用 - 这里需要后端提供批量更新接口
         // 由于后端可能没有批量更新接口，我们这里循环调用单个更新接口
         for (const id of ids) {
-          await updateApplicationStatus(id, data);
+          // 如果是安排面试，使用专门的面试安排API
+          if (data.status === 'interview' &&
+              (data.interviewTime || data.interviewType || data.interviewLocation ||
+               data.interviewContact || data.interviewContactInfo)) {
+            await scheduleInterview(id, data);
+          } else {
+            await updateApplicationStatus(id, data);
+          }
         }
 
         // 更新本地数据
@@ -360,6 +369,121 @@ export const useApplicationStore = defineStore('application', {
           ElMessage.error(error.response.data.message);
         } else {
           ElMessage.error('提交反馈失败，请稍后重试');
+        }
+
+        throw error;
+      } finally {
+        this.submitting = false;
+      }
+    },
+
+    // 企业提交反馈
+    async submitCompanyFeedback(id: string | number, feedback: string, rating: number) {
+      this.submitting = true;
+      try {
+        const response = await submitCompanyFeedback(id, { feedback, rating });
+
+        // 使用后端返回的最新数据更新本地状态
+        if (this.currentApplicationDetail?.id === id && response.data) {
+          // 完全替换为后端返回的最新数据
+          this.currentApplicationDetail = response.data;
+        }
+
+        // 更新列表中的数据
+        const companyAppIndex = this.companyApplications.findIndex(app => app.id === id);
+        if (companyAppIndex !== -1) {
+          this.companyApplications[companyAppIndex].feedback = feedback;
+          this.companyApplications[companyAppIndex].rating = rating;
+        }
+
+        ElMessage.success('反馈提交成功');
+        return response;
+      } catch (error: any) {
+        console.error('Failed to submit company feedback:', error);
+
+        // 处理特定错误消息
+        if (error.response && error.response.data && error.response.data.message) {
+          ElMessage.error(error.response.data.message);
+        } else {
+          ElMessage.error('提交反馈失败，请稍后重试');
+        }
+
+        throw error;
+      } finally {
+        this.submitting = false;
+      }
+    },
+
+    // 安排面试
+    async scheduleInterviewForApplication(id: string | number, interviewData: any) {
+      this.submitting = true;
+      try {
+        // 调用专门的面试安排API
+        const response = await scheduleInterview(id, interviewData);
+
+        // 更新本地数据
+        const companyAppIndex = this.companyApplications.findIndex(app => app.id === id);
+        if (companyAppIndex !== -1) {
+          // 更新状态为面试中
+          this.companyApplications[companyAppIndex].status = 'interview';
+
+          // 更新面试相关信息
+          if (interviewData.interviewTime) {
+            this.companyApplications[companyAppIndex].interviewTime = interviewData.interviewTime;
+          }
+          if (interviewData.interviewType) {
+            this.companyApplications[companyAppIndex].interviewType = interviewData.interviewType;
+          }
+          if (interviewData.interviewLocation) {
+            this.companyApplications[companyAppIndex].interviewLocation = interviewData.interviewLocation;
+          }
+          if (interviewData.interviewContact) {
+            this.companyApplications[companyAppIndex].interviewContact = interviewData.interviewContact;
+          }
+          if (interviewData.interviewContactInfo) {
+            this.companyApplications[companyAppIndex].interviewContactInfo = interviewData.interviewContactInfo;
+          }
+          if (interviewData.feedback) {
+            this.companyApplications[companyAppIndex].feedback = interviewData.feedback;
+          }
+        }
+
+        // 更新当前详情
+        if (this.currentApplicationDetail?.id === id) {
+          // 更新状态为面试中
+          this.currentApplicationDetail.status = 'interview';
+
+          // 更新面试相关信息
+          if (interviewData.interviewTime) {
+            this.currentApplicationDetail.interviewTime = interviewData.interviewTime;
+          }
+          if (interviewData.interviewType) {
+            this.currentApplicationDetail.interviewType = interviewData.interviewType;
+          }
+          if (interviewData.interviewLocation) {
+            this.currentApplicationDetail.interviewLocation = interviewData.interviewLocation;
+          }
+          if (interviewData.interviewContact) {
+            this.currentApplicationDetail.interviewContact = interviewData.interviewContact;
+          }
+          if (interviewData.interviewContactInfo) {
+            this.currentApplicationDetail.interviewContactInfo = interviewData.interviewContactInfo;
+          }
+          if (interviewData.feedback) {
+            this.currentApplicationDetail.feedback = interviewData.feedback;
+          }
+        }
+
+        ElMessage.success('面试安排成功');
+        return response;
+      } catch (error: any) {
+        console.error('Failed to schedule interview:', error);
+
+        // 处理特定错误消息
+        if (error.response && error.response.data && error.response.data.message) {
+          ElMessage.error(error.response.data.message);
+        } else {
+          ElMessage.error('安排面试失败，请稍后重试');
         }
 
         throw error;

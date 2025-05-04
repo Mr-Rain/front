@@ -346,6 +346,20 @@ export function scheduleInterview(id: string | number, interviewData: any) {
 }
 
 /**
+ * (企业端) 提交反馈
+ * @param id 申请ID
+ * @param feedbackData 反馈信息
+ * @returns 操作结果
+ */
+export function submitCompanyFeedback(id: string | number, feedbackData: { feedback: string, rating: number }) {
+  return request({
+    url: `/api/applications/${id}/company-feedback`,
+    method: 'put',
+    data: feedbackData,
+  });
+}
+
+/**
  * (管理端) 获取所有申请列表 (需要管理员权限)
  * @param params 查询参数
  * @returns 申请列表

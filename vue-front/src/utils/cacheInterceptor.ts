@@ -39,6 +39,11 @@ const isCacheable = (config: AxiosRequestConfig): boolean => {
     return false;
   }
 
+  // 如果没有明确指定cache，默认不缓存
+  if (config.cache === undefined) {
+    return false;
+  }
+
   return true;
 };
 

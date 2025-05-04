@@ -399,9 +399,9 @@ const activityChartOptions = computed<EChartsOption>(() => ({
 const fetchAdminStatistics = async () => {
   loading.value = true;
   try {
-    // 从API获取实际数据，使用封装的request工具，添加缓存配置
+    // 从API获取实际数据，使用封装的request工具，已添加缓存配置
     const result = await getSystemOverview();
-    console.log('API返回数据:', result);
+    console.log('API返回数据:', result, '(可能来自缓存)');
 
     // 检查返回的数据结构
     if (result && result.data) {
@@ -608,13 +608,24 @@ const fetchAdminStatistics = async () => {
 let observer: IntersectionObserver | null = null;
 const statsContainer = ref<HTMLElement | null>(null);
 
+// 上次数据加载时间
+let lastFetchTime = 0;
+
 onMounted(() => {
   // 创建一个观察器，当组件进入视口时才加载数据
   if ('IntersectionObserver' in window) {
     observer = new IntersectionObserver((entries) => {
       // 如果组件进入视口
       if (entries[0].isIntersecting) {
-        fetchAdminStatistics();
+        // 检查是否需要重新加载数据（如果距离上次加载超过30秒）
+        const now = Date.now();
+        if (now - lastFetchTime > 30 * 1000) {
+          fetchAdminStatistics();
+          lastFetchTime = now;
+        } else {
+          console.log('使用缓存数据，距离上次加载时间:', Math.round((now - lastFetchTime) / 1000), '秒');
+        }
+
         // 停止观察
         if (observer && entries[0].target) {
           observer.unobserve(entries[0].target);
@@ -630,10 +641,12 @@ onMounted(() => {
     } else {
       // 如果找不到元素，直接加载数据
       fetchAdminStatistics();
+      lastFetchTime = Date.now();
     }
   } else {
     // 如果浏览器不支持IntersectionObserver，直接加载数据
     fetchAdminStatistics();
+    lastFetchTime = Date.now();
   }
 });
 

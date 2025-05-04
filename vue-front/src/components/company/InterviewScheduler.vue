@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     v-model="dialogVisible"
-    :title="isEditing ? '编辑面试安排' : '安排面试'"
+    :title="getDialogTitle"
     width="600px"
     :close-on-click-modal="false"
     :before-close="handleClose"
@@ -20,7 +20,7 @@
             type="datetime"
             placeholder="选择面试时间"
             format="YYYY-MM-DD HH:mm"
-            value-format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DDTHH:mm:ss+08:00"
             :disabled-date="disabledDate"
             style="width: 100%"
           />
@@ -28,15 +28,15 @@
 
         <el-form-item label="面试方式" prop="interviewType" required>
           <el-radio-group v-model="formData.interviewType">
-            <el-radio label="onsite">现场面试</el-radio>
-            <el-radio label="video">视频面试</el-radio>
-            <el-radio label="phone">电话面试</el-radio>
+            <el-radio value="onsite">现场面试</el-radio>
+            <el-radio value="video">视频面试</el-radio>
+            <el-radio value="phone">电话面试</el-radio>
           </el-radio-group>
         </el-form-item>
 
         <el-form-item label="面试地点" prop="interviewLocation" :required="formData.interviewType === 'onsite'">
-          <el-input 
-            v-model="formData.interviewLocation" 
+          <el-input
+            v-model="formData.interviewLocation"
             placeholder="请输入面试地点"
             :disabled="formData.interviewType !== 'onsite'"
           />
@@ -50,9 +50,9 @@
           <el-input v-model="formData.interviewContactInfo" placeholder="请输入联系方式（电话/邮箱）" />
         </el-form-item>
 
-        <el-form-item label="面试说明" prop="feedback">
+        <el-form-item label="面试说明" prop="interviewNotes">
           <el-input
-            v-model="formData.feedback"
+            v-model="formData.interviewNotes"
             type="textarea"
             :rows="4"
             placeholder="请输入面试说明，如面试流程、需要准备的材料等"
@@ -106,6 +106,17 @@ const dialogVisible = computed({
   set: (value) => emit('update:visible', value)
 });
 
+// 对话框标题
+const getDialogTitle = computed(() => {
+  if (props.isEditing) {
+    return '编辑面试安排';
+  } else if (props.application?.status === 'interview') {
+    return '更新面试信息';
+  } else {
+    return '安排面试';
+  }
+});
+
 // 加载状态
 const loading = ref(false);
 
@@ -116,6 +127,7 @@ const formData = reactive({
   interviewLocation: '',
   interviewContact: '',
   interviewContactInfo: '',
+  interviewNotes: '',
   feedback: ''
 });
 
@@ -128,9 +140,9 @@ const formRules = reactive<FormRules>({
     { required: true, message: '请选择面试方式', trigger: 'change' }
   ],
   interviewLocation: [
-    { 
-      required: true, 
-      message: '请输入面试地点', 
+    {
+      required: true,
+      message: '请输入面试地点',
       trigger: 'blur',
       validator: (rule, value, callback) => {
         if (formData.interviewType === 'onsite' && !value) {
@@ -155,25 +167,27 @@ const disabledDate = (time: Date) => {
 };
 
 // 初始化表单数据
-const initForm = () => {
-  // 如果是编辑模式且有应用数据，则填充表单
-  if (props.isEditing && props.application) {
+const initForm = (isUpdating = false) => {
+  // 如果是编辑模式或更新模式且有应用数据，则填充表单
+  if ((props.isEditing || isUpdating) && props.application) {
     formData.interviewTime = props.application.interviewTime || '';
     formData.interviewType = props.application.interviewType || 'onsite';
     formData.interviewLocation = props.application.interviewLocation || '';
     formData.interviewContact = props.application.interviewContact || '';
     formData.interviewContactInfo = props.application.interviewContactInfo || '';
+    formData.interviewNotes = props.application.interviewNotes || '';
     formData.feedback = props.application.feedback || '';
   } else {
     // 新建模式，设置默认值
     const now = new Date();
     now.setHours(now.getHours() + 24); // 默认设置为明天此时
-    
-    formData.interviewTime = now.toISOString().slice(0, 16).replace('T', ' ');
+
+    formData.interviewTime = now.toISOString().replace(/\.\d+Z$/, '+08:00');
     formData.interviewType = 'onsite';
     formData.interviewLocation = '';
     formData.interviewContact = '';
     formData.interviewContactInfo = '';
+    formData.interviewNotes = '';
     formData.feedback = '';
   }
 };
@@ -187,26 +201,26 @@ const handleClose = () => {
 // 处理提交
 const handleSubmit = async () => {
   if (!formRef.value) return;
-  
+
   await formRef.value.validate(async (valid) => {
     if (valid) {
       loading.value = true;
-      
+
       try {
-        // 构建提交数据
+        // 构建提交数据 - 不再包含状态字段，使用专门的面试安排API
         const submitData = {
-          status: 'interview' as const,
           interviewTime: formData.interviewTime,
           interviewType: formData.interviewType,
           interviewLocation: formData.interviewType === 'onsite' ? formData.interviewLocation : '',
           interviewContact: formData.interviewContact,
           interviewContactInfo: formData.interviewContactInfo,
+          interviewNotes: formData.interviewNotes,
           feedback: formData.feedback
         };
-        
+
         // 发送提交事件
         emit('submit', submitData);
-        
+
         // 关闭对话框
         dialogVisible.value = false;
       } catch (error) {

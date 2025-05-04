@@ -35,6 +35,7 @@ export interface ApplicationInfo {
   interviewType?: 'onsite' | 'video' | 'phone'; // 面试方式
   interviewContact?: string; // 面试联系人
   interviewContactInfo?: string; // 联系人信息
+  interviewNotes?: string; // 面试说明
 
   // --- 冗余信息，方便前端展示 ---
   jobInfo?: Pick<JobInfo, 'id' | 'title' | 'companyName' | 'location' | 'salaryRange' | 'jobType'>; // 添加 jobType
@@ -72,4 +73,5 @@ export interface UpdateApplicationStatusPayload {
   interviewLocation?: string;
   interviewContact?: string;
   interviewContactInfo?: string;
+  interviewNotes?: string; // 面试说明
 }

@@ -92,59 +92,87 @@ export const useUserStore = defineStore('user', {
     // 登录
     async login(payload: LoginPayload, remember: boolean = false) {
       this.loading = true;
-      try {
-        const response = await loginApi(payload);
-        // 从响应中获取token和用户信息
-        const data = response?.data || response;
-        const token = data?.token;
 
-        if (!token) {
-          throw new Error('登录失败：未获取到有效的令牌');
+      // 最大重试次数
+      const maxRetries = 3;
+      // 当前重试次数
+      let retryCount = 0;
+      // 重试延迟（毫秒）
+      const retryDelay = 1000;
+
+      while (retryCount <= maxRetries) {
+        try {
+          const response = await loginApi(payload);
+          // 从响应中获取token和用户信息
+          const data = response?.data || response;
+          const token = data?.token;
+
+          if (!token) {
+            throw new Error('登录失败：未获取到有效的令牌');
+          }
+
+          this.setToken(token, remember);
+
+          // 直接使用登录接口返回的用户信息
+          const userInfo: UserInfo = {
+            id: data.id,
+            username: data.username,
+            email: data.email,
+            // 将后端返回的大写用户类型转换为小写，以匹配前端期望的格式
+            userType: data.userType?.toLowerCase() || 'student',
+            avatar: data.avatar,
+            status: data.status,
+            createTime: data.createTime,
+            lastLoginTime: data.lastLoginTime,
+            previousLoginTime: data.previousLoginTime
+          };
+
+          this.setUserInfo(userInfo);
+
+          // 获取权限
+          const permissionStore = usePermissionStore();
+          await permissionStore.fetchUserPermissions();
+
+          // 保存权限到本地存储
+          const permissionsData = {
+            roles: permissionStore.roles,
+            permissions: permissionStore.permissions
+          };
+
+          if (remember) {
+            localStorage.setItem('permissionsData', JSON.stringify(permissionsData));
+          } else {
+            sessionStorage.setItem('permissionsData', JSON.stringify(permissionsData));
+            localStorage.removeItem('permissionsData');
+          }
+
+          this.loading = false;
+          return Promise.resolve(); // 返回成功状态
+        } catch (error: any) {
+          console.error(`登录尝试 ${retryCount + 1} 失败:`, error);
+
+          // 如果是网络错误或超时错误，并且还有重试次数，则重试
+          if (retryCount < maxRetries &&
+              (error.type === 'network' ||
+              (error.originalError && error.originalError.code === 'ECONNABORTED'))) {
+            retryCount++;
+            console.log(`正在重试登录 (${retryCount}/${maxRetries})...`);
+            // 等待一段时间后重试
+            await new Promise(resolve => setTimeout(resolve, retryDelay * retryCount));
+          } else {
+            // 其他错误或已达到最大重试次数，抛出错误
+            this.resetAuth(); // 登录失败，重置状态
+            this.loading = false;
+            ElMessage.error(error?.message || '登录失败，请检查用户名和密码');
+            return Promise.reject(error);
+          }
         }
-
-        this.setToken(token, remember);
-
-        // 直接使用登录接口返回的用户信息
-        const userInfo: UserInfo = {
-          id: data.id,
-          username: data.username,
-          email: data.email,
-          // 将后端返回的大写用户类型转换为小写，以匹配前端期望的格式
-          userType: data.userType?.toLowerCase() || 'student',
-          avatar: data.avatar,
-          status: data.status,
-          createTime: data.createTime,
-          lastLoginTime: data.lastLoginTime,
-          previousLoginTime: data.previousLoginTime
-        };
-
-        this.setUserInfo(userInfo);
-
-        // 获取权限
-        const permissionStore = usePermissionStore();
-        await permissionStore.fetchUserPermissions();
-
-        // 保存权限到本地存储
-        const permissionsData = {
-          roles: permissionStore.roles,
-          permissions: permissionStore.permissions
-        };
-
-        if (remember) {
-          localStorage.setItem('permissionsData', JSON.stringify(permissionsData));
-        } else {
-          sessionStorage.setItem('permissionsData', JSON.stringify(permissionsData));
-          localStorage.removeItem('permissionsData');
-        }
-
-        return Promise.resolve(); // 返回成功状态
-      } catch (error: any) {
-        this.resetAuth(); // 登录失败，重置状态
-        ElMessage.error(error?.message || '登录失败，请检查用户名和密码');
-        return Promise.reject(error);
-      } finally {
-        this.loading = false;
       }
+
+      // 如果所有重试都失败
+      this.loading = false;
+      ElMessage.error('多次尝试登录失败，请稍后再试');
+      return Promise.reject(new Error('多次尝试登录失败'));
     },
 
     // 注册

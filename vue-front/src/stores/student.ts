@@ -16,14 +16,23 @@ export const useStudentStore = defineStore('student', {
 
   actions: {
     // 获取学生档案信息
-    async fetchProfile() {
+    async fetchProfile(forceRefresh = false) {
       // 不清空当前数据，只设置加载状态
       // this.profile = null; // 移除这一行，避免临时状态为null
       this.loading = true;
 
       try {
         console.log('Fetching student profile...');
+        // 如果强制刷新，添加缓存配置
         const response = await getStudentProfile();
+
+        // 如果是强制刷新，清除缓存
+        if (forceRefresh) {
+          import('@/utils/cacheInterceptor').then(({ clearCacheByTags }) => {
+            clearCacheByTags(['student', 'profile']);
+            console.log('已强制清除学生个人信息缓存');
+          });
+        }
         console.log('Student profile response:', response);
 
         // 确保响应数据存在

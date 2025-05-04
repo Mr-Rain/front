@@ -14,13 +14,26 @@ import { setupCacheInterceptor } from '@/utils/cacheInterceptor';
 // 导入数据转换工具
 // 注释掉数据转换相关导入，我们不再需要它们
 // import { camelToSnake, snakeToCamel } from '@/utils/dataTransformer';
+// 类型扩展 - 直接在这里扩展 AxiosRequestConfig 接口
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    // 是否启用重试
+    retry?: boolean;
+    // 重试次数
+    retryCount?: number;
+    // 重试延迟（毫秒）
+    retryDelay?: number;
+    // 内部重试计数器
+    __retryCount?: number;
+  }
+}
 
 // 创建 axios 实例，用于发起 HTTP 请求
 const service: AxiosInstance = axios.create({
   // API 的基础 URL，从环境变量 VITE_API_BASE_URL 读取，若未设置则默认为 '/'
   baseURL: import.meta.env.VITE_API_BASE_URL || '/',
-  // 请求超时时间，单位毫秒
-  timeout: 10000,
+  // 请求超时时间，单位毫秒，增加到30秒以处理可能的数据库延迟
+  timeout: 30000,
 });
 
 // 为创建的 axios 实例设置缓存拦截器
@@ -171,7 +184,7 @@ service.interceptors.response.use(
     // 这样在调用 API 的地方可以通过 .then(data => ...) 直接获取后端返回的核心数据
     return res;
   },
-  (error) => {
+  async (error) => {
     // 调试日志
     console.error('Response Error:', error);
     console.error('Error Config:', error.config);
@@ -181,6 +194,33 @@ service.interceptors.response.use(
       console.error('Error Data:', error.response.data);
     }
 
+    // 处理重试逻辑
+    const config = error.config;
+    if (config && config.retry) {
+      // 设置重试计数器
+      config.__retryCount = config.__retryCount || 0;
+
+      // 如果未达到最大重试次数，则重试
+      if (config.__retryCount < (config.retryCount || 3)) {
+        // 增加重试计数
+        config.__retryCount += 1;
+
+        console.log(`Retrying request (${config.__retryCount}/${config.retryCount || 3}): ${config.url}`);
+
+        // 创建延迟Promise
+        const delayRetry = new Promise<void>((resolve) => {
+          setTimeout(() => {
+            resolve();
+          }, (config.retryDelay || 1000) * config.__retryCount);
+        });
+
+        // 等待延迟后重试请求
+        await delayRetry;
+        return service(config);
+      }
+    }
+
+    // 如果不需要重试或已达到最大重试次数，则处理错误
     // 处理 HTTP 层面的错误（例如网络断开、超时、500 服务器错误等）
     // 使用统一错误处理器处理错误
     const apiError = errorHandler.handleApiError(error, {

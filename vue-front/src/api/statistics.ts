@@ -25,7 +25,7 @@ export function getSystemOverview(): Promise<ApiResponse<StatisticsData>> {
     url: '/api/admin/stats',
     method: 'get',
     cache: {
-      ttl: 5 * 60 * 1000, // 5分钟缓存
+      ttl: 30 * 1000, // 30秒缓存
       tags: ['admin-stats', 'dashboard'],
       backgroundRefresh: true // 返回缓存数据的同时在后台刷新
     }
@@ -42,6 +42,11 @@ export function getUserStatistics(params?: any): Promise<ApiResponse<StatisticsD
     url: '/api/admin/statistics/users',
     method: 'get',
     params,
+    cache: {
+      ttl: 30 * 1000, // 30秒缓存
+      tags: ['admin-stats', 'user-stats'],
+      backgroundRefresh: true
+    }
   });
 }
 
@@ -55,6 +60,11 @@ export function getJobStatistics(params?: any): Promise<ApiResponse<StatisticsDa
     url: '/api/admin/statistics/jobs',
     method: 'get',
     params,
+    cache: {
+      ttl: 30 * 1000, // 30秒缓存
+      tags: ['admin-stats', 'job-stats'],
+      backgroundRefresh: true
+    }
   });
 }
 
@@ -68,6 +78,11 @@ export function getApplicationStatistics(params?: any): Promise<ApiResponse<Stat
     url: '/api/admin/statistics/applications',
     method: 'get',
     params,
+    cache: {
+      ttl: 30 * 1000, // 30秒缓存
+      tags: ['admin-stats', 'application-stats'],
+      backgroundRefresh: true
+    }
   });
 }
 
@@ -81,6 +96,11 @@ export function getCompanyStatistics(params?: any): Promise<ApiResponse<Statisti
     url: '/api/company/statistics',
     method: 'get',
     params,
+    cache: {
+      ttl: 30 * 1000, // 30秒缓存
+      tags: ['company-stats'],
+      backgroundRefresh: true
+    }
   });
 }
 
@@ -92,7 +112,12 @@ export function getCompanyDashboardStatistics(): Promise<ApiResponse<StatisticsD
   return request({
     url: '/api/company/statistics',
     method: 'get',
-    params: { time_range: 'week' }
+    params: { time_range: 'week' },
+    cache: {
+      ttl: 30 * 1000, // 30秒缓存
+      tags: ['company-stats', 'company-dashboard'],
+      backgroundRefresh: true
+    }
   });
 }
 
@@ -104,5 +129,10 @@ export function getStudentDashboardStatistics(): Promise<ApiResponse<StatisticsD
   return request({
     url: '/api/student/statistics/dashboard',
     method: 'get',
+    cache: {
+      ttl: 30 * 1000, // 30秒缓存
+      tags: ['student-stats', 'student-dashboard'],
+      backgroundRefresh: true
+    }
   });
 }

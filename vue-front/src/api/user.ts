@@ -68,6 +68,12 @@ export function login(data: LoginPayload) {
     url: '/api/auth/login',
     method: 'post',
     data,
+    // 为登录请求特别设置更长的超时时间
+    timeout: 60000, // 60秒
+    // 启用自动重试
+    retry: true,
+    retryDelay: 1000,
+    retryCount: 3
   });
 }
 

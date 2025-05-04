@@ -161,6 +161,20 @@ const scenarioRecommendations: Record<string, RecommendedJob[]> = {
   ],
 };
 
+// 重新生成推荐职位
+export function regenerateRecommendations(): Promise<{ success: boolean }> {
+  // 实际API调用
+  return request({
+    url: '/api/recommendations/regenerate',
+    method: 'post'
+  }).then(() => {
+    return { success: true };
+  }).catch(error => {
+    console.error('Failed to regenerate recommendations:', error);
+    return { success: false };
+  });
+}
+
 // (学生端) 获取个性化推荐职位列表
 export function getRecommendedJobs(params?: any): Promise<{ data: RecommendationResponse }> {
   // 实际API调用
@@ -178,15 +192,20 @@ export function getRecommendedJobs(params?: any): Promise<{ data: Recommendation
     // 检查response.data是否存在且包含list属性
     if (response.data && Array.isArray(response.data)) {
       // 如果response.data是数组，直接使用
+      console.log('API Response Data:', response.data);
       const recommendations = response.data.map((item: any) => ({
         jobInfo: {
           id: item.jobId,
-          title: item.jobTitle,
+          title: item.jobTitle || '未知职位',
           companyId: item.companyId,
-          companyName: item.companyName,
+          companyName: item.companyName || '未知公司',
           companyLogo: item.companyLogo,
-          location: item.jobLocation,
-          salaryRange: item.salaryRange,
+          location: item.jobLocation || '未知地点',
+          salaryRange: item.salaryRange || '薪资面议',
+          experienceRequired: item.experienceRequired || '不限',
+          educationRequired: item.educationRequired || '不限',
+          tags: item.tags || [],
+          jobType: item.jobType || '全职',
           status: 'open' // 默认状态
         },
         recommendationScore: item.score,
@@ -200,15 +219,20 @@ export function getRecommendedJobs(params?: any): Promise<{ data: Recommendation
       };
     } else if (response.data && response.data.list && Array.isArray(response.data.list)) {
       // 如果response.data包含list属性且是数组
+      console.log('API Response Data (list):', response.data.list);
       const recommendations = response.data.list.map((item: any) => ({
         jobInfo: {
           id: item.jobId,
-          title: item.jobTitle,
+          title: item.jobTitle || '未知职位',
           companyId: item.companyId,
-          companyName: item.companyName,
+          companyName: item.companyName || '未知公司',
           companyLogo: item.companyLogo,
-          location: item.jobLocation,
-          salaryRange: item.salaryRange,
+          location: item.jobLocation || '未知地点',
+          salaryRange: item.salaryRange || '薪资面议',
+          experienceRequired: item.experienceRequired || '不限',
+          educationRequired: item.educationRequired || '不限',
+          tags: item.tags || [],
+          jobType: item.jobType || '全职',
           status: 'open' // 默认状态
         },
         recommendationScore: item.score,
