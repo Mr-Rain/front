@@ -3,37 +3,50 @@
     <div class="theme-switch-container">
       <ThemeSwitcher />
     </div>
-    <el-card class="register-card">
-      <template #header>
-        <div class="card-header">
-          <span>校园招聘系统 - 注册</span>
-        </div>
-      </template>
-      <el-form ref="registerFormRef" :model="registerForm" :rules="registerRules" label-width="100px">
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="registerForm.username" placeholder="请输入用户名"></el-input>
-        </el-form-item>
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="registerForm.email" placeholder="请输入邮箱"></el-input>
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model="registerForm.password" type="password" placeholder="请输入密码" show-password></el-input>
-        </el-form-item>
-        <el-form-item label="确认密码" prop="confirmPassword">
-          <el-input v-model="registerForm.confirmPassword" type="password" placeholder="请再次输入密码" show-password></el-input>
-        </el-form-item>
-        <el-form-item label="用户类型" prop="userType">
-          <el-radio-group v-model="registerForm.userType">
-            <el-radio label="STUDENT">学生</el-radio>
-            <el-radio label="COMPANY">企业</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleRegister" :loading="loading">注册</el-button>
-          <el-button @click="goToLogin">已有账号? 去登录</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    <div class="back-home-btn">
+      <el-button link type="primary" @click="goToHome" class="home-button">
+        <el-icon class="home-icon"><House /></el-icon>
+        返回主页
+      </el-button>
+    </div>
+    <div class="register-content">
+      <div class="register-left">
+        <h2 class="welcome-text">开启新旅程</h2>
+        <h1 class="system-title">校园招聘系统</h1>
+        <p class="system-desc">注册账号，探索更多职业机会</p>
+      </div>
+      <el-card class="register-card">
+        <template #header>
+          <div class="card-header">
+            <span>用户注册</span>
+          </div>
+        </template>
+        <el-form ref="registerFormRef" :model="registerForm" :rules="registerRules" label-width="100px">
+          <el-form-item label="用户名" prop="username">
+            <el-input v-model="registerForm.username" placeholder="请输入用户名"></el-input>
+          </el-form-item>
+          <el-form-item label="邮箱" prop="email">
+            <el-input v-model="registerForm.email" placeholder="请输入邮箱"></el-input>
+          </el-form-item>
+          <el-form-item label="密码" prop="password">
+            <el-input v-model="registerForm.password" type="password" placeholder="请输入密码" show-password></el-input>
+          </el-form-item>
+          <el-form-item label="确认密码" prop="confirmPassword">
+            <el-input v-model="registerForm.confirmPassword" type="password" placeholder="请再次输入密码" show-password></el-input>
+          </el-form-item>
+          <el-form-item label="用户类型" prop="userType">
+            <el-radio-group v-model="registerForm.userType">
+              <el-radio label="STUDENT">学生</el-radio>
+              <el-radio label="COMPANY">企业</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleRegister" :loading="loading">注册</el-button>
+            <el-button @click="goToLogin">已有账号? 去登录</el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
+    </div>
   </div>
 </template>
 
@@ -41,6 +54,7 @@
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import { House } from '@element-plus/icons-vue';
 import type { FormInstance, FormRules } from 'element-plus';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher.vue';
 import { useUserStore } from '@/stores/user'; // Assuming register logic is in userStore
@@ -121,6 +135,10 @@ const handleRegister = () => {
 const goToLogin = () => {
   router.push('/login');
 };
+
+const goToHome = () => {
+  router.push('/');
+};
 </script>
 
 <style scoped>
@@ -128,58 +146,246 @@ const goToLogin = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh; /* Use min-height for potentially longer forms */
-  padding: 20px 0; /* Add padding for scroll */
-  background-color: var(--el-bg-color-page, #f0f2f5);
-  color: var(--el-text-color-primary);
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--el-color-primary-light-7) 0%, var(--el-color-primary-light-9) 100%);
   position: relative;
+  overflow: hidden;
+  padding: 2rem 0;
+}
+
+.register-container::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 60%);
+  animation: rotate 30s linear infinite;
+}
+
+.register-content {
+  display: flex;
+  align-items: center;
+  gap: 4rem;
+  z-index: 1;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+.register-left {
+  color: var(--el-text-color-primary);
+  max-width: 400px;
+  padding: 2rem;
+}
+
+.welcome-text {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.system-title {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(45deg, var(--el-color-primary) 0%, var(--el-color-primary-light-3) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards 0.2s;
+}
+
+.system-desc {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards 0.4s;
 }
 
 .theme-switch-container {
-  position: absolute;
+  position: fixed;
   top: 20px;
   right: 20px;
   z-index: 10;
 }
 
 .register-card {
-  width: 500px; /* Slightly wider for more fields */
+  width: 500px;
   background-color: var(--el-bg-color, #ffffff);
-  border-color: var(--el-border-color-light);
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards 0.6s;
 }
 
 .card-header {
   text-align: center;
-  font-size: 1.2em;
+  font-size: 1.5em;
   color: var(--el-text-color-primary);
+  margin-bottom: 1rem;
 }
 
-/* 添加深色主题下的样式 */
-:deep(.dark-theme .el-card) {
-  background-color: var(--theme-card-bg-dark, #252525) !important;
-  border-color: var(--theme-border-color, #333333) !important;
-  color: var(--theme-text-color, #e6e6e6) !important;
+:deep(.el-form-item) {
+  margin-bottom: 22px;
+  opacity: 0;
+  animation: fadeInUp 0.4s ease forwards;
 }
 
-:deep(.dark-theme .el-card__header) {
-  border-bottom-color: var(--theme-border-color, #333333) !important;
+:deep(.el-form-item:nth-child(1)) { animation-delay: 0.7s; }
+:deep(.el-form-item:nth-child(2)) { animation-delay: 0.8s; }
+:deep(.el-form-item:nth-child(3)) { animation-delay: 0.9s; }
+:deep(.el-form-item:nth-child(4)) { animation-delay: 1.0s; }
+:deep(.el-form-item:nth-child(5)) { animation-delay: 1.1s; }
+:deep(.el-form-item:nth-child(6)) { animation-delay: 1.2s; }
+
+:deep(.el-radio-group) {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
 }
 
-:deep(.dark-theme .el-input__wrapper) {
-  background-color: var(--theme-input-bg, #2c2c2c) !important;
-  box-shadow: 0 0 0 1px var(--theme-input-border, #444444) inset !important;
+:deep(.el-radio) {
+  margin-right: 0;
+  padding: 10px 20px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
-:deep(.dark-theme .el-input__inner) {
-  color: var(--theme-input-text, #cccccc) !important;
-  background-color: transparent !important;
+:deep(.el-radio.is-checked) {
+  background: var(--el-color-primary-light-9);
 }
 
-:deep(.dark-theme .el-form-item__label) {
-  color: var(--theme-text-color-light, #cccccc) !important;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-:deep(.dark-theme .el-radio__label) {
-  color: var(--theme-text-color-light, #cccccc) !important;
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dark theme styles */
+:deep(.dark-theme) {
+  .register-container {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  }
+
+  .register-content {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .register-card {
+    background-color: rgba(37, 37, 37, 0.9) !important;
+    border-color: rgba(51, 51, 51, 0.5) !important;
+  }
+
+  .el-input__wrapper {
+    background-color: rgba(44, 44, 44, 0.8) !important;
+    box-shadow: 0 0 0 1px rgba(68, 68, 68, 0.5) inset !important;
+    backdrop-filter: blur(5px);
+  }
+
+  .el-radio.is-checked {
+    background: rgba(var(--el-color-primary-rgb), 0.2);
+  }
+
+  .el-input__inner {
+    color: #cccccc !important;
+  }
+
+  .el-form-item__label,
+  .el-radio__label {
+    color: #cccccc !important;
+  }
+
+  .home-button {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+  }
+  
+  .home-button:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .register-content {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .register-left {
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .system-title {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .register-card {
+    width: 100%;
+    max-width: 450px;
+  }
+
+  .system-title {
+    font-size: 2rem;
+  }
+
+  :deep(.el-radio-group) {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  :deep(.el-radio) {
+    margin: 0;
+    padding: 8px 16px;
+  }
+}
+
+.back-home-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+}
+
+.home-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.home-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.home-icon {
+  font-size: 1.2em;
 }
 </style>

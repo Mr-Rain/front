@@ -3,35 +3,46 @@
     <div class="theme-switch-container">
       <ThemeSwitcher />
     </div>
-    <el-card class="login-card">
-      <template #header>
-        <div class="card-header">
-          <span>校园招聘系统 - 登录</span>
-        </div>
-      </template>
-      <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" label-width="80px" @keyup.enter="handleLogin">
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="loginForm.username" placeholder="请输入用户名/邮箱/手机号"></el-input>
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" show-password></el-input>
-        </el-form-item>
+    <div class="back-home-btn">
+      <el-button link type="primary" @click="goToHome" class="home-button">
+        <el-icon class="home-icon"><House /></el-icon>
+        返回主页
+      </el-button>
+    </div>
+    <div class="login-content">
+      <div class="login-left">
+        <h2 class="welcome-text">欢迎来到</h2>
+        <h1 class="system-title">校园招聘系统</h1>
+        <p class="system-desc">连接人才与机遇，开启你的职业生涯</p>
+      </div>
+      <el-card class="login-card">
+        <template #header>
+          <div class="card-header">
+            <span>用户登录</span>
+          </div>
+        </template>
+        <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" label-width="80px" @keyup.enter="handleLogin">
+          <el-form-item label="用户名" prop="username">
+            <el-input v-model="loginForm.username" placeholder="请输入用户名/邮箱/手机号"></el-input>
+          </el-form-item>
+          <el-form-item label="密码" prop="password">
+            <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" show-password></el-input>
+          </el-form-item>
 
-        <el-form-item>
-          <el-checkbox v-model="rememberMe">记住登录状态</el-checkbox>
-        </el-form-item>
+          <el-form-item>
+            <el-checkbox v-model="rememberMe">记住登录状态</el-checkbox>
+          </el-form-item>
 
-
-
-        <el-form-item>
-          <el-button type="primary" @click="handleLogin" :loading="loading">登录</el-button>
-          <el-button @click="goToRegister">注册</el-button>
-        </el-form-item>
-        <div class="form-links">
-          <el-link type="primary" @click="goToForgotPassword">忘记密码?</el-link>
-        </div>
-      </el-form>
-    </el-card>
+          <el-form-item>
+            <el-button type="primary" @click="handleLogin" :loading="loading">登录</el-button>
+            <el-button @click="goToRegister">注册</el-button>
+          </el-form-item>
+          <div class="form-links">
+            <el-link type="primary" @click="goToForgotPassword">忘记密码?</el-link>
+          </div>
+        </el-form>
+      </el-card>
+    </div>
   </div>
 </template>
 
@@ -39,6 +50,7 @@
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import { House } from '@element-plus/icons-vue';
 import type { FormInstance, FormRules } from 'element-plus';
 import { useUserStore } from '@/stores/user';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher.vue';
@@ -113,6 +125,10 @@ const goToRegister = () => {
 const goToForgotPassword = () => {
   router.push('/forgot-password');
 };
+
+const goToHome = () => {
+  router.push('/');
+};
 </script>
 
 <style scoped>
@@ -120,14 +136,66 @@ const goToForgotPassword = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: var(--el-bg-color-page, #f0f2f5);
-  color: var(--el-text-color-primary);
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--el-color-primary-light-7) 0%, var(--el-color-primary-light-9) 100%);
   position: relative;
+  overflow: hidden;
+}
+
+.login-container::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 60%);
+  animation: rotate 30s linear infinite;
+}
+
+.login-content {
+  display: flex;
+  align-items: center;
+  gap: 4rem;
+  z-index: 1;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+.login-left {
+  color: var(--el-text-color-primary);
+  max-width: 400px;
+  padding: 2rem;
+}
+
+.welcome-text {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.system-title {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(45deg, var(--el-color-primary) 0%, var(--el-color-primary-light-3) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards 0.2s;
+}
+
+.system-desc {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards 0.4s;
 }
 
 .theme-switch-container {
-  position: absolute;
+  position: fixed;
   top: 20px;
   right: 20px;
   z-index: 10;
@@ -136,50 +204,139 @@ const goToForgotPassword = () => {
 .login-card {
   width: 400px;
   background-color: var(--el-bg-color, #ffffff);
-  border-color: var(--el-border-color-light);
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards 0.6s;
 }
 
 .card-header {
   text-align: center;
-  font-size: 1.2em;
+  font-size: 1.5em;
   color: var(--el-text-color-primary);
+  margin-bottom: 1rem;
 }
 
 .form-links {
   text-align: right;
-  margin-top: -10px; /* Adjust spacing */
+  margin-top: 1rem;
 }
 
-/* 添加深色主题下的样式 */
-:deep(.dark-theme .el-card) {
-  background-color: var(--theme-card-bg-dark, #252525) !important;
-  border-color: var(--theme-border-color, #333333) !important;
-  color: var(--theme-text-color, #e6e6e6) !important;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-:deep(.dark-theme .el-card__header) {
-  border-bottom-color: var(--theme-border-color, #333333) !important;
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-:deep(.dark-theme .el-input__wrapper) {
-  background-color: var(--theme-input-bg, #2c2c2c) !important;
-  box-shadow: 0 0 0 1px var(--theme-input-border, #444444) inset !important;
+.back-home-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
 }
 
-:deep(.dark-theme .el-input__inner) {
-  color: var(--theme-input-text, #cccccc) !important;
-  background-color: transparent !important;
+.home-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
 }
 
-:deep(.dark-theme .el-form-item__label) {
-  color: var(--theme-text-color-light, #cccccc) !important;
+.home-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
 }
 
-:deep(.dark-theme .el-checkbox__label) {
-  color: var(--theme-text-color-light, #cccccc) !important;
+.home-icon {
+  font-size: 1.2em;
 }
 
-:deep(.dark-theme .el-radio__label) {
-  color: var(--theme-text-color-light, #cccccc) !important;
+/* Dark theme styles */
+:deep(.dark-theme) {
+  .login-container {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  }
+
+  .login-content {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .login-card {
+    background-color: rgba(37, 37, 37, 0.9) !important;
+    border-color: rgba(51, 51, 51, 0.5) !important;
+  }
+
+  .el-input__wrapper {
+    background-color: rgba(44, 44, 44, 0.8) !important;
+    box-shadow: 0 0 0 1px rgba(68, 68, 68, 0.5) inset !important;
+    backdrop-filter: blur(5px);
+  }
+
+  .el-input__inner {
+    color: #cccccc !important;
+  }
+
+  .el-form-item__label,
+  .el-checkbox__label,
+  .el-radio__label {
+    color: #cccccc !important;
+  }
+
+  .home-button {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+  }
+  
+  .home-button:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .login-content {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .login-left {
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .system-title {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    width: 100%;
+    max-width: 350px;
+  }
+
+  .system-title {
+    font-size: 2rem;
+  }
 }
 </style>

@@ -3,31 +3,38 @@
     <div class="theme-switch-container">
       <ThemeSwitcher />
     </div>
-    <el-card class="forgot-password-card">
-      <template #header>
-        <div class="card-header">
-          <span>校园招聘系统 - 找回密码</span>
-        </div>
-      </template>
-      <el-form ref="forgotPasswordFormRef" :model="forgotPasswordForm" :rules="forgotPasswordRules" label-width="80px">
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="forgotPasswordForm.email" placeholder="请输入注册时使用的邮箱"></el-input>
-        </el-form-item>
-        <el-form-item label="验证码" prop="code">
-          <el-input v-model="forgotPasswordForm.code" placeholder="请输入邮箱验证码">
-            <template #append>
-              <el-button :disabled="isSendingCode" @click="sendVerificationCode">
-                {{ codeButtonText }}
-              </el-button>
-            </template>
-          </el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSubmit" :loading="loading">提交</el-button>
-          <el-button @click="goToLogin">返回登录</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    <div class="forgot-password-content">
+      <div class="forgot-password-left">
+        <h2 class="welcome-text">找回密码</h2>
+        <h1 class="system-title">校园招聘系统</h1>
+        <p class="system-desc">别担心，我们会帮您找回账号</p>
+      </div>
+      <el-card class="forgot-password-card">
+        <template #header>
+          <div class="card-header">
+            <span>重置密码</span>
+          </div>
+        </template>
+        <el-form ref="forgotPasswordFormRef" :model="forgotPasswordForm" :rules="forgotPasswordRules" label-width="80px">
+          <el-form-item label="邮箱" prop="email">
+            <el-input v-model="forgotPasswordForm.email" placeholder="请输入注册时使用的邮箱"></el-input>
+          </el-form-item>
+          <el-form-item label="验证码" prop="code">
+            <el-input v-model="forgotPasswordForm.code" placeholder="请输入邮箱验证码">
+              <template #append>
+                <el-button :disabled="isSendingCode" @click="sendVerificationCode" class="verification-btn">
+                  {{ codeButtonText }}
+                </el-button>
+              </template>
+            </el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleSubmit" :loading="loading">提交</el-button>
+            <el-button @click="goToLogin">返回登录</el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
+    </div>
   </div>
 </template>
 
@@ -146,59 +153,198 @@ const goToLogin = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: var(--el-bg-color-page, #f0f2f5);
-  color: var(--el-text-color-primary);
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--el-color-primary-light-7) 0%, var(--el-color-primary-light-9) 100%);
   position: relative;
+  overflow: hidden;
+}
+
+.forgot-password-container::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 60%);
+  animation: rotate 30s linear infinite;
+}
+
+.forgot-password-content {
+  display: flex;
+  align-items: center;
+  gap: 4rem;
+  z-index: 1;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+.forgot-password-left {
+  color: var(--el-text-color-primary);
+  max-width: 400px;
+  padding: 2rem;
+}
+
+.welcome-text {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.system-title {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(45deg, var(--el-color-primary) 0%, var(--el-color-primary-light-3) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards 0.2s;
+}
+
+.system-desc {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards 0.4s;
 }
 
 .theme-switch-container {
-  position: absolute;
+  position: fixed;
   top: 20px;
   right: 20px;
   z-index: 10;
 }
 
 .forgot-password-card {
-  width: 450px; /* Adjust width as needed */
+  width: 450px;
   background-color: var(--el-bg-color, #ffffff);
-  border-color: var(--el-border-color-light);
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards 0.6s;
 }
 
 .card-header {
   text-align: center;
-  font-size: 1.2em;
+  font-size: 1.5em;
   color: var(--el-text-color-primary);
+  margin-bottom: 1rem;
 }
 
-/* 添加深色主题下的样式 */
-:deep(.dark-theme .el-card) {
-  background-color: var(--theme-card-bg-dark, #252525) !important;
-  border-color: var(--theme-border-color, #333333) !important;
-  color: var(--theme-text-color, #e6e6e6) !important;
+:deep(.el-form-item) {
+  margin-bottom: 22px;
+  opacity: 0;
+  animation: fadeInUp 0.4s ease forwards;
 }
 
-:deep(.dark-theme .el-card__header) {
-  border-bottom-color: var(--theme-border-color, #333333) !important;
+:deep(.el-form-item:nth-child(1)) { animation-delay: 0.7s; }
+:deep(.el-form-item:nth-child(2)) { animation-delay: 0.8s; }
+:deep(.el-form-item:nth-child(3)) { animation-delay: 0.9s; }
+
+.verification-btn {
+  min-width: 120px;
+  transition: all 0.3s ease;
 }
 
-:deep(.dark-theme .el-input__wrapper) {
-  background-color: var(--theme-input-bg, #2c2c2c) !important;
-  box-shadow: 0 0 0 1px var(--theme-input-border, #444444) inset !important;
+.verification-btn:not(:disabled):hover {
+  background: var(--el-color-primary-light-8);
 }
 
-:deep(.dark-theme .el-input__inner) {
-  color: var(--theme-input-text, #cccccc) !important;
-  background-color: transparent !important;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-:deep(.dark-theme .el-form-item__label) {
-  color: var(--theme-text-color-light, #cccccc) !important;
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-:deep(.dark-theme .el-button--default) {
-  background-color: var(--theme-bg-color-lighter, #2c2c2c) !important;
-  border-color: var(--theme-border-color, #333333) !important;
-  color: var(--theme-text-color, #e6e6e6) !important;
+/* Dark theme styles */
+:deep(.dark-theme) {
+  .forgot-password-container {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  }
+
+  .forgot-password-content {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .forgot-password-card {
+    background-color: rgba(37, 37, 37, 0.9) !important;
+    border-color: rgba(51, 51, 51, 0.5) !important;
+  }
+
+  .el-input__wrapper {
+    background-color: rgba(44, 44, 44, 0.8) !important;
+    box-shadow: 0 0 0 1px rgba(68, 68, 68, 0.5) inset !important;
+    backdrop-filter: blur(5px);
+  }
+
+  .el-input__inner {
+    color: #cccccc !important;
+  }
+
+  .el-form-item__label {
+    color: #cccccc !important;
+  }
+
+  .el-button--default {
+    background-color: rgba(44, 44, 44, 0.8) !important;
+    border-color: rgba(68, 68, 68, 0.5) !important;
+    color: #cccccc !important;
+    
+    &:hover {
+      background-color: rgba(44, 44, 44, 0.9) !important;
+      border-color: rgba(68, 68, 68, 0.7) !important;
+    }
+  }
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .forgot-password-content {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .forgot-password-left {
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .system-title {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .forgot-password-card {
+    width: 100%;
+    max-width: 350px;
+  }
+
+  .system-title {
+    font-size: 2rem;
+  }
+
+  .verification-btn {
+    min-width: 100px;
+    padding: 0 10px;
+  }
 }
 </style>
