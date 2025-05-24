@@ -34,6 +34,18 @@
 
         <template #suffix>
           <div class="search-button-container">
+            <!-- 搜索历史按钮 -->
+            <el-button
+              class="history-button"
+              :icon="Clock"
+              circle
+              plain
+              size="small"
+              :type="showHistory ? 'primary' : 'default'"
+              @click.stop="toggleHistory"
+            />
+
+            <!-- 清除按钮 -->
             <el-button
               v-if="searchQuery"
               class="clear-button"
@@ -43,11 +55,13 @@
               size="small"
               @click.stop="clearSearch"
             />
+
+            <!-- 搜索按钮 -->
             <el-button
               class="search-button modern-search-button"
-              type="primary"
               :icon="Search"
               circle
+              plain
               @click="handleSearch"
             />
           </div>
@@ -56,28 +70,35 @@
     </div>
 
     <!-- 搜索历史 -->
-    <div v-if="showHistory && searchStore.searchHistory.length > 0" class="search-history">
-      <div class="history-header">
-        <h3>搜索历史</h3>
-        <el-button
-          type="primary"
-          @click="clearHistory"
-        >
-          清除历史
-        </el-button>
-      </div>
-      <div class="history-list">
+    <SearchHistoryComponent
+      v-if="showHistory"
+      @use-history="useHistoryItem"
+      @close="showHistory = false"
+    />
+
+    <!-- 当前筛选条件显示 -->
+    <div v-if="hasActiveFilters" class="active-filters">
+      <div class="filter-tags">
         <el-tag
-          v-for="item in searchStore.searchHistory"
-          :key="item.id"
-          class="history-tag"
-          @click="useHistoryItem(item)"
+          v-for="(filter, key) in activeFiltersDisplay"
+          :key="key"
+          :closable="true"
+          @close="removeFilter(key)"
+          class="filter-tag"
+          type="primary"
         >
-          {{ item.keyword }}
-          <template v-if="item.type !== 'all'">
-            <span class="history-type">{{ formatSearchType(item.type) }}</span>
-          </template>
+          {{ filter.label }}: {{ filter.value }}
         </el-tag>
+        <el-button
+          v-if="hasActiveFilters"
+          size="small"
+          type="danger"
+          text
+          @click="clearAllFilters"
+          class="clear-all-btn"
+        >
+          清除所有筛选
+        </el-button>
       </div>
     </div>
 
@@ -231,12 +252,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, onMounted, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSearchStore } from '@/stores/search';
 import type { SearchType, SearchHistory } from '@/api/search';
 import { ElMessageBox } from 'element-plus';
 import { Search, Clock, Delete, ArrowDown, ArrowUp } from '@element-plus/icons-vue';
+import SearchHistoryComponent from './SearchHistory.vue';
 
 // 定义组件属性
 const props = defineProps({
@@ -251,6 +273,10 @@ const props = defineProps({
   showHistoryByDefault: {
     type: Boolean,
     default: false
+  },
+  initialFilters: {
+    type: Object,
+    default: () => ({})
   }
 });
 
@@ -270,12 +296,12 @@ const showHistory = ref(props.showHistoryByDefault);
 
 // 高级筛选条件
 const advancedFilters = reactive({
-  location: '',
-  salary: '',
-  experience: '',
-  education: '',
-  industry: '',
-  size: ''
+  location: props.initialFilters.location || '',
+  salary: props.initialFilters.salary || '',
+  experience: props.initialFilters.experience || '',
+  education: props.initialFilters.education || '',
+  industry: props.initialFilters.industry || '',
+  size: props.initialFilters.size || ''
 });
 
 // 选项数据
@@ -341,6 +367,48 @@ const sizeOptions = [
   { value: '2000人以上', label: '2000人以上' }
 ];
 
+// 计算属性：是否有活跃的筛选条件
+const hasActiveFilters = computed(() => {
+  return Object.values(advancedFilters).some(value => value !== '');
+});
+
+// 计算属性：活跃筛选条件的显示格式
+const activeFiltersDisplay = computed(() => {
+  const filters: Record<string, { label: string; value: string }> = {};
+
+  const labelMap: Record<string, string> = {
+    location: '工作地点',
+    salary: '薪资范围',
+    experience: '工作经验',
+    education: '学历要求',
+    industry: '企业行业',
+    size: '企业规模'
+  };
+
+  const valueMap: Record<string, Record<string, string>> = {
+    salary: {
+      '0-5k': '5K以下',
+      '5k-10k': '5K-10K',
+      '10k-15k': '10K-15K',
+      '15k-20k': '15K-20K',
+      '20k-30k': '20K-30K',
+      '30k-50k': '30K-50K',
+      '50k+': '50K以上'
+    }
+  };
+
+  Object.entries(advancedFilters).forEach(([key, value]) => {
+    if (value) {
+      filters[key] = {
+        label: labelMap[key] || key,
+        value: valueMap[key]?.[value] || value
+      };
+    }
+  });
+
+  return filters;
+});
+
 // 获取搜索建议
 const querySearchAsync = async (queryString: string, cb: (arg: any[]) => void) => {
   if (!queryString) {
@@ -392,9 +460,11 @@ const handleSelect = (item: any) => {
 const handleSearch = () => {
   if (!searchQuery.value.trim()) return;
 
-  // 隐藏高级搜索和历史记录
-  showAdvancedSearch.value = false;
+  // 隐藏历史记录，但如果有筛选条件则保持高级搜索面板显示
   showHistory.value = false;
+  if (!hasActiveFilters.value) {
+    showAdvancedSearch.value = false;
+  }
 
   // 构建搜索参数
   const searchParams = {
@@ -450,6 +520,16 @@ const useHistoryItem = (item: SearchHistory) => {
   handleSearch();
 };
 
+// 切换搜索历史显示
+const toggleHistory = () => {
+  showHistory.value = !showHistory.value;
+
+  // 如果打开历史记录，则关闭高级搜索
+  if (showHistory.value) {
+    showAdvancedSearch.value = false;
+  }
+};
+
 // 切换高级搜索
 const toggleAdvancedSearch = () => {
   showAdvancedSearch.value = !showAdvancedSearch.value;
@@ -472,6 +552,20 @@ const applyAdvancedFilters = () => {
   handleSearch();
 };
 
+// 移除单个筛选条件
+const removeFilter = (key: string) => {
+  advancedFilters[key as keyof typeof advancedFilters] = '';
+  handleSearch();
+};
+
+// 清除所有筛选条件
+const clearAllFilters = () => {
+  Object.keys(advancedFilters).forEach(key => {
+    advancedFilters[key as keyof typeof advancedFilters] = '';
+  });
+  handleSearch();
+};
+
 // 处理搜索类型变更
 const handleTypeChange = () => {
   emit('type-change', searchType.value);
@@ -488,6 +582,29 @@ const formatSearchType = (type: SearchType): string => {
 
   return typeMap[type] || '全部';
 };
+
+// 监听初始筛选条件的变化
+watch(
+  () => props.initialFilters,
+  (newFilters) => {
+    if (newFilters) {
+      Object.keys(advancedFilters).forEach(key => {
+        advancedFilters[key as keyof typeof advancedFilters] = newFilters[key] || '';
+      });
+    }
+  },
+  { deep: true, immediate: true }
+);
+
+// 监听初始关键词和类型的变化
+watch(
+  () => [props.initialKeyword, props.initialType],
+  ([newKeyword, newType]) => {
+    searchQuery.value = newKeyword;
+    searchType.value = newType as SearchType;
+  },
+  { immediate: true }
+);
 
 // 组件挂载时获取搜索历史
 onMounted(async () => {
@@ -515,45 +632,86 @@ onMounted(async () => {
 
 .global-search-input {
   width: 100%;
+  position: relative;
 }
 
+/* 主输入框容器样式 - 现代化设计 */
 .global-search-input :deep(.el-input__wrapper) {
-  border-radius: 20px !important;
-  padding: 0 8px;
-  background: rgba(35, 35, 50, 0.8);
-  border: 1px solid rgba(100, 100, 255, 0.3);
-  box-shadow: 0 0 10px rgba(80, 80, 255, 0.1);
-  transition: all 0.3s ease;
-  height: 40px;
-  padding-right: 85px; /* 为两个按钮预留空间 */
+  border-radius: 24px !important;
+  padding: 0 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+  border: 2px solid rgba(99, 102, 241, 0.2);
+  box-shadow:
+    0 4px 20px rgba(99, 102, 241, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 48px;
+  padding-right: 120px; /* 为三个按钮预留合适空间 */
+  padding-left: 52px; /* 为前缀图标预留空间 */
+  backdrop-filter: blur(10px);
 }
 
-.global-search-input :deep(.el-input__wrapper:hover),
+/* 悬停和聚焦状态 - 增强交互反馈 */
+.global-search-input :deep(.el-input__wrapper:hover) {
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow:
+    0 8px 30px rgba(99, 102, 241, 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transform: translateY(-1px);
+}
+
 .global-search-input :deep(.el-input__wrapper:focus-within) {
-  border-color: rgba(120, 120, 255, 0.8);
-  box-shadow: 0 0 15px rgba(100, 100, 255, 0.3);
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow:
+    0 12px 40px rgba(99, 102, 241, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 0 0 4px rgba(99, 102, 241, 0.1);
+  transform: translateY(-2px);
 }
 
-/* 输入框样式 */
+/* 输入框文本样式 - 优化可读性 */
 .global-search-input :deep(.el-input__inner) {
-  height: 40px;
-  color: #eaeaea;
+  height: 48px;
+  color: #1f2937;
   background: transparent;
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
+  padding: 0;
+  border: none;
 }
 
 .global-search-input :deep(.el-input__inner::placeholder) {
-  color: rgba(180, 180, 200, 0.6);
+  color: rgba(107, 114, 128, 0.7);
+  font-weight: 400;
 }
 
-/* 前缀图标样式 */
+/* 前缀图标容器 - 改进布局 */
 .global-search-input :deep(.el-input__prefix) {
-  padding-right: 8px;
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
 }
 
+/* 搜索图标样式 - 统一尺寸 */
 .search-icon {
-  color: rgba(150, 150, 255, 0.8);
-  font-size: 16px;
+  color: rgba(99, 102, 241, 0.7);
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.global-search-input :deep(.el-input__wrapper:focus-within) .search-icon {
+  color: rgba(99, 102, 241, 1);
+  transform: scale(1.1);
 }
 
 /* 搜索按钮容器样式 */
@@ -561,78 +719,299 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   position: absolute;
-  right: 6px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 2;
-  gap: 8px;
+  z-index: 10;
+  gap: 6px;
+  padding: 3px !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(10px) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  width: auto !important;
+  height: auto !important;
+  flex-shrink: 0 !important;
 }
 
-/* 搜索按钮样式 */
-.modern-search-button {
-  width: 32px !important;
-  height: 32px !important;
+/* 搜索按钮样式 - 使用更强的选择器覆盖Element Plus默认样式 */
+.search-button-container .modern-search-button.el-button.el-button--default.is-circle {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  max-width: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
   padding: 0 !important;
-  background: linear-gradient(135deg, #6e8efb, #a777e3) !important;
-  border-color: transparent !important;
-  transition: all 0.3s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.modern-search-button:hover {
-  transform: scale(1.1) !important;
-  box-shadow: 0 0 8px rgba(150, 150, 255, 0.6) !important;
-}
-
-/* 清除按钮样式 */
-.clear-button {
-  width: 28px !important;
-  height: 28px !important;
-  padding: 0 !important;
-  color: rgba(180, 180, 200, 0.8) !important;
-  background: rgba(80, 80, 100, 0.3) !important;
-  border-color: transparent !important;
-  transition: all 0.3s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.clear-button:hover {
+  margin: 0 !important;
   color: white !important;
-  background: rgba(255, 100, 100, 0.5) !important;
-  transform: scale(1.1) !important;
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  background-color: #10b981 !important;
+  border: none !important;
+  border-color: transparent !important;
+  border-width: 0 !important;
+  border-radius: 50% !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
 }
 
-/* 添加呼吸光效果 */
-@keyframes glow {
-  0% { box-shadow: 0 0 5px rgba(100, 100, 255, 0.3); }
-  50% { box-shadow: 0 0 15px rgba(120, 120, 255, 0.5); }
-  100% { box-shadow: 0 0 5px rgba(100, 100, 255, 0.3); }
+.search-button-container .modern-search-button.el-button.el-button--default.is-circle:hover,
+.search-button-container .modern-search-button.el-button.el-button--default.is-circle:focus {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  max-width: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  color: white !important;
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  background-color: #059669 !important;
+  border-color: transparent !important;
+  border-width: 0 !important;
+  transform: scale(1.1) translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
 }
 
-.global-search-input :deep(.el-input__wrapper:focus-within) {
-  animation: glow 2s infinite;
+.search-button-container .modern-search-button.el-button.el-button--default.is-circle:active {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  max-width: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  color: white !important;
+  background: linear-gradient(135deg, #047857, #065f46) !important;
+  background-color: #047857 !important;
+  border-color: transparent !important;
+  border-width: 0 !important;
+  transform: scale(1.05) translateY(0) !important;
 }
 
-/* 适配浅色主题 */
-:root[data-theme="light"] .global-search-input :deep(.el-input__wrapper) {
-  background: rgba(245, 245, 250, 0.9);
-  border: 1px solid rgba(100, 100, 255, 0.2);
+.search-button-container .modern-search-button.el-button .el-icon {
+  font-size: 14px !important;
+  color: white !important;
+  margin: 0 !important;
 }
 
-:root[data-theme="light"] .global-search-input :deep(.el-input__inner) {
-  color: #333;
+/* 深度选择器确保覆盖所有嵌套样式 */
+.search-button-container .modern-search-button :deep(.el-button) {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  max-width: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  padding: 0 !important;
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  border: none !important;
+  border-radius: 50% !important;
 }
 
-:root[data-theme="light"] .global-search-input :deep(.el-input__inner::placeholder) {
-  color: rgba(100, 100, 120, 0.6);
+.search-button-container .modern-search-button :deep(.el-icon) {
+  font-size: 14px !important;
+  color: white !important;
 }
 
-:root[data-theme="light"] .search-icon {
-  color: rgba(100, 100, 255, 0.7);
+/* 额外的强制样式确保按钮为正方形 */
+.modern-search-button.el-button {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  max-width: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+}
+
+/* 使用属性选择器进一步强化 */
+.search-button-container button.modern-search-button[class*="el-button"] {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  max-width: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+/* 强制覆盖所有可能的Element Plus样式 */
+.search-button-container .modern-search-button.el-button * {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+}
+
+/* 针对按钮内部的span元素 */
+.search-button-container .modern-search-button.el-button > span {
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* 最强优先级的样式 */
+.search-button-container .modern-search-button.el-button.el-button--default.is-circle.is-plain {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  max-width: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-width: 0 !important;
+  line-height: 1 !important;
+  font-size: 14px !important;
+}
+
+/* 搜索历史按钮样式 - 使用更强的选择器 */
+.search-button-container .history-button.el-button {
+  width: 24px !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: white !important;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+  background-color: #3b82f6 !important;
+  border: none !important;
+  border-color: transparent !important;
+  border-radius: 50% !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+}
+
+.search-button-container .history-button.el-button:hover,
+.search-button-container .history-button.el-button:focus {
+  color: white !important;
+  background: linear-gradient(135deg, #2563eb, #1e40af) !important;
+  background-color: #2563eb !important;
+  border-color: transparent !important;
+  transform: scale(1.1) translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+}
+
+.search-button-container .history-button.el-button--primary,
+.search-button-container .history-button.el-button.is-active {
+  color: white !important;
+  background: linear-gradient(135deg, #1d4ed8, #1e3a8a) !important;
+  background-color: #1d4ed8 !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.5) !important;
+}
+
+.search-button-container .history-button.el-button .el-icon {
+  font-size: 14px !important;
+  color: white !important;
+  margin: 0 !important;
+}
+
+/* 清除按钮样式 - 使用更强的选择器 */
+.search-button-container .clear-button.el-button {
+  width: 24px !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: white !important;
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  background-color: #ef4444 !important;
+  border: none !important;
+  border-color: transparent !important;
+  border-radius: 50% !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
+}
+
+.search-button-container .clear-button.el-button:hover,
+.search-button-container .clear-button.el-button:focus {
+  color: white !important;
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  background-color: #dc2626 !important;
+  border-color: transparent !important;
+  transform: scale(1.1) translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4) !important;
+}
+
+.search-button-container .clear-button.el-button .el-icon {
+  font-size: 14px !important;
+  color: white !important;
+  margin: 0 !important;
+}
+
+
+
+/* 深色主题适配 */
+[data-theme="dark"] .global-search-input :deep(.el-input__wrapper) {
+  background: linear-gradient(135deg, rgba(30, 30, 40, 0.95), rgba(25, 25, 35, 0.9)) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  box-shadow:
+    0 4px 20px rgba(99, 102, 241, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .global-search-input :deep(.el-input__inner) {
+  color: #e5e7eb !important;
+}
+
+[data-theme="dark"] .global-search-input :deep(.el-input__inner::placeholder) {
+  color: rgba(156, 163, 175, 0.7) !important;
+}
+
+[data-theme="dark"] .search-icon {
+  color: rgba(99, 102, 241, 0.8) !important;
+}
+
+[data-theme="dark"] .search-button-container {
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+/* 浅色主题保持默认样式，无需额外覆盖 */
+
+/* 自动主题适配 */
+@media (prefers-color-scheme: dark) {
+  .global-search-input :deep(.el-input__wrapper) {
+    background: linear-gradient(135deg, rgba(30, 30, 40, 0.95), rgba(25, 25, 35, 0.9)) !important;
+    border-color: rgba(99, 102, 241, 0.3) !important;
+  }
+
+  .global-search-input :deep(.el-input__inner) {
+    color: #e5e7eb !important;
+  }
+
+  .global-search-input :deep(.el-input__inner::placeholder) {
+    color: rgba(156, 163, 175, 0.7) !important;
+  }
+
+  .search-icon {
+    color: rgba(99, 102, 241, 0.8) !important;
+  }
 }
 
 .suggestion-item {
@@ -718,33 +1097,149 @@ onMounted(async () => {
   gap: 10px;
 }
 
+/* 当前筛选条件显示 */
+.active-filters {
+  margin: 15px 0;
+  padding: 15px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.filter-tag {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+  transition: all 0.3s ease;
+}
+
+.filter-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.filter-tag :deep(.el-tag__close) {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-weight: bold;
+}
+
+.filter-tag :deep(.el-tag__close:hover) {
+  color: white !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.clear-all-btn {
+  margin-left: 8px;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.clear-all-btn:hover {
+  transform: scale(1.05);
+}
+
 .advanced-search-toggle {
   display: flex;
   justify-content: center;
   margin-top: 15px;
 }
 
-/* 响应式调整 */
+/* 响应式设计优化 */
 @media (max-width: 768px) {
   .global-search-container {
     padding: 15px;
   }
 
-  :deep(.el-input__wrapper) {
-    height: 40px;
+  .global-search-input :deep(.el-input__wrapper) {
+    height: 44px !important;
+    padding-right: 140px !important;
+    padding-left: 48px !important;
+    border-radius: 22px !important;
   }
 
-  :deep(.el-input__inner) {
-    font-size: 14px;
-    height: 40px;
+  .global-search-input :deep(.el-input__inner) {
+    font-size: 14px !important;
+    height: 44px !important;
   }
 
   .search-icon {
-    font-size: 16px;
+    font-size: 16px !important;
+  }
+
+  .global-search-input :deep(.el-input__prefix) {
+    left: 16px !important;
+  }
+
+  .search-button-container {
+    right: 8px !important;
+    gap: 6px !important;
+    padding: 3px !important;
+  }
+
+  .modern-search-button {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .modern-search-button .el-icon {
+    font-size: 12px !important;
+  }
+
+  .history-button,
+  .clear-button {
+    width: 20px !important;
+    height: 20px !important;
   }
 
   .el-col {
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .global-search-input :deep(.el-input__wrapper) {
+    height: 42px !important;
+    padding-right: 120px !important;
+    padding-left: 44px !important;
+  }
+
+  .global-search-input :deep(.el-input__inner) {
+    font-size: 13px !important;
+    height: 42px !important;
+  }
+
+  .modern-search-button {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .modern-search-button .el-icon {
+    font-size: 10px !important;
+  }
+
+  .history-button,
+  .clear-button {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .search-button-container {
+    gap: 4px !important;
+    padding: 2px !important;
   }
 }
 </style>

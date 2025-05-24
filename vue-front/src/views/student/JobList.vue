@@ -95,7 +95,7 @@
     </el-card>
 
     <!-- 添加调试信息 -->
-    <el-card v-if="showDebug" shadow="hover" class="debug-card responsive-card">
+    <!-- <el-card v-if="showDebug" shadow="hover" class="debug-card responsive-card">
       <div class="debug-info">
         <p><strong>路由信息：</strong> {{ route.path }} ({{ route.name }})</p>
         <p><strong>查询参数：</strong> {{ JSON.stringify(route.query) }}</p>
@@ -105,7 +105,7 @@
         <el-button size="small" @click="forceRefreshData">强制刷新数据</el-button>
         <el-button size="small" @click="showDebug = false">隐藏调试信息</el-button>
       </div>
-    </el-card>
+    </el-card> -->
 
     <el-card shadow="never" class="list-card responsive-card" v-loading="jobStore.loadingList">
       <!-- 搜索结果摘要 -->

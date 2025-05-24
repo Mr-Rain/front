@@ -55,7 +55,7 @@ const router = createRouter({
           path: 'dashboard',
           name: 'student-dashboard',
           component: createLazyComponent('student/Dashboard'),
-          meta: { title: '学生仪表盘' },
+          meta: { title: '我的主页' },
         },
         {
           path: 'profile',
@@ -137,7 +137,7 @@ const router = createRouter({
           path: 'dashboard',
           name: 'company-dashboard',
           component: createLazyComponent('company/Dashboard'),
-          meta: { title: '企业工作台' },
+          meta: { title: '招聘管理' },
         },
         {
           path: 'profile',
@@ -183,7 +183,7 @@ const router = createRouter({
           path: 'dashboard',
           name: 'admin-dashboard',
           component: createLazyComponent('admin/Dashboard'),
-          meta: { title: '管理工作台' },
+          meta: { title: '管理后台' },
         },
         {
           path: 'users',
@@ -196,6 +196,12 @@ const router = createRouter({
           name: 'admin-company-audit',
           component: createLazyComponent('admin/CompanyAudit'),
           meta: { title: '企业审核', permissions: ['company:view', 'company:audit'] }
+        },
+        {
+          path: 'announcements',
+          name: 'admin-announcement-manage',
+          component: createLazyComponent('admin/AnnouncementManage'),
+          meta: { title: '系统公告管理', permissions: ['announcement:view', 'announcement:create', 'announcement:edit', 'announcement:delete'] } // 根据实际权限调整
         },
         {
           path: 'jobs',
@@ -264,19 +270,30 @@ const router = createRouter({
     {
       path: '/notifications',
       component: DefaultLayout,
-      meta: { requiresAuth: true },
       children: [
         {
           path: '',
           name: 'notifications',
           component: createLazyComponent('common/Notifications'),
-          meta: { title: '消息通知' }
+          meta: { title: '消息通知', requiresAuth: true }
         },
         {
-          path: 'settings',
+          path: ':id',
+          name: 'notification-detail',
+          component: createLazyComponent('common/NotificationDetail'),
+          meta: { title: '通知详情', requiresAuth: true }
+        }
+      ]
+    },
+    {
+      path: '/notification-settings',
+      component: DefaultLayout,
+      children: [
+        {
+          path: '',
           name: 'notification-settings',
           component: createLazyComponent('common/NotificationSettings'),
-          meta: { title: '通知设置' }
+          meta: { title: '通知设置', requiresAuth: true }
         }
       ]
     },

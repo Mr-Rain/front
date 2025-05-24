@@ -145,3 +145,19 @@ export function exportResumeToPdf(id: string | number) {
     responseType: 'blob',
   });
 }
+
+/**
+ * 检查简历是否存在
+ * @param id 简历ID
+ * @returns 检查结果
+ */
+export function checkResumeExists(id: string | number) {
+  return request({
+    url: `/api/resumes/${id}/exists`,
+    method: 'get',
+    cache: {
+      ttl: 0, // 不缓存
+      forceRefresh: true // 强制刷新
+    }
+  });
+}

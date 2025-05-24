@@ -12,7 +12,7 @@
         <template #reference>
           <el-button class="notification-button" :icon="Bell" circle />
         </template>
-        
+
         <!-- 通知弹出框内容 -->
         <div class="notification-popover-content">
           <div class="notification-header">
@@ -26,7 +26,7 @@
               </el-button>
             </div>
           </div>
-          
+
           <el-tabs v-model="activeTab" class="notification-tabs">
             <el-tab-pane label="全部" name="all">
               <div v-loading="loading" class="notification-list">
@@ -56,7 +56,7 @@
                 <el-empty v-else description="暂无通知" :image-size="64" />
               </div>
             </el-tab-pane>
-            
+
             <el-tab-pane label="未读" name="unread">
               <div v-loading="loading" class="notification-list">
                 <template v-if="unreadNotifications.length > 0">
@@ -96,12 +96,12 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotificationStore } from '@/stores/notification';
 import type { NotificationInfo } from '@/types/notification';
-import { 
-  Bell, 
-  Message, 
-  InfoFilled, 
-  Promotion, 
-  ChatDotRound 
+import {
+  Bell,
+  Message,
+  InfoFilled,
+  Promotion,
+  ChatDotRound
 } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 
@@ -162,7 +162,7 @@ const fetchNotifications = async () => {
 const fetchUnreadNotifications = async () => {
   loading.value = true;
   try {
-    const response = await notificationStore.fetchNotifications({ 
+    const response = await notificationStore.fetchNotifications({
       limit: 5,
       status: 'unread'
     });
@@ -200,16 +200,8 @@ const viewAllNotifications = () => {
 
 // 处理通知点击
 const handleNotificationClick = async (notification: NotificationInfo) => {
-  // 如果通知未读，标记为已读
-  if (notification.status === 'unread') {
-    await notificationStore.markAsRead(notification.id);
-    unreadCount.value = Math.max(0, unreadCount.value - 1);
-  }
-  
-  // 如果有链接，跳转到对应页面
-  if (notification.link) {
-    router.push(notification.link);
-  }
+  // 跳转到通知详情页面
+  router.push(`/notifications/${notification.id}`);
 };
 
 // 获取通知图标
@@ -240,27 +232,27 @@ const formatTime = (timeStr: string): string => {
   const now = new Date();
   const time = new Date(timeStr);
   const diff = now.getTime() - time.getTime();
-  
+
   // 小于1分钟
   if (diff < 60 * 1000) {
     return '刚刚';
   }
-  
+
   // 小于1小时
   if (diff < 60 * 60 * 1000) {
     return `${Math.floor(diff / (60 * 1000))}分钟前`;
   }
-  
+
   // 小于24小时
   if (diff < 24 * 60 * 60 * 1000) {
     return `${Math.floor(diff / (60 * 60 * 1000))}小时前`;
   }
-  
+
   // 小于7天
   if (diff < 7 * 24 * 60 * 60 * 1000) {
     return `${Math.floor(diff / (24 * 60 * 60 * 1000))}天前`;
   }
-  
+
   // 大于7天，显示具体日期
   return time.toLocaleDateString();
 };
@@ -413,7 +405,7 @@ const formatTime = (timeStr: string): string => {
   :deep(.el-popover.notification-popover) {
     width: 280px !important;
   }
-  
+
   .notification-item-title {
     max-width: 160px;
   }

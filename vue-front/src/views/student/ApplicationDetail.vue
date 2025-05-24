@@ -44,7 +44,28 @@
             </div>
             <div class="info-item">
               <span class="label">投递简历:</span>
-              <span class="value">{{ applicationStore.currentApplicationDetail.resumeTitle || '-' }}</span>
+              <!-- 有简历ID -->
+              <template v-if="applicationStore.currentApplicationDetail.resumeId">
+                <el-link
+                  type="primary"
+                  @click="checkAndGoToResume(applicationStore.currentApplicationDetail.resumeId, applicationStore.currentApplicationDetail.resumeTitle)"
+                  :underline="false"
+                  class="value"
+                >
+                  {{ applicationStore.currentApplicationDetail.resumeTitle || '查看简历' }}
+                </el-link>
+              </template>
+              <!-- 简历已被删除但有删除前的标题 -->
+              <template v-else-if="applicationStore.currentApplicationDetail.deletedResumeTitle">
+                <span class="value deleted-resume">
+                  {{ applicationStore.currentApplicationDetail.deletedResumeTitle }}
+                  <el-tag size="small" type="info">已删除</el-tag>
+                </span>
+              </template>
+              <!-- 没有简历ID且没有删除前标题 -->
+              <template v-else>
+                <span class="value deleted-resume">未知简历</span>
+              </template>
             </div>
           </div>
         </div>
@@ -153,6 +174,8 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { ArrowLeft, Calendar } from '@element-plus/icons-vue';
 import { marked } from 'marked'; // 需要安装: pnpm add marked
 
+// 不再需要isDev变量
+
 const router = useRouter();
 const route = useRoute();
 const applicationStore = useApplicationStore();
@@ -243,17 +266,34 @@ const hasSubmittedFeedback = computed(() => {
 onMounted(async () => {
   if (applicationId) {
     try {
+      console.log('正在获取申请详情，ID:', applicationId);
+
       await applicationStore.fetchApplicationDetail(applicationId);
+
       if (!applicationStore.currentApplicationDetail) {
+        console.error('获取申请详情后数据为空');
         ElMessage.error('找不到该申请记录');
         goBack();
+      } else {
+        console.log('成功加载申请详情:', applicationStore.currentApplicationDetail);
+
+        // 检查简历标题
+        if (!applicationStore.currentApplicationDetail.resumeTitle) {
+          console.warn('申请详情中缺少简历标题');
+        }
+
+        // 检查简历ID
+        if (!applicationStore.currentApplicationDetail.resumeId) {
+          console.warn('申请详情中缺少简历ID');
+        }
       }
     } catch (error) {
-      console.error('Failed to fetch application detail:', error);
+      console.error('获取申请详情失败:', error);
       ElMessage.error('获取申请详情失败');
       goBack();
     }
   } else {
+    console.error('申请ID不存在');
     ElMessage.error('申请ID不存在');
     goBack();
   }
@@ -365,6 +405,31 @@ const handleWithdraw = async (id: string | number) => {
 const goToJobDetail = (jobId: string | number | undefined) => {
   if (!jobId) return;
   router.push({ name: 'student-job-detail', params: { id: jobId } });
+};
+
+// 检查简历是否存在并跳转
+const checkAndGoToResume = async (resumeId: string | number, resumeTitle: string) => {
+  if(!resumeId) return;
+
+  try {
+    // 导入简历API
+    const { checkResumeExists } = await import('@/api/resume');
+
+    // 检查简历是否存在
+    const response = await checkResumeExists(resumeId);
+
+    if (response.data && response.data.exists) {
+      // 简历存在，跳转到预览页面
+      console.log(`Viewing resume preview for id: ${resumeId}`);
+      router.push(`/student/resume/${resumeId}/preview`);
+    } else {
+      // 简历不存在，显示提示
+      ElMessage.warning(`简历"${resumeTitle}"已被删除或不存在`);
+    }
+  } catch (error) {
+    console.error('Failed to check resume existence:', error);
+    ElMessage.error('无法验证简历是否存在，请稍后重试');
+  }
 };
 
 // 格式化Markdown内容
@@ -525,6 +590,24 @@ const submitFeedback = async () => {
   flex-grow: 1;
 }
 
+/* 确保链接样式与普通文本一致 */
+.el-link.value {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/* 已删除简历样式 */
+.deleted-resume {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #909399;
+}
+
+.deleted-resume .el-tag {
+  margin-left: 5px;
+}
+
 .interview-card {
   background-color: #f0f9ff;
   border-radius: 8px;
@@ -537,6 +620,13 @@ const submitFeedback = async () => {
   align-items: center;
   margin-bottom: 15px;
   color: #409eff;
+}
+
+.debug-info {
+  margin-left: 10px;
+  font-size: 0.8rem;
+  color: #909399;
+  font-style: italic;
   font-weight: 600;
 }
 

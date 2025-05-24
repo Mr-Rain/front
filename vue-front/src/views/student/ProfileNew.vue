@@ -1,7 +1,7 @@
 <template>
   <div class="student-profile-page responsive-padding">
     <!-- 调试信息卡片 -->
-    <el-card v-if="true" shadow="hover" class="debug-card responsive-card">
+    <!-- <el-card v-if="true" shadow="hover" class="debug-card responsive-card">
       <div class="debug-info">
         <h3>调试信息</h3>
         <p><strong>路由信息：</strong> {{ route.path }} ({{ route.name }})</p>
@@ -18,7 +18,7 @@
         <pre>{{ JSON.stringify(profileForm, null, 2) }}</pre>
         <el-button size="small" @click="forceRefreshData">强制刷新数据</el-button>
       </div>
-    </el-card>
+    </el-card> -->
 
     <el-card shadow="never" class="page-card responsive-card">
       <template #header>

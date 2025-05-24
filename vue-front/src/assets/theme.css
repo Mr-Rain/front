@@ -738,26 +738,29 @@ body.dark-theme .el-button:not(.el-button--primary):not(.el-button--success):not
 
 /* 搜索按钮样式调整 - 更紧凑的设计 */
 .search-button.el-button.is-circle {
-  width: 20px !important;
-  height: 20px !important;
-  padding: 2px !important;
-  font-size: 10px !important;
-  background: transparent !important;
+  width: 16px !important;
+  height: 16px !important;
+  padding: 0 !important;
+  font-size: 8px !important;
+  background: linear-gradient(135deg, #10b981, #059669) !important;
   border: none !important;
-  color: #409EFF !important;
-  box-shadow: none !important;
+  color: white !important;
+  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.3) !important;
   margin-right: 2px !important;
   transition: all 0.3s ease !important;
   min-height: unset !important;
+  border-radius: 50% !important;
 }
 
 .search-button.el-button.is-circle:hover {
-  background-color: rgba(64, 158, 255, 0.1) !important;
+  background: linear-gradient(135deg, #059669, #047857) !important;
   transform: scale(1.1) !important;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4) !important;
 }
 
 .search-button.el-button.is-circle .el-icon {
-  font-size: 12px !important;
+  font-size: 10px !important;
+  color: white !important;
 }
 
 /* 搜索框样式优化 */

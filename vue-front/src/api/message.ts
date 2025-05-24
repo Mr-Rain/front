@@ -6,15 +6,15 @@ import type { PaginatedResponse, PaginationParams } from './company';
  */
 export interface MessageInfo {
   id: string | number;
-  user_id: string | number;
+  userId: string | number;
   title: string;
   content: string;
   type: string;
-  is_read: boolean;
-  create_time: string;
-  read_time?: string;
-  related_id?: string | number;
-  related_type?: string;
+  isRead: boolean;
+  createTime: string;
+  readTime?: string;
+  relatedId?: string | number;
+  relatedType?: string;
 }
 
 /**

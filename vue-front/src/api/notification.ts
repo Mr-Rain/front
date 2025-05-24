@@ -7,6 +7,18 @@ import type {
 } from '@/types/notification';
 
 /**
+ * 获取通知详情
+ * @param id 通知ID
+ * @returns 通知详情
+ */
+export function getNotificationById(id: string | number): Promise<{ data: NotificationInfo }> {
+  return request({
+    url: `/api/notifications/${id}`,
+    method: 'get'
+  });
+}
+
+/**
  * 获取通知列表
  * @param params 查询参数
  * @returns 通知列表
@@ -76,13 +88,11 @@ export function getNotifications(params: NotificationQueryParams): Promise<{ dat
   // });
 
   // 当后端API实现后，取消注释下面的代码
-  // /*
   return request({
     url: '/api/notifications',
     method: 'get',
     params
   });
-  // */
 }
 
 /**
@@ -101,12 +111,10 @@ export function getUnreadCount(): Promise<{ data: { count: number } }> {
   // });
 
   // 当后端API实现后，取消注释下面的代码
-  // /*
   return request({
     url: '/api/notifications/unread/count',
     method: 'get'
   });
-  // */
 }
 
 /**
@@ -126,7 +134,6 @@ export function markAsRead(id?: string | number): Promise<{ data: { success: boo
   // });
 
   // 当后端API实现后，取消注释下面的代码
-  // /*
   if (id) {
     return request({
       url: `/api/notifications/${id}/read`,
@@ -138,7 +145,6 @@ export function markAsRead(id?: string | number): Promise<{ data: { success: boo
       method: 'put'
     });
   }
-  // */
 }
 
 /**
@@ -158,12 +164,10 @@ export function deleteNotification(id: string | number): Promise<{ data: { succe
   // });
 
   // 当后端API实现后，取消注释下面的代码
-  // /*
   return request({
     url: `/api/notifications/${id}`,
     method: 'delete'
   });
-  // */
 }
 
 /**
@@ -188,12 +192,10 @@ export function getNotificationSettings(): Promise<{ data: {
   // });
 
   // 当后端API实现后，取消注释下面的代码
-  // /*
   return request({
-    url: '/api/notifications/settings',
+    url: '/api/notifications/settings', // This endpoint needs to be implemented in backend
     method: 'get'
   });
-  // */
 }
 
 /**
@@ -217,11 +219,9 @@ export function updateNotificationSettings(settings: {
   // });
 
   // 当后端API实现后，取消注释下面的代码
-  // /*
   return request({
-    url: '/api/notifications/settings',
+    url: '/api/notifications/settings', // This endpoint needs to be implemented in backend
     method: 'put',
     data: settings
   });
-  // */
 }

@@ -2,14 +2,15 @@
   <div class="search-results-page">
     <!-- 搜索区域 -->
     <div class="search-area">
-      <global-search
+      <GlobalSearch
         :initial-keyword="searchQuery"
         :initial-type="searchType"
+        :initial-filters="currentFilters"
         @search="handleSearch"
         @type-change="handleTypeChange"
       />
     </div>
-    
+
     <!-- 搜索结果 -->
     <div class="search-results-container">
       <!-- 搜索结果标题 -->
@@ -25,7 +26,7 @@
             未找到与 "{{ searchQuery }}" 相关的结果
           </template>
         </h2>
-        
+
         <!-- 搜索类型切换 -->
         <div class="search-type-tabs">
           <el-tabs v-model="searchType" @tab-change="handleTypeChange">
@@ -35,12 +36,12 @@
           </el-tabs>
         </div>
       </div>
-      
+
       <!-- 加载状态 -->
       <div v-if="searchStore.loading" class="loading-container">
         <el-skeleton :rows="10" animated />
       </div>
-      
+
       <!-- 空结果提示 -->
       <el-empty
         v-else-if="!hasResults"
@@ -51,16 +52,16 @@
         </template>
         <el-button @click="resetSearch">清空搜索条件</el-button>
       </el-empty>
-      
+
       <!-- 搜索结果列表 -->
       <div v-else class="results-list">
         <!-- 职位搜索结果 -->
         <template v-if="searchType === 'all' || searchType === 'job'">
           <div v-if="searchStore.searchResults.jobs && searchStore.searchResults.jobs.length > 0" class="result-section">
             <h3 v-if="searchType === 'all'" class="section-title">职位 ({{ searchStore.searchResults.jobs.length }})</h3>
-            
+
             <div class="job-results">
-              <job-card
+              <JobCard
                 v-for="job in searchStore.searchResults.jobs"
                 :key="job.id"
                 :job="job"
@@ -69,14 +70,14 @@
             </div>
           </div>
         </template>
-        
+
         <!-- 企业搜索结果 -->
         <template v-if="searchType === 'all' || searchType === 'company'">
           <div v-if="searchStore.searchResults.companies && searchStore.searchResults.companies.length > 0" class="result-section">
             <h3 v-if="searchType === 'all'" class="section-title">企业 ({{ searchStore.searchResults.companies.length }})</h3>
-            
+
             <div class="company-results">
-              <company-card
+              <CompanyCard
                 v-for="company in searchStore.searchResults.companies"
                 :key="company.id"
                 :company="company"
@@ -86,7 +87,7 @@
           </div>
         </template>
       </div>
-      
+
       <!-- 分页 -->
       <div v-if="hasResults && searchStore.searchResults.total > searchStore.searchParams.pageSize" class="pagination-container">
         <el-pagination
@@ -121,11 +122,12 @@ const searchQuery = ref('');
 const searchType = ref<SearchType>('all');
 const currentPage = ref(1);
 const pageSize = ref(10);
+const currentFilters = ref<Record<string, any>>({});
 
 // 计算属性：是否有搜索结果
 const hasResults = computed(() => {
   const { jobs = [], companies = [] } = searchStore.searchResults;
-  
+
   if (searchType.value === 'all') {
     return jobs.length > 0 || companies.length > 0;
   } else if (searchType.value === 'job') {
@@ -133,28 +135,31 @@ const hasResults = computed(() => {
   } else if (searchType.value === 'company') {
     return companies.length > 0;
   }
-  
+
   return false;
 });
 
 // 从路由参数中获取搜索条件
 const getSearchParamsFromRoute = () => {
   const query = route.query;
-  
+
   searchQuery.value = query.q as string || '';
   searchType.value = (query.type as SearchType) || 'all';
   currentPage.value = parseInt(query.page as string) || 1;
   pageSize.value = parseInt(query.pageSize as string) || 10;
-  
+
   // 提取高级筛选条件
   const filters: Record<string, any> = {};
-  
+
   ['location', 'salary', 'experience', 'education', 'industry', 'size'].forEach(key => {
     if (query[key]) {
       filters[key] = query[key];
     }
   });
-  
+
+  // 更新当前筛选条件
+  currentFilters.value = filters;
+
   return {
     keyword: searchQuery.value,
     type: searchType.value,
@@ -167,7 +172,7 @@ const getSearchParamsFromRoute = () => {
 // 执行搜索
 const performSearch = () => {
   if (!searchQuery.value) return;
-  
+
   const params = getSearchParamsFromRoute();
   searchStore.performSearch(params);
 };
@@ -177,7 +182,12 @@ const handleSearch = (params: any) => {
   searchQuery.value = params.keyword;
   searchType.value = params.type;
   currentPage.value = 1;
-  
+
+  // 更新筛选条件
+  if (params.filters) {
+    currentFilters.value = { ...params.filters };
+  }
+
   updateRouteQuery();
   performSearch();
 };
@@ -186,7 +196,7 @@ const handleSearch = (params: any) => {
 const handleTypeChange = (type: SearchType) => {
   searchType.value = type;
   currentPage.value = 1;
-  
+
   updateRouteQuery();
   performSearch();
 };
@@ -194,7 +204,7 @@ const handleTypeChange = (type: SearchType) => {
 // 处理页码变更
 const handleCurrentChange = (page: number) => {
   currentPage.value = page;
-  
+
   updateRouteQuery();
   performSearch();
 };
@@ -203,29 +213,29 @@ const handleCurrentChange = (page: number) => {
 const handleSizeChange = (size: number) => {
   pageSize.value = size;
   currentPage.value = 1;
-  
+
   updateRouteQuery();
   performSearch();
 };
 
 // 更新路由查询参数
 const updateRouteQuery = () => {
-  const query = {
+  const query: Record<string, string> = {
     q: searchQuery.value,
     type: searchType.value,
     page: currentPage.value.toString(),
     pageSize: pageSize.value.toString()
   };
-  
+
   // 添加高级筛选条件
-  if (searchStore.searchParams.filters) {
-    Object.entries(searchStore.searchParams.filters).forEach(([key, value]) => {
+  if (currentFilters.value) {
+    Object.entries(currentFilters.value).forEach(([key, value]) => {
       if (value) {
-        query[key] = value;
+        query[key] = value as string;
       }
     });
   }
-  
+
   router.push({ path: '/search', query });
 };
 
@@ -233,7 +243,8 @@ const updateRouteQuery = () => {
 const resetSearch = () => {
   searchStore.resetSearchParams();
   searchStore.resetFilters();
-  
+  currentFilters.value = {};
+
   router.push({ path: '/search' });
 };
 
@@ -242,7 +253,7 @@ watch(
   () => route.query,
   () => {
     const params = getSearchParamsFromRoute();
-    
+
     // 只有当搜索关键词存在时才执行搜索
     if (params.keyword) {
       performSearch();
@@ -254,7 +265,7 @@ watch(
 // 组件挂载时执行搜索
 onMounted(() => {
   const params = getSearchParamsFromRoute();
-  
+
   // 只有当搜索关键词存在时才执行搜索
   if (params.keyword) {
     performSearch();
@@ -351,11 +362,11 @@ onMounted(() => {
   .search-results-page {
     padding: 10px;
   }
-  
+
   .search-results-container {
     padding: 15px;
   }
-  
+
   .job-results,
   .company-results {
     grid-template-columns: 1fr;

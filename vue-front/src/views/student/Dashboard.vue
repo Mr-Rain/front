@@ -245,14 +245,32 @@ const studentStore = useStudentStore();
 const applicationStore = useApplicationStore();
 
 // 在组件挂载后执行数据获取操作
-onMounted(() => {
-  // 获取学生个人信息
-  studentStore.fetchProfile();
-  // 获取学生的申请列表（默认获取第一页，每页100条，确保获取所有数据）
-  applicationStore.fetchStudentApplications({ pageSize: 100, page: 1 });
+onMounted(async () => {
+  console.log('Dashboard mounted, starting data fetch...');
 
-  // 打印获取到的数据，用于调试
-  console.log('Dashboard mounted, fetching student applications...');
+  try {
+    // 获取学生个人信息
+    await studentStore.fetchProfile();
+    console.log('Student profile fetched:', studentStore.profile);
+
+    // 获取学生的申请列表（默认获取第一页，每页100条，确保获取所有数据）
+    await applicationStore.fetchStudentApplications({ pageSize: 100, page: 1 });
+    console.log('Student applications fetched:', applicationStore.studentApplications);
+
+    // 检查面试相关的申请
+    const interviewApps = applicationStore.studentApplications.filter(app =>
+      ['interview', 'offer', 'rejected', 'accepted'].includes(app.status)
+    );
+    console.log('Interview-related applications:', interviewApps);
+
+    if (interviewApps.length === 0) {
+      console.log('No interview-related applications found. All applications:',
+        applicationStore.studentApplications.map(app => ({ id: app.id, status: app.status }))
+      );
+    }
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+  }
 });
 
 // 定义导航函数，使用正常的 router.push 方式
@@ -355,62 +373,67 @@ const recentInterviews = computed(() => {
 
   console.log('Raw applications data:', applicationStore.studentApplications);
 
-  // 筛选出状态为 'interview', 'offer', 'rejected' 的申请记录
+  // 筛选出状态为 'interview', 'offer', 'rejected', 'accepted' 的申请记录
+  // 注意：后端可能使用 'accepted' 而不是 'offer'
   const filteredApps = applicationStore.studentApplications
-    .filter(app => ['interview', 'offer', 'rejected'].includes(app.status));
+    .filter(app => ['interview', 'offer', 'rejected', 'accepted'].includes(app.status));
 
-  console.log('Filtered applications:', filteredApps);
+  console.log('Filtered applications for interviews:', filteredApps);
 
-  // 按更新时间或面试时间排序，确保最新的在最前面
+  // 如果没有符合条件的申请，返回空数组
+  if (filteredApps.length === 0) {
+    console.log('No interview-related applications found');
+    return [];
+  }
+
+  // 按更新时间排序，确保最新的在最前面
   const sortedApps = filteredApps.sort((a, b) => {
     // 优先使用更新时间，因为它更能反映最近的状态变化
-    const timeA = new Date(a.updateTime || a.interviewTime || a.applyTime || 0).getTime();
-    const timeB = new Date(b.updateTime || b.interviewTime || b.applyTime || 0).getTime();
+    const timeA = new Date(a.updateTime || a.applyTime || 0).getTime();
+    const timeB = new Date(b.updateTime || b.applyTime || 0).getTime();
     return timeB - timeA; // 降序排列，最新的在前
   });
 
   console.log('Sorted applications:', sortedApps);
 
-  // 将筛选出的申请记录映射为面试卡片所需的数据格式，使用后端真实数据
+  // 将筛选出的申请记录映射为面试卡片所需的数据格式
   const mappedApps = sortedApps.map(app => {
-    console.log('Mapping application:', app);
-    // 检查jobInfo是否存在
-    console.log('Job info:', app.jobInfo);
+    console.log('Mapping application for interview display:', app);
 
-    // 直接使用后端数据，保持属性名的一致性（使用驼峰命名法）
     // 创建基础数据对象
     const baseData = {
       id: app.id,
       status: app.status,
-      // 公司和职位信息
+      // 公司和职位信息 - 优先使用顶层字段，然后是jobInfo
       companyName: app.companyName || app.jobInfo?.companyName || '未知企业',
-      companyLogo: '', // 默认为空字符串，因为后端可能没有提供这个字段
+      companyLogo: (app as any).companyLogo || '',
       jobInfo: {
         title: app.jobTitle || app.jobInfo?.title || '未知职位',
         companyName: app.companyName || app.jobInfo?.companyName || '未知企业'
       },
-      // 所有状态都包含更新时间，用于显示操作时间
+      // 时间信息
       updateTime: app.updateTime || app.applyTime,
+      applyTime: app.applyTime,
       // 反馈信息
       feedback: app.feedback
     };
 
-    // 只有在状态为"interview"或"offer"时才添加面试相关信息
-    if (app.status === 'interview' || app.status === 'offer') {
-      return {
-        ...baseData,
-        // 面试相关信息
-        interviewTime: app.interviewTime || null,
-        interviewLocation: app.interviewLocation || (app.interviewType === 'onsite' ? '公司总部' : '线上面试'),
-        interviewContact: app.interviewContact || '招聘负责人'
-      };
-    }
+    // 添加面试相关信息（如果存在）
+    const interviewData = {
+      ...baseData,
+      // 面试相关信息 - 直接从后端数据获取
+      interviewTime: app.interviewTime || null,
+      interviewLocation: app.interviewLocation || null,
+      interviewType: app.interviewType || null,
+      interviewContact: app.interviewContact || null,
+      interviewContactInfo: app.interviewContactInfo || null
+    };
 
-    // 对于其他状态（如rejected），不包含面试相关信息，但包含更新时间
-    return baseData;
+    console.log('Final mapped interview data:', interviewData);
+    return interviewData;
   });
 
-  console.log('Mapped applications for display:', mappedApps);
+  console.log('All mapped applications for display:', mappedApps);
 
   // 获取最新的6条面试结果，以便在栅格系统中美观展示
   return mappedApps.slice(0, 6);

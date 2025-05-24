@@ -141,8 +141,8 @@
               <el-icon><DataAnalysis /></el-icon>
             </div>
             <div class="summary-info">
-              <div class="summary-title">面试通过率</div>
-              <div class="summary-value">{{ statistics.interviewPassRate }}%</div>
+              <div class="summary-title">通过率</div>
+              <div class="summary-value">{{ statistics.passRate }}%</div>
             </div>
           </div>
         </el-card>
@@ -172,7 +172,7 @@ const statistics = reactive({
   totalApplications: 0,
   interviewCount: 0,
   offerCount: 0,
-  interviewPassRate: 0
+  passRate: 0
 });
 
 // 申请状态数据
@@ -342,7 +342,7 @@ const fetchApplicationStatistics = async () => {
       statistics.totalApplications = 0;
       statistics.interviewCount = 0;
       statistics.offerCount = 0;
-      statistics.interviewPassRate = 0;
+      statistics.passRate = 0;
 
       // 清空图表数据
       applicationStatusData.value = [];
@@ -360,10 +360,14 @@ const fetchApplicationStatistics = async () => {
 
     // 统计数据
     statistics.totalApplications = applications.length;
-    statistics.interviewCount = applications.filter(app => app.status === 'interview').length;
-    statistics.offerCount = applications.filter(app => app.status === 'offer').length;
-    statistics.interviewPassRate = statistics.interviewCount > 0
-      ? Math.round((statistics.offerCount / statistics.interviewCount) * 100)
+    statistics.interviewCount = applications.filter(app =>
+        app.status === 'interview' || app.status === 'offer' || app.status === 'accepted'
+    ).length;
+
+    statistics.offerCount = applications.filter(app => app.status === 'offer' || app.status === 'accepted').length;
+
+    statistics.passRate = statistics.totalApplications > 0
+      ? Math.round((statistics.offerCount / statistics.totalApplications) * 100)
       : 0;
 
     // 申请状态数据
@@ -422,7 +426,7 @@ const fetchApplicationStatistics = async () => {
     statistics.totalApplications = 0;
     statistics.interviewCount = 0;
     statistics.offerCount = 0;
-    statistics.interviewPassRate = 0;
+    statistics.passRate = 0;
   } finally {
     loading.value = false;
   }
@@ -436,7 +440,8 @@ const formatStatus = (status: string): string => {
     'interview': '面试中',
     'offer': '已录用',
     'rejected': '未通过',
-    'withdrawn': '已撤回'
+    'withdrawn': '已撤回',
+    'accepted': '通过'
   };
   return statusMap[status] || status;
 };

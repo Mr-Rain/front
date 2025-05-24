@@ -66,13 +66,22 @@ export const useApplicationStore = defineStore('application', {
         const rawApplications = response.data.list || response.data.records || [];
 
         // 处理数据，确保顶层字段存在
-        this.studentApplications = rawApplications.map(app => ({
-          ...app,
-          jobTitle: app.jobTitle || app.jobInfo?.title || 'N/A',
-          companyName: app.companyName || app.jobInfo?.companyName || 'N/A',
-          // 假设 resumeInfo 或 resumeSnapshot 中有 title 字段
-          resumeTitle: app.resumeTitle || (app as any).resumeSnapshot?.title || (app as any).resumeInfo?.title || 'N/A'
-        }));
+        this.studentApplications = rawApplications.map(app => {
+          // 打印原始数据，用于调试
+          console.log('原始申请数据:', app);
+
+          return {
+            ...app,
+            jobTitle: app.jobTitle || app.jobInfo?.title || 'N/A',
+            companyName: app.companyName || app.jobInfo?.companyName || 'N/A',
+            // 简历标题处理逻辑
+            resumeTitle: app.resumeTitle ||
+                        (app as any).resumeSnapshot?.title ||
+                        (app as any).resumeInfo?.title ||
+                        (app as any).resume?.title ||
+                        '未知简历'
+          };
+        });
 
         this.studentApplicationsTotal = response.data.total;
       } catch (error) {
@@ -160,20 +169,41 @@ export const useApplicationStore = defineStore('application', {
       }
     },
 
-    // (学生端) 获取申请详情
-    async fetchApplicationDetail(id: string | number) {
-      this.loadingDetail = true;
-      this.currentApplicationDetail = null;
-      try {
-        const response = await getStudentApplicationDetail(id);
-        this.currentApplicationDetail = response.data;
-      } catch (error) {
-        console.error(`Failed to fetch application detail for id ${id}:`, error);
-        ElMessage.error('获取申请详情失败');
-      } finally {
-        this.loadingDetail = false;
-      }
-    },
+  // (学生端) 获取申请详情
+  async fetchApplicationDetail(id: string | number) {
+    this.loadingDetail = true;
+    this.currentApplicationDetail = null;
+    try {
+      const response = await getStudentApplicationDetail(id);
+      // 处理数据，确保顶层字段存在
+      const applicationDetail = response.data;
+      // 打印原始数据，用于调试
+      console.log('Original application detail data:', applicationDetail);
+
+      this.currentApplicationDetail = {
+        ...applicationDetail,
+        jobTitle: applicationDetail.jobTitle || applicationDetail.jobInfo?.title || 'N/A',
+        companyName: applicationDetail.companyName || applicationDetail.jobInfo?.companyName || 'N/A',
+        // 确保简历标题字段存在，增加更多可能的数据来源
+        resumeTitle: applicationDetail.resumeTitle ||
+                    (applicationDetail as any).resumeSnapshot?.title ||
+                    (applicationDetail as any).resumeInfo?.title ||
+                    (applicationDetail as any).resume?.title ||
+                    '未知简历'
+      };
+
+      // 打印处理后的数据，用于调试
+      console.log('处理后的申请详情数据:', this.currentApplicationDetail);
+
+      // 打印处理后的数据，用于调试
+      console.log('Processed application detail data:', this.currentApplicationDetail);
+    } catch (error) {
+      console.error(`Failed to fetch application detail for id ${id}:`, error);
+      ElMessage.error('获取申请详情失败');
+    } finally {
+      this.loadingDetail = false;
+    }
+  },
 
     // (企业端) 更新申请状态
     async updateApplicationStatus(id: string | number, data: UpdateApplicationStatusPayload) {
@@ -336,7 +366,20 @@ export const useApplicationStore = defineStore('application', {
     },
 
     clearCurrentApplicationDetail() {
+        // 保存ID以便清除缓存
+        const id = this.currentApplicationDetail?.id;
+
+        // 清除当前详情
         this.currentApplicationDetail = null;
+
+        // 清除缓存
+        if (id) {
+          import('@/utils/apiCache').then(module => {
+            const apiCache = module.default;
+            apiCache.clearByTags(['application', `application-${id}`]);
+            console.log('Cleared application cache for ID:', id);
+          });
+        }
     },
 
     clearApplicationData() {
@@ -345,6 +388,13 @@ export const useApplicationStore = defineStore('application', {
         this.companyApplications = [];
         this.companyApplicationsTotal = 0;
         this.currentApplicationDetail = null;
+
+        // 清除所有申请相关缓存
+        import('@/utils/apiCache').then(module => {
+          const apiCache = module.default;
+          apiCache.clearByTags(['application']);
+          console.log('Cleared all application cache');
+        });
     },
 
     // 提交面试反馈

@@ -1,198 +1,61 @@
 import request from '@/utils/request';
 import type { RecommendationResponse, RecommendedJob } from '@/types/recommendation';
-import type { JobInfo } from '@/types/job'; // For mock data
+import type { JobInfo, JobStatus } from '@/types/job';
+import { ApiErrorCode, ErrorType, createApiError } from '@/types/error';
 
-// 模拟职位数据
-const mockJobs: Record<string, JobInfo> = {
-  'job-rec-1': {
-    id: 'job-rec-1',
-    title: '前端开发工程师 (高匹配)',
-    companyId: 'comp-a',
-    companyName: '数字科技有限公司',
-    location: '杭州',
-    salaryRange: '16k-28k',
-    jobType: '全职',
-    experienceRequired: '1-3年',
-    educationRequired: '本科',
-    tags: ['Vue', 'TypeScript', 'React'],
-    description: '负责公司前端产品的开发和维护，优化用户体验。',
-    requirements: '精通Vue或React框架，熟悉TypeScript，有良好的编码习惯。',
-    status: 'open',
-  },
-  'job-rec-2': {
-    id: 'job-rec-2',
-    title: '算法工程师',
-    companyId: 'comp-b',
-    companyName: '智能算法科技',
-    location: '北京',
-    salaryRange: '25k-40k',
-    jobType: '全职',
-    experienceRequired: '3-5年',
-    educationRequired: '硕士',
-    tags: ['Python', '机器学习', '推荐系统'],
-    description: '负责公司推荐系统的算法设计和实现。',
-    requirements: '精通Python，熟悉机器学习算法，有推荐系统相关经验。',
-    status: 'open',
-  },
-  'job-rec-3': {
-    id: 'job-rec-3',
-    title: '产品经理',
-    companyId: 'comp-c',
-    companyName: '创新产品科技',
-    location: '上海',
-    salaryRange: '20k-35k',
-    jobType: '全职',
-    experienceRequired: '3-5年',
-    educationRequired: '本科',
-    tags: ['产品设计', '用户研究', '敏捷开发'],
-    description: '负责公司产品的规划、设计和落地。',
-    requirements: '有互联网产品经验，善于用户研究，有良好的沟通能力。',
-    status: 'open',
-  },
-  'job-rec-4': {
-    id: 'job-rec-4',
-    title: 'Java后端开发工程师',
-    companyId: 'comp-d',
-    companyName: '云服务科技有限公司',
-    location: '深圳',
-    salaryRange: '18k-30k',
-    jobType: '全职',
-    experienceRequired: '2-4年',
-    educationRequired: '本科',
-    tags: ['Java', 'Spring Boot', '微服务'],
-    description: '负责公司后端服务的开发和维护。',
-    requirements: '精通Java，熟悉Spring Boot框架，有微服务架构经验。',
-    status: 'open',
-  },
-  'job-rec-5': {
-    id: 'job-rec-5',
-    title: 'UI/UX设计师',
-    companyId: 'comp-e',
-    companyName: '创意设计工作室',
-    location: '广州',
-    salaryRange: '15k-25k',
-    jobType: '全职',
-    experienceRequired: '2-4年',
-    educationRequired: '本科',
-    tags: ['UI设计', 'UX设计', 'Figma'],
-    description: '负责公司产品的界面设计和用户体验优化。',
-    requirements: '精通Figma等设计工具，有良好的客户端产品设计经验。',
-    status: 'open',
-  },
-  'job-rec-6': {
-    id: 'job-rec-6',
-    title: '运维工程师',
-    companyId: 'comp-f',
-    companyName: '云基础设施服务公司',
-    location: '成都',
-    salaryRange: '15k-28k',
-    jobType: '全职',
-    experienceRequired: '2-5年',
-    educationRequired: '本科',
-    tags: ['Linux', 'Docker', 'Kubernetes'],
-    description: '负责公司云基础设施的运维和管理。',
-    requirements: '精通Linux系统，熟悉Docker和Kubernetes，有云运维经验。',
-    status: 'open',
-  },
-};
-
-// 不同推荐场景的模拟数据
-const scenarioRecommendations: Record<string, RecommendedJob[]> = {
-  // 默认推荐
-  'default': [
-    {
-      jobInfo: mockJobs['job-rec-1'],
-      recommendationScore: 0.95,
-      recommendationReason: '与你的技能画像高度匹配'
-    },
-    {
-      jobInfo: mockJobs['job-rec-4'],
-      recommendationScore: 0.88,
-      recommendationReason: '基于你的项目经历推荐'
-    },
-    {
-      jobInfo: mockJobs['job-rec-3'],
-      recommendationScore: 0.82,
-      recommendationReason: '与你的职业发展方向匹配'
-    },
-    {
-      jobInfo: mockJobs['job-rec-5'],
-      recommendationScore: 0.75,
-      recommendationReason: '与你的兴趣特长匹配'
-    },
-  ],
-
-  // 基于技能的推荐
-  'skill-based': [
-    {
-      jobInfo: mockJobs['job-rec-1'],
-      recommendationScore: 0.97,
-      recommendationReason: '与你的前端技能高度匹配'
-    },
-    {
-      jobInfo: mockJobs['job-rec-2'],
-      recommendationScore: 0.85,
-      recommendationReason: '与你的算法能力匹配'
-    },
-    {
-      jobInfo: mockJobs['job-rec-6'],
-      recommendationScore: 0.78,
-      recommendationReason: '与你的运维知识匹配'
-    },
-  ],
-
-  // 基于浏览历史的推荐
-  'history-based': [
-    {
-      jobInfo: mockJobs['job-rec-3'],
-      recommendationScore: 0.92,
-      recommendationReason: '基于你最近浏览的产品类职位'
-    },
-    {
-      jobInfo: mockJobs['job-rec-5'],
-      recommendationScore: 0.89,
-      recommendationReason: '与你最近关注的设计类职位相关'
-    },
-    {
-      jobInfo: mockJobs['job-rec-4'],
-      recommendationScore: 0.81,
-      recommendationReason: '与你最近浏览的后端类职位相关'
-    },
-  ],
-};
-
-// 重新生成推荐职位
-export function regenerateRecommendations(): Promise<{ success: boolean }> {
-  // 实际API调用
-  return request({
-    url: '/api/recommendations/regenerate',
-    method: 'post'
-  }).then(() => {
+/**
+ * 重新生成推荐职位
+ *
+ * @returns 操作结果
+ */
+export async function regenerateRecommendations(): Promise<{ success: boolean }> {
+  try {
+    await request({
+      url: '/api/recommendations/regenerate',
+      method: 'post'
+    });
     return { success: true };
-  }).catch(error => {
+  } catch (error) {
     console.error('Failed to regenerate recommendations:', error);
-    return { success: false };
-  });
+
+    // 创建特定的API错误
+    const apiError = createApiError(
+      ApiErrorCode.BUSINESS_ERROR,
+      '重新生成推荐职位失败',
+      ErrorType.BUSINESS,
+      { originalError: error }
+    );
+
+    // 重新抛出错误，让调用者处理
+    throw apiError;
+  }
 }
 
-// (学生端) 获取个性化推荐职位列表
-export function getRecommendedJobs(params?: any): Promise<{ data: RecommendationResponse }> {
-  // 实际API调用
-  return request({
-    url: '/api/recommendations',
-    method: 'get',
-    params: {
-      // 将前端的scenario参数映射到后端的recommendationType参数
-      recommendationType: params?.scenario || 'default',
-      page: params?.page || 1,
-      pageSize: params?.pageSize || 10
-    }
-  }).then(response => {
+/**
+ * (学生端) 获取个性化推荐职位列表
+ *
+ * @param params 查询参数，包含recommendationType(推荐类型)、page(页码)、pageSize(每页数量)
+ * @returns 推荐职位列表
+ */
+export async function getRecommendedJobs(params?: {
+  recommendationType?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<{ data: RecommendationResponse }> {
+  try {
+    const response = await request({
+      url: '/api/recommendations',
+      method: 'get',
+      params: {
+        recommendationType: params?.recommendationType || 'default',
+        page: params?.page || 1,
+        pageSize: params?.pageSize || 10
+      }
+    });
+
     // 将后端返回的数据格式转换为前端期望的格式
-    // 检查response.data是否存在且包含list属性
     if (response.data && Array.isArray(response.data)) {
       // 如果response.data是数组，直接使用
-      console.log('API Response Data:', response.data);
       const recommendations = response.data.map((item: any) => ({
         jobInfo: {
           id: item.jobId,
@@ -206,7 +69,9 @@ export function getRecommendedJobs(params?: any): Promise<{ data: Recommendation
           educationRequired: item.educationRequired || '不限',
           tags: item.tags || [],
           jobType: item.jobType || '全职',
-          status: 'open' // 默认状态
+          description: item.description || '',
+          requirements: item.requirements || '',
+          status: (item.status || 'open') as JobStatus // 默认状态
         },
         recommendationScore: item.score,
         recommendationReason: item.reason
@@ -219,7 +84,6 @@ export function getRecommendedJobs(params?: any): Promise<{ data: Recommendation
       };
     } else if (response.data && response.data.list && Array.isArray(response.data.list)) {
       // 如果response.data包含list属性且是数组
-      console.log('API Response Data (list):', response.data.list);
       const recommendations = response.data.list.map((item: any) => ({
         jobInfo: {
           id: item.jobId,
@@ -233,7 +97,9 @@ export function getRecommendedJobs(params?: any): Promise<{ data: Recommendation
           educationRequired: item.educationRequired || '不限',
           tags: item.tags || [],
           jobType: item.jobType || '全职',
-          status: 'open' // 默认状态
+          description: item.description || '',
+          requirements: item.requirements || '',
+          status: (item.status || 'open') as JobStatus // 默认状态
         },
         recommendationScore: item.score,
         recommendationReason: item.reason
@@ -253,53 +119,34 @@ export function getRecommendedJobs(params?: any): Promise<{ data: Recommendation
         }
       };
     }
-  }).catch(error => {
+  } catch (error) {
     console.error('Failed to fetch recommended jobs:', error);
-    // 出错时返回空数组
-    return {
-      data: {
-        list: []
-      }
-    };
-  });
 
-  // 保留模拟数据代码，以便在API不可用时可以快速切换回来
-  /*
-  // ---- Mock Data Start ----
-  console.warn('API MOCK: getRecommendedJobs is using mock data.');
+    // 创建特定的API错误
+    const apiError = createApiError(
+      ApiErrorCode.BUSINESS_ERROR,
+      '获取推荐职位失败',
+      ErrorType.BUSINESS,
+      { originalError: error }
+    );
 
-  // 获取推荐场景，默认为'default'
-  const scenario = params?.scenario || 'default';
-  console.log(`Using recommendation scenario: ${scenario}`);
-
-  // 根据场景获取推荐数据
-  let recommendedJobs = scenarioRecommendations[scenario] || scenarioRecommendations['default'];
-
-  // 模拟分页逻辑（如果需要）
-  if (params?.page && params?.pageSize) {
-    const page = parseInt(params.page) || 1;
-    const pageSize = parseInt(params.pageSize) || 10;
-    const start = (page - 1) * pageSize;
-    const end = start + pageSize;
-    recommendedJobs = recommendedJobs.slice(start, end);
+    // 重新抛出错误，让调用者处理
+    throw apiError;
   }
-
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ data: { list: recommendedJobs } });
-    }, 800); // 模拟网络延迟
-  });
-  // ---- Mock Data End ----
-  */
 }
 
-// 获取推荐场景列表
-export function getRecommendationScenarios(): Promise<{ data: { scenarios: Array<{id: string, name: string}> } }> {
-  // 实际API调用
-  return request({
-    url: '/api/recommendations/scenarios',
-    method: 'get'
-  }).then(response => {
+/**
+ * 获取推荐场景列表
+ *
+ * @returns 推荐场景列表
+ */
+export async function getRecommendationScenarios(): Promise<{ data: { scenarios: Array<{id: string, name: string}> } }> {
+  try {
+    const response = await request({
+      url: '/api/recommendations/scenarios',
+      method: 'get'
+    });
+
     // 如果后端返回的数据格式与前端期望的不一致，进行转换
     if (response.data && Array.isArray(response.data)) {
       return {
@@ -314,39 +161,171 @@ export function getRecommendationScenarios(): Promise<{ data: { scenarios: Array
 
     // 如果后端已经返回了正确的格式，直接返回
     return response;
-  }).catch(error => {
+  } catch (error) {
     console.error('Failed to fetch recommendation scenarios:', error);
 
-    // 出错时返回默认场景
-    const defaultScenarios = [
-      { id: 'default', name: '智能推荐' },
-      { id: 'skill-based', name: '基于技能' },
-      { id: 'history-based', name: '基于浏览历史' }
-    ];
+    // 创建特定的API错误
+    const apiError = createApiError(
+      ApiErrorCode.BUSINESS_ERROR,
+      '获取推荐场景列表失败',
+      ErrorType.BUSINESS,
+      { originalError: error }
+    );
 
-    return {
-      data: {
-        scenarios: defaultScenarios
-      }
-    };
-  });
+    // 重新抛出错误，让调用者处理
+    throw apiError;
+  }
 }
 
-// 反馈推荐结果
-export function feedbackRecommendation(data: { job_id: string | number, feedback_type: 'like' | 'dislike', reason?: string }): Promise<{ success: boolean }> {
-  // 实际API调用
-  return request({
-    url: '/api/recommendations/feedback',
-    method: 'post',
-    data: {
-      jobId: data.job_id,
-      feedbackType: data.feedback_type,
-      feedbackText: data.reason || ''
-    }
-  }).then(() => {
+/**
+ * 反馈推荐结果
+ *
+ * @param data 反馈数据，包含jobId(职位ID)、feedbackType(反馈类型)、reason(反馈理由)
+ * @returns 操作结果
+ */
+export async function feedbackRecommendation(data: {
+  jobId: string | number,
+  feedbackType: 'like' | 'dislike',
+  reason?: string
+}): Promise<{ success: boolean }> {
+  try {
+    await request({
+      url: '/api/recommendations/feedback',
+      method: 'post',
+      data: {
+        jobId: data.jobId,
+        feedbackType: data.feedbackType,
+        feedbackText: data.reason || ''
+      }
+    });
     return { success: true };
-  }).catch(error => {
+  } catch (error) {
     console.error('Failed to submit recommendation feedback:', error);
-    return { success: false };
-  });
+
+    // 创建特定的API错误
+    const apiError = createApiError(
+      ApiErrorCode.BUSINESS_ERROR,
+      '提交推荐反馈失败',
+      ErrorType.BUSINESS,
+      { originalError: error }
+    );
+
+    // 重新抛出错误，让调用者处理
+    throw apiError;
+  }
+}
+
+/**
+ * 获取推荐设置
+ *
+ * @returns 推荐设置
+ */
+export async function getRecommendationSettings(): Promise<{
+  enabled: boolean;
+  skillWeight: number;
+  historyWeight: number;
+  feedbackWeight: number;
+  maxRecommendations: number;
+  minScore: number;
+  includeApplied: boolean;
+}> {
+  try {
+    const response = await request({
+      url: '/api/recommendations/settings',
+      method: 'get'
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch recommendation settings:', error);
+
+    // 创建特定的API错误
+    const apiError = createApiError(
+      ApiErrorCode.BUSINESS_ERROR,
+      '获取推荐设置失败',
+      ErrorType.BUSINESS,
+      { originalError: error }
+    );
+
+    // 重新抛出错误，让调用者处理
+    throw apiError;
+  }
+}
+
+/**
+ * 更新推荐设置
+ *
+ * @param settings 推荐设置
+ * @returns 更新后的推荐设置
+ */
+export async function updateRecommendationSettings(settings: {
+  enabled?: boolean;
+  skillWeight?: number;
+  historyWeight?: number;
+  feedbackWeight?: number;
+  maxRecommendations?: number;
+  minScore?: number;
+  includeApplied?: boolean;
+}): Promise<{
+  enabled: boolean;
+  skillWeight: number;
+  historyWeight: number;
+  feedbackWeight: number;
+  maxRecommendations: number;
+  minScore: number;
+  includeApplied: boolean;
+}> {
+  try {
+    const response = await request({
+      url: '/api/recommendations/settings',
+      method: 'put',
+      data: settings
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Failed to update recommendation settings:', error);
+
+    // 创建特定的API错误
+    const apiError = createApiError(
+      ApiErrorCode.BUSINESS_ERROR,
+      '更新推荐设置失败',
+      ErrorType.BUSINESS,
+      { originalError: error }
+    );
+
+    // 重新抛出错误，让调用者处理
+    throw apiError;
+  }
+}
+
+/**
+ * 检查是否已对职位进行反馈
+ *
+ * @param jobId 职位ID
+ * @returns 是否已反馈
+ */
+export async function checkRecommendationFeedback(jobId: string | number): Promise<{ hasFeedback: boolean }> {
+  try {
+    const response = await request({
+      url: '/api/recommendations/feedback/check',
+      method: 'get',
+      params: { jobId }
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Failed to check recommendation feedback:', error);
+
+    // 创建特定的API错误
+    const apiError = createApiError(
+      ApiErrorCode.BUSINESS_ERROR,
+      '检查推荐反馈状态失败',
+      ErrorType.BUSINESS,
+      { originalError: error }
+    );
+
+    // 重新抛出错误，让调用者处理
+    throw apiError;
+  }
 }

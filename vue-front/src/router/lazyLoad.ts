@@ -84,6 +84,9 @@ export function createLazyComponent(path: string): RouteComponent {
   else if (path === 'common/Notifications') {
     return () => import('../views/common/Notifications.vue');
   }
+  else if (path === 'common/NotificationDetail') {
+    return () => import('../views/common/NotificationDetail.vue');
+  }
   else if (path === 'common/NotificationSettings') {
     return () => import('../views/common/NotificationSettings.vue');
   }
@@ -143,6 +146,9 @@ export function createLazyComponent(path: string): RouteComponent {
   }
   else if (path === 'admin/CompanyAudit') {
     return () => import('../views/admin/CompanyAudit.vue');
+  }
+  else if (path === 'admin/AnnouncementManage') {
+    return () => import('../views/admin/AnnouncementManage.vue');
   }
 
   // 如果没有匹配的路径，返回错误组件

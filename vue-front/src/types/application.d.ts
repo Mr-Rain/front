@@ -46,6 +46,7 @@ export interface ApplicationInfo {
   jobTitle?: string;
   companyName?: string;
   resumeTitle?: string;
+  deletedResumeTitle?: string; // 已删除简历的标题
   studentName?: string; // 学生姓名
   studentSchool?: string; // 学生学校
   studentMajor?: string; // 学生专业

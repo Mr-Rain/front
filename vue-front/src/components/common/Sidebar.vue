@@ -115,7 +115,7 @@ const menuItems = computed((): MenuItem[] => { // Specify return type
   if (hasStudentRole || userType === 'student') {
     console.log('Generating student menu');
     return [
-      { path: '/student/dashboard', meta: { title: '仪表盘', icon: DataAnalysis } },
+      { path: '/student/dashboard', meta: { title: '我的主页', icon: DataAnalysis } },
       { path: '/student/profile', meta: { title: '个人信息', icon: User } },
       { path: '/student/jobs', meta: { title: '浏览职位', icon: Briefcase } },
       { path: '/student/resume', meta: { title: '我的简历', icon: Document } },
@@ -125,7 +125,7 @@ const menuItems = computed((): MenuItem[] => { // Specify return type
   } else if (hasCompanyRole || userType === 'company') {
     console.log('Generating company menu');
     return [
-       { path: '/company/dashboard', meta: { title: '仪表盘', icon: DataAnalysis } },
+       { path: '/company/dashboard', meta: { title: '招聘管理', icon: DataAnalysis } },
        { path: '/company/profile', meta: { title: '公司信息', icon: User } },
        { path: '/company/jobs', meta: { title: '职位管理', icon: Briefcase } },
        { path: '/company/applications', meta: { title: '收到申请', icon: Document } },
@@ -133,7 +133,7 @@ const menuItems = computed((): MenuItem[] => { // Specify return type
   } else if (hasAdminRole || userType === 'admin') {
     console.log('Generating admin menu');
     return [
-        { path: '/admin/dashboard', meta: { title: '仪表盘', icon: DataAnalysis } },
+        { path: '/admin/dashboard', meta: { title: '管理后台', icon: DataAnalysis } },
         { path: '/admin/users', meta: { title: '用户管理', icon: User } },
         { path: '/admin/companies', meta: { title: '企业审核', icon: Briefcase } },
      ];
@@ -147,7 +147,7 @@ const menuItems = computed((): MenuItem[] => { // Specify return type
     if (userType === 'student') {
       console.log('Generating student menu based on user type');
       return [
-        { path: '/student/dashboard', meta: { title: '仪表盘', icon: DataAnalysis } },
+        { path: '/student/dashboard', meta: { title: '我的主页', icon: DataAnalysis } },
         { path: '/student/profile', meta: { title: '个人信息', icon: User } },
         { path: '/student/jobs', meta: { title: '浏览职位', icon: Briefcase } },
         { path: '/student/resume', meta: { title: '我的简历', icon: Document } },
@@ -157,7 +157,7 @@ const menuItems = computed((): MenuItem[] => { // Specify return type
     } else if (userType === 'company') {
       console.log('Generating company menu based on user type');
       return [
-        { path: '/company/dashboard', meta: { title: '仪表盘', icon: DataAnalysis } },
+        { path: '/company/dashboard', meta: { title: '招聘管理', icon: DataAnalysis } },
         { path: '/company/profile', meta: { title: '公司信息', icon: User } },
         { path: '/company/jobs', meta: { title: '职位管理', icon: Briefcase } },
         { path: '/company/applications', meta: { title: '收到申请', icon: Document } },
@@ -165,7 +165,7 @@ const menuItems = computed((): MenuItem[] => { // Specify return type
     } else if (userType === 'admin') {
       console.log('Generating admin menu based on user type');
       return [
-        { path: '/admin/dashboard', meta: { title: '仪表盘', icon: DataAnalysis } },
+        { path: '/admin/dashboard', meta: { title: '管理后台', icon: DataAnalysis } },
         { path: '/admin/users', meta: { title: '用户管理', icon: User } },
         { path: '/admin/companies', meta: { title: '企业审核', icon: Briefcase } },
       ];

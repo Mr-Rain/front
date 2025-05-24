@@ -42,8 +42,27 @@
         </el-table-column>
          <el-table-column prop="resumeTitle" label="投递简历" min-width="150">
              <template #default="scope">
-                {{ scope.row.resumeTitle || '-' }}
-                <!-- Optionally link to preview resume -->
+                <template v-if="scope.row.resumeId">
+                  <!-- 有简历ID时尝试验证简历是否存在 -->
+                  <el-link
+                    type="primary"
+                    @click="checkAndGoToResume(scope.row.resumeId, scope.row.resumeTitle)"
+                    :underline="false"
+                  >
+                    {{ scope.row.resumeTitle || '查看简历' }}
+                  </el-link>
+                </template>
+                <template v-else-if="scope.row.deletedResumeTitle">
+                  <!-- 简历已被删除但有删除前的标题 -->
+                  <span class="deleted-resume">
+                    {{ scope.row.deletedResumeTitle }}
+                    <el-tag size="small" type="info">已删除</el-tag>
+                  </span>
+                </template>
+                <template v-else>
+                  <!-- 没有简历ID且没有删除前标题时显示为普通文本 -->
+                  <span class="deleted-resume">未知简历</span>
+                </template>
              </template>
         </el-table-column>
         <el-table-column prop="applyTime" label="申请时间" width="180">
@@ -90,6 +109,8 @@ import { RefreshRight } from '@element-plus/icons-vue';
 import Pagination from '@/components/common/Pagination.vue'; // Import pagination component
 import TableExport from '@/components/common/TableExport.vue'; // Import table export component
 import { clearCacheByTags } from '@/utils/cacheInterceptor';
+
+// 不再需要isDev变量
 
 const router = useRouter();
 const applicationStore = useApplicationStore();
@@ -233,6 +254,31 @@ const viewApplicationDetail = (id: string | number) => {
     router.push({ name: 'student-application-detail', params: { id } });
 };
 
+// 检查简历是否存在并跳转
+const checkAndGoToResume = async (resumeId: string | number, resumeTitle: string) => {
+    if(!resumeId) return;
+
+    try {
+        // 导入简历API
+        const { checkResumeExists } = await import('@/api/resume');
+
+        // 检查简历是否存在
+        const response = await checkResumeExists(resumeId);
+
+        if (response.data && response.data.exists) {
+            // 简历存在，跳转到预览页面
+            console.log(`Viewing resume preview for id: ${resumeId}`);
+            router.push(`/student/resume/${resumeId}/preview`);
+        } else {
+            // 简历不存在，显示提示
+            ElMessage.warning(`简历"${resumeTitle}"已被删除或不存在`);
+        }
+    } catch (error) {
+        console.error('Failed to check resume existence:', error);
+        ElMessage.error('无法验证简历是否存在，请稍后重试');
+    }
+};
+
 // 导出相关方法
 
 // 导出列定义
@@ -290,5 +336,23 @@ const formatDateTime = (date: Date): string => {
   margin-top: 20px;
   display: flex;
   justify-content: center;
+}
+
+/* 确保表格中的链接样式一致 */
+.el-table .el-link {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/* 已删除简历样式 */
+.deleted-resume {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #909399;
+}
+
+.deleted-resume .el-tag {
+  margin-left: 5px;
 }
 </style>

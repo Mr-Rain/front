@@ -3,7 +3,13 @@
     <el-card shadow="never" class="page-card responsive-card">
       <template #header>
         <div class="card-header">
-          <span class="page-title">消息通知</span>
+          <div class="header-left-actions">
+            <el-button @click="goBackToDashboard" type="primary" plain class="back-button">
+              <el-icon class="back-icon"><ArrowLeft /></el-icon>
+              <span class="back-text">返回</span>
+            </el-button>
+            <span class="page-title">消息通知</span>
+          </div>
           <div class="header-actions">
             <el-button v-if="hasUnread" type="primary" plain @click="markAllAsRead">
               全部标为已读
@@ -137,7 +143,7 @@
                         v-if="notification.link"
                         type="primary"
                         size="small"
-                        @click.stop="navigateTo(notification.link)"
+                        @click.stop="handleNavigateToLink(notification.link)"
                       >
                         查看详情
                       </el-button>
@@ -185,6 +191,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotificationStore } from '@/stores/notification';
+import { usePermissionStore } from '@/stores/permission';
 import type { NotificationInfo, NotificationType } from '@/types/notification';
 import {
   Message,
@@ -194,12 +201,15 @@ import {
   Search,
   List,
   View,
-  Check
+  Check,
+  ArrowLeft
 } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
+import { navigateTo } from '@/utils/routeHelper';
 
 const router = useRouter();
 const notificationStore = useNotificationStore();
+const permissionStore = usePermissionStore();
 
 // 默认头像 URL 或空字符串
 const defaultAvatar = ref(''); // 或者是一个默认头像的 URL
@@ -227,7 +237,30 @@ const hasUnread = computed(() => {
 
 // 初始化
 onMounted(async () => {
-  await fetchNotifications();
+  // Determine default notification type based on user role
+  const userRoles = permissionStore.roles;
+  let defaultFilterType: string | null = null;
+
+  if (userRoles && userRoles.length > 0) {
+    const primaryRole = userRoles[0].toLowerCase(); // Assuming roles are strings and taking the first as primary
+
+    if (primaryRole === 'student') {
+      defaultFilterType = 'application'; // Students might default to application notifications
+    } else if (primaryRole === 'company') {
+      defaultFilterType = 'application'; // Companies might also default to application notifications
+    } else if (primaryRole === 'admin') {
+      defaultFilterType = 'system';    // Admins might default to system notifications
+    }
+  }
+
+  if (defaultFilterType) {
+    // If a default type is determined, use handleTypeSelect to apply it.
+    // handleTypeSelect will set currentType and trigger fetchNotifications.
+    handleTypeSelect(defaultFilterType);
+  } else {
+    // If no specific default, fetch notifications with the initial global default type (all)
+    await fetchNotifications();
+  }
 });
 
 // 监听页码变化
@@ -330,20 +363,13 @@ const deleteNotification = async (id: string | number) => {
 
 // 处理通知点击
 const handleNotificationClick = async (notification: NotificationInfo) => {
-  // 如果通知未读，标记为已读
-  if (notification.status === 'unread') {
-    await notificationStore.markAsRead(notification.id);
-  }
-
-  // 如果有链接，跳转到对应页面
-  if (notification.link) {
-    navigateTo(notification.link);
-  }
+  // 跳转到通知详情页面
+  router.push(`/notifications/${notification.id}`);
 };
 
-// 导航到指定链接
-const navigateTo = (link: string) => {
-  router.push(link);
+// 导航到指定链接 - 使用与项目其他部分一致的简单跳转逻辑
+const handleNavigateToLink = async (link: string) => {
+  await navigateTo(router, link);
 };
 
 // 前往通知设置
@@ -379,6 +405,24 @@ const formatTime = (timeStr: string): string => {
   const date = new Date(timeStr);
   return date.toLocaleString();
 };
+
+const goBackToDashboard = () => {
+  const userRoles = permissionStore.roles;
+  if (userRoles && userRoles.length > 0) {
+    const primaryRole = userRoles[0];
+    if (primaryRole === 'student') {
+      router.push('/student/dashboard');
+    } else if (primaryRole === 'company') {
+      router.push('/company/dashboard');
+    } else if (primaryRole === 'admin') {
+      router.push('/admin/dashboard');
+    } else {
+      router.push('/');
+    }
+  } else {
+    router.push('/');
+  }
+};
 </script>
 
 <style scoped>
@@ -390,6 +434,16 @@ const formatTime = (timeStr: string): string => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.header-left-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.back-button .back-icon {
+  margin-right: 5px;
 }
 
 .page-title {
@@ -434,8 +488,6 @@ const formatTime = (timeStr: string): string => {
   align-items: center;
   height: 100%;
 }
-
-
 
 /* 右侧通知列表 */
 .notifications-list-container {

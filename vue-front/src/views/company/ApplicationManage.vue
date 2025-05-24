@@ -24,7 +24,7 @@
                   <el-option label="待处理" value="pending"></el-option>
                   <el-option label="已查看" value="viewed"></el-option>
                   <el-option label="面试中" value="interview"></el-option>
-                  <el-option label="已录用" value="offer"></el-option>
+                  <el-option label="已录用" value="accepted"></el-option>
                   <el-option label="未录用" value="rejected"></el-option>
                   <el-option label="已撤销" value="withdrawn"></el-option>
                 </el-select>
@@ -112,40 +112,42 @@
                 <el-tag :type="getStatusTagType(scope.row.status)" effect="light">{{ formatStatus(scope.row.status) }}</el-tag>
             </template>
         </el-table-column>
-        <el-table-column label="操作" width="250" align="center" fixed="right">
+        <el-table-column label="操作" min-width="180" width="220" align="center" fixed="right">
           <template #default="scope">
-            <el-button link type="primary" size="small" @click="handleViewDetail(scope.row.id)">
-              <el-icon><View /></el-icon> 详情
-            </el-button>
-
-            <el-dropdown trigger="click">
-              <el-button link type="primary" size="small">
-                <el-icon><Calendar /></el-icon> 面试
+            <div class="action-buttons-container">
+              <el-button link type="primary" size="small" @click="handleViewDetail(scope.row.id)" class="action-button">
+                <el-icon><View /></el-icon> 详情
               </el-button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item @click="handleScheduleInterview(scope.row)" :disabled="!canScheduleInterview(scope.row.status)">
-                    安排面试
-                  </el-dropdown-item>
-                  <el-dropdown-item @click="handleAddFeedback(scope.row, 'interview')" :disabled="scope.row.status !== 'interview'">
-                    添加面试反馈
-                  </el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
 
-            <el-dropdown @command="(command) => handleUpdateStatus(scope.row.id, command)">
-              <el-button link type="primary" size="small">
-                <el-icon><ChatLineRound /></el-icon> 状态
-              </el-button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="viewed" :disabled="scope.row.status !== 'pending'">标记为已查看</el-dropdown-item>
-                  <el-dropdown-item command="offer" :disabled="!canProgress(scope.row.status)">发放Offer</el-dropdown-item>
-                  <el-dropdown-item command="rejected" :disabled="!canProgress(scope.row.status)">标记不合适</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
+              <el-dropdown trigger="click" class="action-dropdown">
+                <el-button link type="primary" size="small" class="action-button">
+                  <el-icon><Calendar /></el-icon> 面试
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item @click="handleScheduleInterview(scope.row)" :disabled="!canScheduleInterview(scope.row.status)">
+                      安排面试
+                    </el-dropdown-item>
+                    <el-dropdown-item @click="handleAddFeedback(scope.row, 'interview')" :disabled="scope.row.status !== 'interview'">
+                      添加面试反馈
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+
+              <el-dropdown @command="(command) => handleUpdateStatus(scope.row.id, command)" class="action-dropdown">
+                <el-button link type="primary" size="small" class="action-button">
+                  <el-icon><ChatLineRound /></el-icon> 状态
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="viewed" :disabled="scope.row.status !== 'pending'">标记为已查看</el-dropdown-item>
+                    <el-dropdown-item command="accepted" :disabled="!canProgress(scope.row.status)">发放Offer</el-dropdown-item>
+                    <el-dropdown-item command="rejected" :disabled="!canProgress(scope.row.status)">标记不合适</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
           </template>
         </el-table-column>
         <template #empty>
@@ -284,6 +286,13 @@
       />
     </el-dialog>
 
+    <!-- 简历预览对话框 -->
+    <resume-preview-dialog
+      v-model:visible="resumePreviewDialogVisible"
+      :resume-id="selectedResumeId"
+      :deleted-resume-title="selectedResumeTitle"
+    />
+
   </div>
 </template>
 
@@ -300,6 +309,7 @@ import BatchActionBar from '@/components/company/BatchActionBar.vue';
 import InterviewScheduler from '@/components/company/InterviewScheduler.vue';
 import BatchInterviewDialog from '@/components/company/BatchInterviewDialog.vue';
 import FeedbackForm from '@/components/company/FeedbackForm.vue';
+import ResumePreviewDialog from '@/components/company/ResumePreviewDialog.vue';
 
 const route = useRoute();
 const applicationStore = useApplicationStore();
@@ -309,11 +319,14 @@ const detailDrawerVisible = ref(false);
 const interviewDialogVisible = ref(false);
 const batchInterviewDialogVisible = ref(false);
 const feedbackDialogVisible = ref(false);
+const resumePreviewDialogVisible = ref(false);
 const selectedApplication = ref<ApplicationInfo | null>(null);
 const multipleSelection = ref<ApplicationInfo[]>([]);
 const interviewSchedulerRef = ref<InstanceType<typeof InterviewScheduler>>();
 const batchInterviewDialogRef = ref<InstanceType<typeof BatchInterviewDialog>>();
 const feedbackType = ref<'interview' | 'rejection' | 'offer' | 'general'>('general');
+const selectedResumeId = ref<string | number | undefined>();
+const selectedResumeTitle = ref<string>('');
 
 const listQuery = reactive({
     page: 1,
@@ -499,12 +512,29 @@ const previewResume = (resumeId: string | number | undefined, studentId: string 
         ElMessage.warning('无法获取简历信息');
         return;
     }
+
     console.log(`Previewing resume ${resumeId} for student ${studentId}`);
-    // TODO: Implement resume preview logic
-    // Option 1: Fetch resume URL via API call
-    // Option 2: If resume data/snapshot is available in application detail, display it
-    // Option 3: Open a dedicated resume viewer component/route
-    ElMessage.info('简历预览功能待实现');
+
+    // 查找当前申请记录，获取简历标题和删除状态信息
+    let deletedResumeTitle = '';
+
+    // 如果是从详情抽屉中点击的，使用当前申请详情
+    if (detailDrawerVisible.value && applicationStore.currentApplicationDetail) {
+        deletedResumeTitle = applicationStore.currentApplicationDetail.deletedResumeTitle || '';
+    } else {
+        // 否则从列表中查找
+        const application = applicationStore.companyApplications.find(app => app.id === resumeId);
+        if (application) {
+            deletedResumeTitle = application.deletedResumeTitle || '';
+        }
+    }
+
+    // 设置选中的简历ID和标题
+    selectedResumeId.value = resumeId;
+    selectedResumeTitle.value = deletedResumeTitle;
+
+    // 打开简历预览对话框
+    resumePreviewDialogVisible.value = true;
 };
 
 // 多选相关方法
@@ -796,8 +826,40 @@ const handleFeedbackSubmit = async (data: any) => {
   color: var(--el-text-color-secondary);
 }
 
-.el-dropdown .el-button {
-  margin-left: 8px; /* Space between buttons */
+.action-buttons-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px; /* 统一的按钮间距 */
+  flex-wrap: nowrap; /* 默认不换行 */
+}
+
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px; /* 确保按钮宽度一致 */
+  padding: 6px 8px;
+  border-radius: 4px;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.action-button:hover {
+  background-color: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+}
+
+.action-button:active {
+  transform: scale(0.98);
+}
+
+.action-button .el-icon {
+  margin-right: 4px;
+}
+
+.action-dropdown {
+  display: inline-flex;
 }
 
 .detail-content h4 {
@@ -871,6 +933,34 @@ const handleFeedbackSubmit = async (data: any) => {
 
   .action-buttons {
     flex-wrap: wrap;
+  }
+
+  .action-buttons-container {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+  }
+
+  .action-button {
+    min-width: auto;
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+
+  /* 在小屏幕上可以考虑只显示图标 */
+  .action-button span {
+    display: none;
+  }
+
+  .action-button .el-icon {
+    margin-right: 0;
+    font-size: 16px;
+  }
+
+  /* 调整表格列宽度 */
+  .el-table-column--fixed-right {
+    width: auto !important;
+    min-width: 120px !important;
   }
 
   .feedback-rating {

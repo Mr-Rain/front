@@ -13,21 +13,21 @@ export function getStudentProfile(): Promise<{ data: StudentProfileCamel }> {
   // const mockStudentProfile: StudentProfile = {
   //   id: 1,
   //   username: '黄星豪',
-  //   user_type: 'student',
+  //   userType: 'student',
   //   status: 'active',
   //   phone: '13800138000',
   //   email: '1051992437@qq.com',
-  //   student_id: '2020123456',
+  //   studentNumber: '2020123456',
   //   school: '重庆理工大学',
   //   major: '计算机科学与技术',
   //   grade: '大四',
   //   education: '本科',
   //   skills: ['JavaScript', 'TypeScript', 'Vue', 'React', 'Node.js'],
-  //   expected_salary: '10k-15k',
-  //   expected_location: '重庆',
+  //   expectedSalary: '10k-15k',
+  //   expectedLocation: '重庆',
   //   bio: '热爱编程，对Web开发和人工智能有浓厚兴趣',
-  //   create_time: new Date().toISOString(),
-  //   last_login_time: new Date().toISOString()
+  //   createTime: new Date().toISOString(),
+  //   lastLoginTime: new Date().toISOString()
   // };
   //
   // // 返回模拟响应
