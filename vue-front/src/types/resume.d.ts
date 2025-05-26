@@ -91,4 +91,6 @@ export interface CreateResumePayload {
   projectList?: ProjectExperience[];
   skillsDescription?: string;
   selfEvaluation?: string;
+  expectedSalary?: string;
+  expectedLocation?: string;
 }

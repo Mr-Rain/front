@@ -79,6 +79,7 @@
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { formatDateTime } from '@/utils/dateUtils';
 import type { UserInfo, UserType, UserStatus } from '@/types/user';
 import type { CompanyProfile, CompanyAuditStatus } from '@/types/company';
 import type { StudentProfile } from '@/types/student';
@@ -133,32 +134,11 @@ const title = computed(() => {
   return `用户详情 - ${props.userDetail.username}`;
 });
 
-// 格式化时间
+// 格式化时间 - 使用统一的日期格式化函数
 const formatTime = (timeStr: string | undefined): string => {
   if (!timeStr) return '-';
-  try {
-    // 创建一个日期对象
-    const date = new Date(timeStr);
-
-    // 检查日期是否有效
-    if (isNaN(date.getTime())) {
-      return timeStr || '-';
-    }
-
-    // 格式化为本地时间字符串（北京时间）
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
-  } catch (e) {
-    console.error('日期格式化错误:', e);
-    return timeStr || '-';
-  }
+  const formatted = formatDateTime(timeStr, { format: 'full' });
+  return formatted || '-';
 };
 
 // 格式化用户类型

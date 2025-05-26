@@ -53,14 +53,14 @@
 
       <!-- 推荐列表 -->
       <div v-if="recommendationStore.recommendedJobs.length > 0" class="recommendation-list">
-        <div v-for="rec in recommendationStore.recommendedJobs" :key="rec.jobInfo.id" class="recommendation-item">
+        <div v-for="rec in recommendationStore.recommendedJobs" :key="rec.jobId" class="recommendation-item">
           <!-- 推荐分数可视化 -->
           <div class="recommendation-score-bar">
             <div class="score-label">匹配度</div>
             <el-progress
-              :percentage="(rec.recommendationScore || 0) * 100"
+              :percentage="(rec.score || 0) * 100"
               :format="(percentage) => (percentage / 100).toFixed(2)"
-              :color="getScoreColor(rec.recommendationScore || 0)"
+              :color="getScoreColor(rec.score || 0)"
               :stroke-width="12"
               class="score-progress"
             />
@@ -68,7 +68,7 @@
 
           <!-- 职位卡片 -->
           <JobCard
-            :job="rec.jobInfo"
+            :job="convertToJobInfo(rec)"
             class="job-card"
           >
             <!-- 推荐理由和操作 -->
@@ -76,10 +76,10 @@
               <div class="recommendation-info">
                 <div class="reason">
                   <el-icon><MagicStick /></el-icon>
-                  <span>推荐理由: {{ rec.recommendationReason || '与您的技能匹配度高' }}</span>
+                  <span>推荐理由: {{ rec.reason || '与您的技能匹配度高' }}</span>
                 </div>
                 <div class="actions">
-                  <el-button link type="info" size="small" @click="handleDislike(rec.jobInfo.id)">
+                  <el-button link type="info" size="small" @click="handleDislike(rec.jobId)">
                     <el-icon><Close /></el-icon>
                     <span class="hide-on-mobile">不感兴趣</span>
                   </el-button>
@@ -110,6 +110,8 @@ import { useRouter } from 'vue-router';
 import { useRecommendationStore } from '@/stores/recommendation';
 import { getRecommendationScenarios, regenerateRecommendations as regenerateRecommendationsApi } from '@/api/recommendation';
 import JobCard from '@/components/common/JobCard.vue';
+import type { RecommendationDTO } from '@/types/recommendation';
+import type { JobInfo } from '@/types/job';
 import {
   ElCard, ElEmpty, ElIcon, ElTooltip, ElButton,
   ElProgress, ElMessage, ElSelect, ElOption
@@ -153,6 +155,28 @@ const fetchRecommendations = () => {
     scenario: currentScenario.value
   };
   recommendationStore.fetchRecommendations(params);
+};
+
+// 将RecommendationDTO转换为JobInfo格式，供JobCard组件使用
+const convertToJobInfo = (rec: RecommendationDTO): JobInfo => {
+  return {
+    id: rec.jobId,
+    title: rec.jobTitle,
+    companyId: rec.companyId,
+    companyName: rec.companyName,
+    companyLogo: rec.companyLogo,
+    location: rec.jobLocation,
+    salaryRange: rec.salaryRange,
+    jobType: rec.jobType as any, // 类型转换，因为后端可能返回字符串
+    experienceRequired: rec.experienceRequired,
+    educationRequired: rec.educationRequired,
+    tags: rec.tags,
+    benefits: [], // 推荐DTO中没有benefits字段，使用空数组
+    description: '', // 推荐DTO中没有description字段，使用空字符串
+    requirements: '', // 推荐DTO中没有requirements字段，使用空字符串
+    publishTime: rec.createdAt,
+    status: 'open' as any // 默认状态
+  };
 };
 
 // 根据分数返回颜色

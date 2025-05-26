@@ -617,10 +617,10 @@ onMounted(async () => {
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px;
-  background-color: var(--el-bg-color);
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .search-input-container {
@@ -637,80 +637,80 @@ onMounted(async () => {
 
 /* 主输入框容器样式 - 现代化设计 */
 .global-search-input :deep(.el-input__wrapper) {
-  border-radius: 24px !important;
+  border-radius: 28px !important;
   padding: 0 16px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
-  border: 2px solid rgba(99, 102, 241, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   box-shadow:
-    0 4px 20px rgba(99, 102, 241, 0.08),
-    0 1px 3px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  height: 48px;
-  padding-right: 120px; /* 为三个按钮预留合适空间 */
-  padding-left: 52px; /* 为前缀图标预留空间 */
-  backdrop-filter: blur(10px);
+  height: 56px;
+  padding-right: 130px; /* 为三个按钮预留合适空间 */
+  padding-left: 60px; /* 为前缀图标预留空间 */
+  backdrop-filter: blur(20px);
 }
 
 /* 悬停和聚焦状态 - 增强交互反馈 */
 .global-search-input :deep(.el-input__wrapper:hover) {
-  border-color: rgba(99, 102, 241, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
   box-shadow:
-    0 8px 30px rgba(99, 102, 241, 0.15),
-    0 2px 8px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  transform: translateY(-1px);
+    0 12px 40px rgba(0, 0, 0, 0.15),
+    0 6px 20px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
 }
 
 .global-search-input :deep(.el-input__wrapper:focus-within) {
-  border-color: rgba(99, 102, 241, 0.6);
+  border-color: rgba(255, 255, 255, 0.8);
   box-shadow:
-    0 12px 40px rgba(99, 102, 241, 0.2),
-    0 4px 12px rgba(0, 0, 0, 0.15),
+    0 16px 48px rgba(0, 0, 0, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 1),
-    0 0 0 4px rgba(99, 102, 241, 0.1);
-  transform: translateY(-2px);
+    0 0 0 4px rgba(255, 255, 255, 0.2);
+  transform: translateY(-3px);
 }
 
 /* 输入框文本样式 - 优化可读性 */
 .global-search-input :deep(.el-input__inner) {
-  height: 48px;
+  height: 56px;
   color: #1f2937;
   background: transparent;
-  font-size: 15px;
-  font-weight: 400;
+  font-size: 16px;
+  font-weight: 500;
   line-height: 1.5;
   padding: 0;
   border: none;
 }
 
 .global-search-input :deep(.el-input__inner::placeholder) {
-  color: rgba(107, 114, 128, 0.7);
+  color: rgba(107, 114, 128, 0.6);
   font-weight: 400;
 }
 
 /* 前缀图标容器 - 改进布局 */
 .global-search-input :deep(.el-input__prefix) {
   position: absolute;
-  left: 18px;
+  left: 22px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
 }
 
 /* 搜索图标样式 - 统一尺寸 */
 .search-icon {
-  color: rgba(99, 102, 241, 0.7);
-  font-size: 18px;
+  color: rgba(59, 130, 246, 0.8);
+  font-size: 20px;
   transition: all 0.3s ease;
 }
 
 .global-search-input :deep(.el-input__wrapper:focus-within) .search-icon {
-  color: rgba(99, 102, 241, 1);
+  color: rgba(59, 130, 246, 1);
   transform: scale(1.1);
 }
 
@@ -719,62 +719,65 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   position: absolute;
-  right: 8px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 10;
   gap: 6px;
-  padding: 3px !important;
+  padding: 4px !important;
   border-radius: 18px !important;
-  background: rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: blur(10px) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
   width: auto !important;
   height: auto !important;
   flex-shrink: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 /* 搜索按钮样式 - 使用更强的选择器覆盖Element Plus默认样式 */
 .search-button-container .modern-search-button.el-button.el-button--default.is-circle {
-  width: 24px !important;
-  height: 24px !important;
-  min-width: 24px !important;
-  max-width: 24px !important;
-  min-height: 24px !important;
-  max-height: 24px !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  max-width: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
   padding: 0 !important;
   margin: 0 !important;
   color: white !important;
-  background: linear-gradient(135deg, #10b981, #059669) !important;
-  background-color: #10b981 !important;
-  border: none !important;
-  border-color: transparent !important;
-  border-width: 0 !important;
+  background: rgba(16, 185, 129, 0.8) !important;
+  border: 1px solid rgba(16, 185, 129, 0.6) !important;
   border-radius: 50% !important;
-  transition: all 0.3s ease !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+  box-shadow:
+    0 2px 8px rgba(16, 185, 129, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
   font-size: 14px !important;
   line-height: 1 !important;
+  backdrop-filter: blur(10px) !important;
 }
 
 .search-button-container .modern-search-button.el-button.el-button--default.is-circle:hover,
 .search-button-container .modern-search-button.el-button.el-button--default.is-circle:focus {
-  width: 24px !important;
-  height: 24px !important;
-  min-width: 24px !important;
-  max-width: 24px !important;
-  min-height: 24px !important;
-  max-height: 24px !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  max-width: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
   color: white !important;
-  background: linear-gradient(135deg, #059669, #047857) !important;
-  background-color: #059669 !important;
-  border-color: transparent !important;
-  border-width: 0 !important;
-  transform: scale(1.1) translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
+  background: rgba(5, 150, 105, 0.9) !important;
+  border: 1px solid rgba(5, 150, 105, 0.8) !important;
+  transform: scale(1.05) translateY(-1px) !important;
+  box-shadow:
+    0 4px 16px rgba(16, 185, 129, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 .search-button-container .modern-search-button.el-button.el-button--default.is-circle:active {
@@ -793,7 +796,7 @@ onMounted(async () => {
 }
 
 .search-button-container .modern-search-button.el-button .el-icon {
-  font-size: 14px !important;
+  font-size: 16px !important;
   color: white !important;
   margin: 0 !important;
 }
@@ -884,32 +887,34 @@ onMounted(async () => {
 
 /* 搜索历史按钮样式 - 使用更强的选择器 */
 .search-button-container .history-button.el-button {
-  width: 24px !important;
-  height: 24px !important;
-  min-height: 24px !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-height: 28px !important;
   padding: 0 !important;
   margin: 0 !important;
   color: white !important;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
-  background-color: #3b82f6 !important;
-  border: none !important;
-  border-color: transparent !important;
+  background: rgba(59, 130, 246, 0.8) !important;
+  border: 1px solid rgba(59, 130, 246, 0.6) !important;
   border-radius: 50% !important;
-  transition: all 0.3s ease !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+  box-shadow:
+    0 2px 8px rgba(59, 130, 246, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(10px) !important;
 }
 
 .search-button-container .history-button.el-button:hover,
 .search-button-container .history-button.el-button:focus {
-  color: white !important;
-  background: linear-gradient(135deg, #2563eb, #1e40af) !important;
-  background-color: #2563eb !important;
-  border-color: transparent !important;
-  transform: scale(1.1) translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+  color: rgb(255, 255, 255) !important;
+  background: rgba(37, 99, 235, 0.9) !important;
+  border: 1px solid rgba(37, 99, 235, 0.8) !important;
+  transform: scale(1.05) translateY(-1px) !important;
+  box-shadow:
+    0 4px 16px rgba(59, 130, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 .search-button-container .history-button.el-button--primary,
@@ -922,43 +927,45 @@ onMounted(async () => {
 }
 
 .search-button-container .history-button.el-button .el-icon {
-  font-size: 14px !important;
+  font-size: 16px !important;
   color: white !important;
   margin: 0 !important;
 }
 
 /* 清除按钮样式 - 使用更强的选择器 */
 .search-button-container .clear-button.el-button {
-  width: 24px !important;
-  height: 24px !important;
-  min-height: 24px !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-height: 28px !important;
   padding: 0 !important;
   margin: 0 !important;
   color: white !important;
-  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-  background-color: #ef4444 !important;
-  border: none !important;
-  border-color: transparent !important;
+  background: rgba(239, 68, 68, 0.8) !important;
+  border: 1px solid rgba(239, 68, 68, 0.6) !important;
   border-radius: 50% !important;
-  transition: all 0.3s ease !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
+  box-shadow:
+    0 2px 8px rgba(239, 68, 68, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(10px) !important;
 }
 
 .search-button-container .clear-button.el-button:hover,
 .search-button-container .clear-button.el-button:focus {
   color: white !important;
-  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
-  background-color: #dc2626 !important;
-  border-color: transparent !important;
-  transform: scale(1.1) translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4) !important;
+  background: rgba(220, 38, 38, 0.9) !important;
+  border: 1px solid rgba(220, 38, 38, 0.8) !important;
+  transform: scale(1.05) translateY(-1px) !important;
+  box-shadow:
+    0 4px 16px rgba(239, 68, 68, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 .search-button-container .clear-button.el-button .el-icon {
-  font-size: 14px !important;
+  font-size: 16px !important;
   color: white !important;
   margin: 0 !important;
 }
@@ -1165,44 +1172,44 @@ onMounted(async () => {
   }
 
   .global-search-input :deep(.el-input__wrapper) {
-    height: 44px !important;
-    padding-right: 140px !important;
-    padding-left: 48px !important;
-    border-radius: 22px !important;
+    height: 48px !important;
+    padding-right: 120px !important;
+    padding-left: 52px !important;
+    border-radius: 24px !important;
   }
 
   .global-search-input :deep(.el-input__inner) {
-    font-size: 14px !important;
-    height: 44px !important;
+    font-size: 15px !important;
+    height: 48px !important;
   }
 
   .search-icon {
-    font-size: 16px !important;
+    font-size: 18px !important;
   }
 
   .global-search-input :deep(.el-input__prefix) {
-    left: 16px !important;
+    left: 18px !important;
   }
 
   .search-button-container {
     right: 8px !important;
     gap: 6px !important;
-    padding: 3px !important;
+    padding: 4px !important;
   }
 
   .modern-search-button {
-    width: 20px !important;
-    height: 20px !important;
+    width: 28px !important;
+    height: 28px !important;
   }
 
   .modern-search-button .el-icon {
-    font-size: 12px !important;
+    font-size: 14px !important;
   }
 
   .history-button,
   .clear-button {
-    width: 20px !important;
-    height: 20px !important;
+    width: 28px !important;
+    height: 28px !important;
   }
 
   .el-col {
@@ -1212,34 +1219,34 @@ onMounted(async () => {
 
 @media (max-width: 480px) {
   .global-search-input :deep(.el-input__wrapper) {
-    height: 42px !important;
-    padding-right: 120px !important;
-    padding-left: 44px !important;
+    height: 44px !important;
+    padding-right: 110px !important;
+    padding-left: 48px !important;
   }
 
   .global-search-input :deep(.el-input__inner) {
-    font-size: 13px !important;
-    height: 42px !important;
+    font-size: 14px !important;
+    height: 44px !important;
   }
 
   .modern-search-button {
-    width: 18px !important;
-    height: 18px !important;
+    width: 24px !important;
+    height: 24px !important;
   }
 
   .modern-search-button .el-icon {
-    font-size: 10px !important;
+    font-size: 12px !important;
   }
 
   .history-button,
   .clear-button {
-    width: 18px !important;
-    height: 18px !important;
+    width: 24px !important;
+    height: 24px !important;
   }
 
   .search-button-container {
     gap: 4px !important;
-    padding: 2px !important;
+    padding: 3px !important;
   }
 }
 </style>

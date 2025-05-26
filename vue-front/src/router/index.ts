@@ -372,6 +372,12 @@ const router = createRouter({
           name: 'data-transform-demo',
           component: () => import('@/components/common/DataTransformDemo.vue'),
           meta: { title: '数据转换演示' }
+        },
+        {
+          path: 'websocket-test',
+          name: 'websocket-test',
+          component: () => import('@/views/test/WebSocketTest.vue'),
+          meta: { title: 'WebSocket测试' }
         }
       ]
     },

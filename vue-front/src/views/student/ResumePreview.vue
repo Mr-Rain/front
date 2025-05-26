@@ -115,6 +115,21 @@
           </div>
         </div>
 
+        <!-- 求职期望 -->
+        <div class="resume-section" v-if="resumeStore.currentResume.expectedSalary || resumeStore.currentResume.expectedLocation">
+          <h2 class="section-title">求职期望</h2>
+          <div class="section-content">
+            <div class="job-expectations">
+              <p v-if="resumeStore.currentResume.expectedSalary">
+                <strong>期望薪资：</strong>{{ resumeStore.currentResume.expectedSalary }}
+              </p>
+              <p v-if="resumeStore.currentResume.expectedLocation">
+                <strong>期望地点：</strong>{{ resumeStore.currentResume.expectedLocation }}
+              </p>
+            </div>
+          </div>
+        </div>
+
         <!-- 更新时间 -->
         <div class="resume-footer">
           <p class="update-time">最后更新: {{ formatTime(resumeStore.currentResume.updateTime) }}</p>
@@ -127,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useResumeStore } from '@/stores/resume';
 import { ElMessage } from 'element-plus';
@@ -362,6 +377,16 @@ const handleEdit = () => {
 
 .project-link {
   margin-top: 5px;
+}
+
+.job-expectations p {
+  margin: 8px 0;
+  color: #606266;
+}
+
+.job-expectations strong {
+  color: #303133;
+  margin-right: 8px;
 }
 
 .resume-footer {

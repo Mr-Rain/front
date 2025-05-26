@@ -21,6 +21,8 @@ import { ElLoading, ElMessage, ElMessageBox, ElNotification } from 'element-plus
 import { setupPlugins } from './plugins'
 import { setupDirectives } from './directives'
 
+// WebSocket服务将在应用挂载后按需导入
+
 // 创建Pinia实例并使用持久化插件
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
@@ -60,3 +62,21 @@ createRouterGuards(router)
 
 // 挂载应用
 app.mount('#app')
+
+// 在应用挂载后，如果用户已登录则初始化WebSocket
+setTimeout(async () => {
+  // 检查用户是否已登录
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+  if (token) {
+    console.log('用户已登录，初始化WebSocket连接')
+    try {
+      // 动态导入WebSocket服务，确保Pinia已经初始化
+      const { webSocketService } = await import('./utils/websocket')
+      webSocketService.connect()
+    } catch (error) {
+      console.error('WebSocket初始化失败:', error)
+    }
+  } else {
+    console.log('用户未登录，跳过WebSocket初始化')
+  }
+}, 1000)

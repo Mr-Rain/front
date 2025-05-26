@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia';
-import type { RecommendedJob } from '@/types/recommendation';
+import type { RecommendationDTO } from '@/types/recommendation';
 import { getRecommendedJobs } from '@/api/recommendation';
 import { ElMessage } from 'element-plus';
 
 interface RecommendationState {
-  recommendedJobs: RecommendedJob[];
+  recommendedJobs: RecommendationDTO[];
   dislikedJobIds: (string | number)[];
   loading: boolean;
   lastFetchTime: string | null;
@@ -63,7 +63,7 @@ export const useRecommendationStore = defineStore('recommendation', {
         // 过滤掉已经不感兴趣的职位
         if (this.dislikedJobIds.length > 0) {
           this.recommendedJobs = this.recommendedJobs.filter(
-            (job: RecommendedJob) => !this.dislikedJobIds.includes(job.jobInfo.id)
+            (job: RecommendationDTO) => !this.dislikedJobIds.includes(job.jobId)
           );
         }
       } catch (error) {

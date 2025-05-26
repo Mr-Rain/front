@@ -42,6 +42,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { ElMessage } from 'element-plus';
+import { formatDateTime } from '@/utils/dateUtils';
 
 // 审核记录类型
 interface AuditLog {
@@ -83,14 +84,11 @@ const drawerVisible = computed({
   set: (value) => emit('update:visible', value)
 });
 
-// 格式化时间
+// 格式化时间 - 使用统一的日期格式化函数
 const formatTime = (timeStr: string | undefined): string => {
   if (!timeStr) return '-';
-  try {
-    return new Date(timeStr).toLocaleString();
-  } catch (e) {
-    return timeStr || '-';
-  }
+  const formatted = formatDateTime(timeStr, { format: 'full' });
+  return formatted || '-';
 };
 
 // 格式化操作类型

@@ -1,5 +1,5 @@
 import request from '@/utils/request';
-import type { RecommendationResponse, RecommendedJob } from '@/types/recommendation';
+import type { RecommendationResponse, RecommendationDTO } from '@/types/recommendation';
 import type { JobInfo, JobStatus } from '@/types/job';
 import { ApiErrorCode, ErrorType, createApiError } from '@/types/error';
 
@@ -147,33 +147,46 @@ export async function getRecommendationScenarios(): Promise<{ data: { scenarios:
       method: 'get'
     });
 
-    // 如果后端返回的数据格式与前端期望的不一致，进行转换
+    // 后端返回格式：{ code: 200, message: "success", data: [{ id: "default", name: "智能推荐" }, ...] }
+    // 前端期望格式：{ data: { scenarios: [{ id: "default", name: "智能推荐" }, ...] } }
+
     if (response.data && Array.isArray(response.data)) {
+      // 转换为前端期望的格式
       return {
         data: {
           scenarios: response.data.map((item: any) => ({
-            id: item.code || item.id,
+            id: item.id,
             name: item.name
           }))
         }
       };
     }
 
-    // 如果后端已经返回了正确的格式，直接返回
-    return response;
+    // 如果后端返回格式不符合预期，返回默认场景
+    console.warn('后端返回的推荐场景格式不符合预期，使用默认场景');
+    return {
+      data: {
+        scenarios: [
+          { id: 'default', name: '智能推荐' },
+          { id: 'skill-based', name: '基于技能' },
+          { id: 'history-based', name: '基于浏览历史' }
+        ]
+      }
+    };
   } catch (error) {
     console.error('Failed to fetch recommendation scenarios:', error);
 
-    // 创建特定的API错误
-    const apiError = createApiError(
-      ApiErrorCode.BUSINESS_ERROR,
-      '获取推荐场景列表失败',
-      ErrorType.BUSINESS,
-      { originalError: error }
-    );
-
-    // 重新抛出错误，让调用者处理
-    throw apiError;
+    // 发生错误时返回默认场景，确保前端功能正常
+    console.warn('获取推荐场景失败，使用默认场景');
+    return {
+      data: {
+        scenarios: [
+          { id: 'default', name: '智能推荐' },
+          { id: 'skill-based', name: '基于技能' },
+          { id: 'history-based', name: '基于浏览历史' }
+        ]
+      }
+    };
   }
 }
 

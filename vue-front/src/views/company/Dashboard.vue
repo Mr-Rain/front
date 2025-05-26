@@ -86,6 +86,7 @@ import { useUserStore } from '@/stores/user';
 import { useCompanyStore } from '@/stores/company';
 import CompanyStatistics from '@/components/company/CompanyStatistics.vue';
 import { getCompanyDashboardStatistics } from '@/api/statistics';
+import { formatDateTime } from '@/utils/dateUtils';
 import {
   Document,
   Briefcase,
@@ -112,7 +113,7 @@ const currentDate = computed(() => {
   });
 });
 
-// 上次登录时间
+// 上次登录时间 - 使用统一的日期格式化函数
 const lastLoginTime = computed(() => {
   const companyStore = useCompanyStore();
   // 使用 previousLoginTime 字段，这是真正的上次登录时间
@@ -120,29 +121,8 @@ const lastLoginTime = computed(() => {
 
   if (!lastLogin) return null;
 
-  try {
-    // 创建一个日期对象
-    const date = new Date(lastLogin);
-
-    // 检查日期是否有效
-    if (isNaN(date.getTime())) {
-      return null;
-    }
-
-    // 格式化为本地时间字符串（北京时间）
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
-  } catch (e) {
-    console.error('日期格式化错误:', e);
-    return null;
-  }
+  const formatted = formatDateTime(lastLogin, { format: 'full' });
+  return formatted || null;
 });
 
 // 统计数据

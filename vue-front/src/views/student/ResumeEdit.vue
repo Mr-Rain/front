@@ -382,13 +382,8 @@ const resumeRules = reactive<FormRules>({
   ],
   selfEvaluation: [
     { required: true, message: '请进行自我评价', trigger: 'blur' }
-  ],
-  expectedSalary: [
-    { required: true, message: '请输入期望薪资', trigger: 'blur' }
-  ],
-  expectedLocation: [
-    { required: true, message: '请输入期望地点', trigger: 'blur' }
   ]
+  // 求职期望字段设为可选，不需要验证规则
 });
 
 // 初始化数据

@@ -14,6 +14,8 @@ import { setupCacheInterceptor } from '@/utils/cacheInterceptor';
 // 导入数据转换工具
 // 注释掉数据转换相关导入，我们不再需要它们
 // import { camelToSnake, snakeToCamel } from '@/utils/dataTransformer';
+// 导入时区验证工具
+import { validateApiTimezoneInfo } from '@/utils/timezoneValidator';
 // 类型扩展 - 直接在这里扩展 AxiosRequestConfig 接口
 declare module 'axios' {
   export interface AxiosRequestConfig {
@@ -111,6 +113,34 @@ service.interceptors.response.use(
     // 直接使用原始数据，保持驼峰命名
     if (res && res.data && typeof res.data === 'object') {
       console.log('Response Data (camelCase):', res.data);
+
+      // 验证API响应中的时区信息完整性
+      try {
+        const timezoneValidation = validateApiTimezoneInfo(res.data);
+        if (!timezoneValidation.isValid && timezoneValidation.dateFields.length > 0) {
+          console.warn('API响应时区验证警告:', {
+            url: response.config.url,
+            dateFields: timezoneValidation.dateFields,
+            issues: timezoneValidation.issues
+          });
+
+          // 在开发环境中显示详细的时区警告
+          if (import.meta.env.DEV) {
+            console.group('🕐 时区信息验证警告');
+            console.warn(`接口: ${response.config.url}`);
+            console.warn(`发现 ${timezoneValidation.dateFields.length} 个日期字段`);
+            console.warn('问题详情:', timezoneValidation.issues);
+            console.groupEnd();
+          }
+        } else if (timezoneValidation.dateFields.length > 0) {
+          console.info('✅ API响应时区验证通过:', {
+            url: response.config.url,
+            dateFields: timezoneValidation.dateFields
+          });
+        }
+      } catch (timezoneError) {
+        console.error('时区验证过程中发生错误:', timezoneError);
+      }
     }
 
     // 检查响应头中是否包含新的 token（用于 token 刷新机制）

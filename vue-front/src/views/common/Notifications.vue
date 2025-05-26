@@ -14,6 +14,16 @@
             <el-button v-if="hasUnread" type="primary" plain @click="markAllAsRead">
               全部标为已读
             </el-button>
+            <el-button
+              v-if="hasReadNotifications"
+              type="danger"
+              plain
+              @click="handleDeleteAllRead"
+              :loading="deleteAllReadLoading"
+            >
+              <el-icon><Delete /></el-icon>
+              一键删除已读
+            </el-button>
             <el-button type="primary" @click="goToSettings">
               通知设置
             </el-button>
@@ -202,10 +212,12 @@ import {
   List,
   View,
   Check,
-  ArrowLeft
+  ArrowLeft,
+  Delete
 } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { navigateTo } from '@/utils/routeHelper';
+import { deleteAllReadNotifications } from '@/api/notification';
 
 const router = useRouter();
 const notificationStore = useNotificationStore();
@@ -215,6 +227,7 @@ const permissionStore = usePermissionStore();
 const defaultAvatar = ref(''); // 或者是一个默认头像的 URL
 
 const loading = ref(false);
+const deleteAllReadLoading = ref(false);
 const notifications = ref<NotificationInfo[]>([]);
 const total = ref(0);
 const stats = ref({
@@ -233,6 +246,12 @@ const searchKeyword = ref('');
 // 计算属性
 const hasUnread = computed(() => {
   return stats.value.unread > 0;
+});
+
+const hasReadNotifications = computed(() => {
+  // 计算已读通知数量：总数 - 未读数
+  const readCount = stats.value.total - stats.value.unread;
+  return readCount > 0;
 });
 
 // 初始化
@@ -358,6 +377,93 @@ const deleteNotification = async (id: string | number) => {
     fetchNotifications();
   } catch (error) {
     console.error('Failed to delete notification:', error);
+  }
+};
+
+// 批量删除已读通知
+const handleDeleteAllRead = async () => {
+  // 计算已读通知数量
+  const readCount = stats.value.total - stats.value.unread;
+
+  if (readCount === 0) {
+    ElMessage.info('暂无已读通知');
+    return;
+  }
+
+  try {
+    // 显示确认对话框
+    await ElMessageBox.confirm(
+      `确定要删除所有已读通知吗？此操作将删除 ${readCount} 条已读通知，删除后无法恢复。`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+        confirmButtonClass: 'el-button--danger',
+        beforeClose: (action, instance, done) => {
+          if (action === 'confirm') {
+            instance.confirmButtonLoading = true;
+            instance.confirmButtonText = '删除中...';
+
+            // 执行删除操作
+            performDeleteAllRead()
+              .then(() => {
+                done();
+              })
+              .catch(() => {
+                instance.confirmButtonLoading = false;
+                instance.confirmButtonText = '确定删除';
+              });
+          } else {
+            done();
+          }
+        }
+      }
+    );
+  } catch (error) {
+    // 用户取消操作
+    console.log('用户取消删除操作');
+  }
+};
+
+// 执行批量删除已读通知
+const performDeleteAllRead = async () => {
+  deleteAllReadLoading.value = true;
+
+  try {
+    const response = await deleteAllReadNotifications();
+
+    if (response.data.success) {
+      ElMessage.success(response.data.message || `成功删除 ${response.data.deletedCount} 条已读通知`);
+
+      // 刷新通知列表和统计信息
+      await fetchNotifications();
+
+      // 如果当前页没有数据且不是第一页，回到上一页
+      if (notifications.value.length === 0 && currentPage.value > 1) {
+        currentPage.value = currentPage.value - 1;
+        await fetchNotifications();
+      }
+    } else {
+      ElMessage.error('删除失败，请重试');
+    }
+  } catch (error: any) {
+    console.error('批量删除已读通知失败:', error);
+
+    // 根据错误类型显示不同的错误信息
+    if (error.response?.status === 403) {
+      ElMessage.error('权限不足，无法删除通知');
+    } else if (error.response?.status === 404) {
+      ElMessage.error('没有找到可删除的已读通知');
+    } else if (error.response?.status >= 500) {
+      ElMessage.error('服务器错误，请稍后重试');
+    } else {
+      ElMessage.error(error.response?.data?.message || '删除失败，请重试');
+    }
+
+    throw error; // 重新抛出错误，让确认对话框知道操作失败
+  } finally {
+    deleteAllReadLoading.value = false;
   }
 };
 

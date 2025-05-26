@@ -225,3 +225,25 @@ export function updateNotificationSettings(settings: {
     data: settings
   });
 }
+
+/**
+ * 创建测试通知
+ * @returns 创建结果
+ */
+export function createTestNotifications(): Promise<{ data: { success: boolean; message: string } }> {
+  return request({
+    url: '/api/notifications/test',
+    method: 'post'
+  });
+}
+
+/**
+ * 批量删除已读通知
+ * @returns 删除结果
+ */
+export function deleteAllReadNotifications(): Promise<{ data: { success: boolean; deletedCount: number; message: string } }> {
+  return request({
+    url: '/api/notifications/read-all',
+    method: 'delete'
+  });
+}

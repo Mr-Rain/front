@@ -136,6 +136,9 @@ export default defineConfig({
     //   }
     // }),
   ],
+  define: {
+    global: 'globalThis',
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
@@ -244,6 +247,8 @@ export default defineConfig({
       'echarts',
       'marked',
       'dompurify',
+      '@stomp/stompjs',
+      'sockjs-client',
     ],
     // 忽略类型检查
     esbuildOptions: {
